@@ -1,0 +1,104 @@
+---
+title: "Eric Hirsch 607 Assignment 1"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(tinytex)
+library(dplyr)
+library(gridExtra)    
+
+```
+
+``` {r load data}
+dfMasculinity <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/masculinity-survey/raw-responses.csv", header= TRUE)
+```
+
+### Introduction
+
+My dataset is from the article, "What Do Men Think It Means To Be A Man?" The article examines whether the #MeToo movement has changed men's thinking about masculinity.  The article concludes that little has changed in how men regard their masculine identity or in how they think about their behavior in work or in relationships.
+
+https://fivethirtyeight.com/features/what-do-men-think-it-means-to-be-a-man
+
+https://github.com/ericonsi/607_Assignment1
+
+https://rpubs.com/ericonsi/719305
+
+``` {r subset dfMasculinity}
+
+dfMasculinity_Subset <- subset(dfMasculinity, select = c("q0001", "age3", "q0026", "q0005", "race2", "q0029", "q0035", "q0030"))
+dfMasculinity_Subset <- rename(dfMasculinity_Subset, c(Feel_Masculine =  "q0001", Age = "age3", Orientation = "q0026", BelieveSocietyPressuresMen="q0005", Race="race2", Education="q0029", Region="q0035", State="q0030"))
+```
+### Analysis 
+The study did not disaggregate the data.  I was curious to see if there were any associations between self perception of masculinity and age, region and/or levels of education.
+
+I looked first at the overall breakdown of how respondents answered the question, "how masculine do you feel?"   The majority of respondents reported feeling "Somewhat Masculine" or "Very Masculine."
+
+``` {r graph}
+ggplot(data = dfMasculinity_Subset, aes(x = Feel_Masculine)) +
+  geom_bar() + ggtitle("Respondent answers to 'How Masculine Do You Feel'")
+```
+
+
+Then I looked at how the percentages broke down for age, region and education.  Because I was going to have to reproduce this exercise many times, I wrote a function to make it easier:
+``` {r percent}
+
+EH_PlotPercents<- function(filterVariable, filterCriteria, groupBy, title)
+{
+if(missing(title))
+  {
+    title = filterCriteria
+  }
+  
+dfPercent <- dfMasculinity_Subset %>%
+  filter(get(filterVariable) == filterCriteria) %>%
+  group_by_at(groupBy) %>%
+  summarise(count = n() ) %>%
+  mutate( perc = count / sum(count) )
+
+g <- ggplot(data = dfPercent, aes_string(x = groupBy, y= "perc")) +
+  geom_col()+ ggtitle(title) + theme(axis.text.x = element_text(angle = 90))
+return(g)
+}
+```
+
+``` {r percent age}
+g1 <- EH_PlotPercents("Age", "18 - 34", "Feel_Masculine")
+g2 <- EH_PlotPercents("Age", "35 - 64", "Feel_Masculine")
+g3 <- EH_PlotPercents("Age", "65 and up", "Feel_Masculine")
+
+grid.arrange(g1, g2, g3, ncol = 3)  
+```
+
+For age, I compared all the categories in the dataset (18-34, 35-64 and >65).  Not surprisingly, a higher percentage of millenial men are less masculine-identified than older men.
+
+``` {r percent region}
+g4 <- EH_PlotPercents("Region", "New England", "Feel_Masculine")
+g5 <- EH_PlotPercents("Region", "West South Central", "Feel_Masculine")
+
+grid.arrange(g4, g5, ncol = 2)  
+```
+
+When I compared the New England region to the West South Central region (e.g. Texas, Oklahoma, etc.), I found that a higher percentage of men in the West South Central identify as "Very Masculine" compared to those in New England (where I'm from.)
+
+``` {r percent education}
+
+g7 <- EH_PlotPercents("Education", "Did not complete high school", "Feel_Masculine", "Didn't finish HS")
+g8 <- EH_PlotPercents("Education", "High school or G.E.D.", "Feel_Masculine")
+g9 <- EH_PlotPercents("Education", "Post graduate degree", "Feel_Masculine")
+
+grid.arrange(g7, g8, g9, ncol = 3)  
+```
+
+The biggest surprise was to see how much less masculine-identified were those men who did not finish high school compared to those with more education.  In fact, the more education a man had, the more likely he was to identify as masculine. If education is a proxy for type of employment, this contradicts the notion portayed in Hollywood and beyond that norms of masculinity play a more important role for men in manual labor jobs than for those in white collar jobs.  
+
+On the other hand, among those without a high school degree who identified as being masculine, a far higher percentage identified as "Very Masculine" compared to other groups.  There is clearly more to unpack here.
+
+### Conclusion
+There are probably a number of ways to disaggregate this data that would lend more insight into how masculinity varies across a number of independent variables.  This would be worth exploring before making general statements about masculinity and the effect of #MeToo.
