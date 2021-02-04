@@ -26,9 +26,9 @@ My dataset is from the article, "What Do Men Think It Means To Be A Man?" The ar
 
 https://fivethirtyeight.com/features/what-do-men-think-it-means-to-be-a-man
 
-https://github.com/ericonsi/607_Assignment1
+https://github.com/ericonsi/CUNY_607/blob/main/Eric_Hirsch_607_Assignment1.Rmd
 
-https://rpubs.com/ericonsi/719305
+https://rpubs.com/ericonsi/721444
 
 ``` {r subset dfMasculinity}
 
@@ -96,7 +96,7 @@ g9 <- EH_PlotPercents("Education", "Post graduate degree", "Feel_Masculine")
 grid.arrange(g7, g8, g9, ncol = 3)  
 ```
 
-The biggest surprise was to see how much less masculine-identified were those men who did not finish high school compared to those with more education.  In fact, the more education a man had, the more likely he was to identify as masculine. If education is a proxy for type of employment, this contradicts the notion portayed in Hollywood and beyond that norms of masculinity play a more important role for men in manual labor jobs than for those in white collar jobs.  
+The biggest surprise was to see how much less masculine-identified were those men who did not finish high school compared to those with more education.  In fact, the more education a man had, the more likely he was to identify as masculine. If education is a proxy for type of employment, this contradicts a common notion that norms of masculinity play a more important role for men in manual labor jobs than for those in white collar jobs.  
 
 On the other hand, among those without a high school degree who identified as being masculine, a far higher percentage identified as "Very Masculine" compared to other groups.  There is clearly more to unpack here.
 
