@@ -20,21 +20,36 @@ library(gridExtra)
 dfMasculinity <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/masculinity-survey/raw-responses.csv", header= TRUE)
 ```
 
+
 ### Introduction
 
 My dataset is from the article, "What Do Men Think It Means To Be A Man?" The article examines whether the #MeToo movement has changed men's thinking about masculinity.  The article concludes that little has changed in how men regard their masculine identity or in how they think about their behavior in work or in relationships.
 
-https://fivethirtyeight.com/features/what-do-men-think-it-means-to-be-a-man
+Article:  https://fivethirtyeight.com/features/what-do-men-think-it-means-to-be-a-man
 
-https://github.com/ericonsi/CUNY_607/blob/main/Eric_Hirsch_607_Assignment1.Rmd
+R Markup File:  https://github.com/ericonsi/CUNY_607/blob/main/Eric_Hirsch_607_Assignment1.Rmd
 
-https://rpubs.com/ericonsi/721444
+Rpubs Link:  https://rpubs.com/ericonsi/721444
+
+
+Here is the raw dataset:
+
+```{r raw}
+head(dfMasculinity)
+```
+
 
 ``` {r subset dfMasculinity}
 
 dfMasculinity_Subset <- subset(dfMasculinity, select = c("q0001", "age3", "q0026", "q0005", "race2", "q0029", "q0035", "q0030"))
 dfMasculinity_Subset <- rename(dfMasculinity_Subset, c(Feel_Masculine =  "q0001", Age = "age3", Orientation = "q0026", BelieveSocietyPressuresMen="q0005", Race="race2", Education="q0029", Region="q0035", State="q0030"))
 ```
+Here is the dataset after subsetting:
+
+```{r subset}
+head(dfMasculinity_Subset)
+```
+
 ### Analysis 
 The study did not disaggregate the data.  I was curious to see if there were any associations between self perception of masculinity and age, region and/or levels of education.
 
