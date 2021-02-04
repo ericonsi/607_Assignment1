@@ -85,7 +85,7 @@ g5 <- EH_PlotPercents("Region", "West South Central", "Feel_Masculine")
 grid.arrange(g4, g5, ncol = 2)  
 ```
 
-When I compared the New England region to the West South Central region (e.g. Texas, Oklahoma, etc.), I found that a higher percentage of men in the West South Central identify as "Very Masculine" compared to those in New England (where I'm from.)
+When I compared the New England region to the West South Central region (e.g. Texas, Oklahoma, etc.), I found that a higher percentage of men in the West South Central identify as "Very Masculine" compared to those in New England (where I'm from.) 
 
 ``` {r percent education}
 
