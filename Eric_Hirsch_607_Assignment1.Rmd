@@ -1,7 +1,7 @@
 ---
 title: "Eric Hirsch 607 Assignment 1"
 date: "`r Sys.Date()`"
-output:
+output: 
   html_document:
     df_print: paged
 ---
@@ -27,7 +27,7 @@ My dataset is from the article, "What Do Men Think It Means To Be A Man?" The ar
 
 Article:  https://fivethirtyeight.com/features/what-do-men-think-it-means-to-be-a-man
 
-R Markup File:  https://github.com/ericonsi/CUNY_607/blob/main/Eric_Hirsch_607_Assignment1.Rmd
+R Markdown File:  https://github.com/ericonsi/CUNY_607/blob/main/Eric_Hirsch_607_Assignment1.Rmd
 
 Rpubs Link:  https://rpubs.com/ericonsi/721444
 
