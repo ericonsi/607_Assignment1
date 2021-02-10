@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Eric Hirsch" />
+
+<meta name="date" content="2021-02-07" />
+
+<title>Eric_Hirsch_607_TidyVerse</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Eric_Hirsch_607_TidyVerse</h1>
+<h4 class="author">Eric Hirsch</h4>
+<h4 class="date">2021-02-07</h4>
+
+
+
+<div id="ggplot2---creating-elegant-and-useful-graphs-in-r" class="section level1">
+<h1>ggplot2 - Creating Elegant and Useful Graphs in R</h1>
+<p><code>ggplot2</code>, a package in the core tidyverse, is a system for easily and efficiently creating graphics in R. It is based on the “Grammar of Graphics”, the notion that all graphs can be built from the same components: a data set, a coordinate system, and visual marks that represent data points. You specify these details to ggplot2 and the package creates the graph.</p>
+<p>The possibilities with ggplot2 are vast. You can learn more at <a href="https://ggplot2.tidyverse.org/" class="uri">https://ggplot2.tidyverse.org/</a>. I will describe here some of the basic core capabilities.</p>
+<div id="loading-the-library-and-our-sample-data" class="section level2">
+<h2>Loading the library and our sample data</h2>
+<p>We start by loading the tidyverse library. If tidyverse is not installed you must first install the tidyverse package ( install.packages(“tidyverse”))</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; -- Attaching packages --------------------------------------- tidyverse 1.3.0 --</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt; v ggplot2 3.3.2     v purrr   0.3.4</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt; v tibble  3.0.4     v dplyr   1.0.2</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt; v tidyr   1.1.2     v stringr 1.4.0</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt; v readr   1.4.0     v forcats 0.5.0</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="co">#&gt; -- Conflicts ------------------------------------------ tidyverse_conflicts() --</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="co">#&gt; x dplyr::filter() masks stats::filter()</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="co">#&gt; x dplyr::lag()    masks stats::lag()</span></span></code></pre></div>
+<p>Next we load the data that will be used for our examples. This data is from the article, “Marriage Isn’t Dead - Yet”, published on fivethirtyeight.com. The data represents the share of the population, aged 25 to 34, that has never been married, broken down by year and by other factors - we will be looking at level of education.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>dfMarriage &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;https://raw.githubusercontent.com/fivethirtyeight/data/master//marriage/both_sexes.csv&quot;</span>, <span class="dt">header=</span> <span class="ot">TRUE</span>)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>dfMarriage_Subset &lt;-<span class="st"> </span><span class="kw">subset</span>(dfMarriage, <span class="dt">select =</span> <span class="kw">c</span>(<span class="st">&quot;year&quot;</span>, <span class="st">&quot;all_2534&quot;</span>, <span class="st">&quot;HS_2534&quot;</span>, <span class="st">&quot;SC_2534&quot;</span>, <span class="st">&quot;BAo_2534&quot;</span>, <span class="st">&quot;GD_2534&quot;</span>))</span>
+<span id="cb2-3"><a href="#cb2-3"></a>dfMarriage_Subset &lt;-<span class="st"> </span><span class="kw">rename</span>(dfMarriage_Subset, <span class="kw">c</span>(<span class="dt">all_individuals =</span>  <span class="st">&quot;all_2534&quot;</span>, <span class="dt">High_School_Or_Less =</span> <span class="st">&quot;HS_2534&quot;</span>, <span class="dt">Some_College =</span> <span class="st">&quot;SC_2534&quot;</span>, <span class="dt">Bachelors_NoGradDegree=</span><span class="st">&quot;BAo_2534&quot;</span>, <span class="dt">Graduate_Degree=</span><span class="st">&quot;GD_2534&quot;</span>))</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="kw">head</span>(dfMarriage_Subset)</span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt;   year all_individuals High_School_Or_Less Some_College Bachelors_NoGradDegree</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; 1 1960       0.1233145           0.1095332    0.1522818              0.2389952</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt; 2 1970       0.1269715           0.1094000    0.1495096              0.2187031</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt; 3 1980       0.1991767           0.1617313    0.2236916              0.2881646</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt; 4 1990       0.2968306           0.2777491    0.2780912              0.3656655</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt; 5 2000       0.3450087           0.3316545    0.3249205              0.3939579</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt; 6 2001       0.3527767           0.3446069    0.3341101              0.3925148</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;   Graduate_Degree</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; 1              NA</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt; 2              NA</span></span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; 3              NA</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a><span class="co">#&gt; 4       0.3474505</span></span>
+<span id="cb2-18"><a href="#cb2-18"></a><span class="co">#&gt; 5       0.3691740</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#&gt; 6       0.3590304</span></span></code></pre></div>
+</div>
+<div id="using-the-ggplot2-library" class="section level2">
+<h2>Using the <code>ggplot2</code> library</h2>
+<p><code>ggplot2</code> can create a vast array of graphs with many features. We will focus here on a few: creating different types of graphs, and adding simple features like titles and labels.</p>
+<p>We begin with a boxplot of the share of never-married adults in the population with a high school education or less, for all the years in the dataset:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a> <span class="kw">ggplot</span>(<span class="dt">data =</span> dfMarriage_Subset, <span class="kw">aes</span>(<span class="dt">x =</span><span class="st">&quot;&quot;</span>, <span class="dt">y=</span>High_School_Or_Less)) <span class="op">+</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="st">  </span><span class="kw">geom_boxplot</span>()</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Note the grammar of graphics at work - we supply a dataset (<em>dfMarriage_subset</em>), a coordinate system, or “aesthetic” (<em>aes(x = &quot;&quot;, y=High_School_Or_Less))</em>) and a type of graph (<em>geom_boxplot()</em>) - and ggplot2 does the rest.</p>
+<p>If we change or add to any of the parameters for this plot, we get a new graph. For example, we can improve the y axis label by specifying new text with <em>ylab()</em> and a new font size with <em>theme(text = element_text(size = 9))</em>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a> <span class="kw">ggplot</span>(<span class="dt">data =</span> dfMarriage_Subset, <span class="kw">aes</span>(<span class="dt">x =</span><span class="st">&quot;&quot;</span>, <span class="dt">y=</span>High_School_Or_Less)) <span class="op">+</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="st">  </span><span class="kw">geom_boxplot</span>() <span class="op">+</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="st">   </span><span class="kw">ylab</span>(<span class="st">&quot;Share of adults who have never married&quot;</span>) <span class="op">+</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="st">   </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">9</span>))</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>What about a scatterplot of the share of ‘never-married adults with a high school education or less’ against ‘year’? True to the grammar of graphics, we can use the same plot with two adjustments - change the x axis to ‘year’ and the plot type to ‘geom_point.’ The plot will retain our y axis label:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a> <span class="kw">ggplot</span>(<span class="dt">data =</span> dfMarriage_Subset, <span class="kw">aes</span>(<span class="dt">x=</span>year, <span class="dt">y=</span>High_School_Or_Less)) <span class="op">+</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="st">   </span><span class="kw">ylab</span>(<span class="st">&quot;Share of adults who have never married&quot;</span>) <span class="op">+</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="st">   </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">9</span>))</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAA1VBMVEUAAAAAADoAAGYAOmYAOpAAZrYzMzM6AAA6ADo6AGY6OmY6OpA6ZrY6kNtNTU1NTW5NTY5NbqtNjshmAABmADpmAGZmOgBmOpBmZmZmtv9uTU1uTY5ubqtujshuq+SOTW6OTY6Obm6ObquOjo6OyP+QOgCQOjqQOmaQ27aQ2/+rbk2rbm6rbo6rjqurq8ir5P+2ZgC2Zjq2/7a2///Ijk3Ijm7I///bkDrb/7bb///kq27kyI7k///r6+v/tmb/yI7/25D/5Kv//7b//8j//9v//+T///8CuRUZAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAJcUlEQVR4nO2dC1vbNhSGTUfLuo2sg9KOrWOXQrd0F1jJmpHRJATw//9JsyzHlqJjHTkXRZG+8/DkCV+PjPrmSIpsHSnLYVbLtl2B0A2AGAMgxgCIMQBiDIAY6wToU2Pqe5vmLgZWGoAYDYAYDYAYDYAYDYAYDYAYDYAYDYAYDYAILcuyRgIgQ8syhRAAmRoAMaXtgGbHmbQn16kCYvugq8PiZfg02QjSJRPQ7OS6fk0PkBo9pWQCergoI2j/JkVAWv9TSkQTe7gonCwtLHlArG24ktssDUBcaYc+SDSx/X9f9tMEZEgmoKKTnn55M5ad9KD39WUu38zfJQ+oGOALQHKYn3xzW/wUbx5/v2w8fFcyMEAyguQwPzrL73/6WLy5//m73pH412eFtTe+eM0Y5mULG53nj38IQJMXH8Uv0nx/ir5KL3bQpRsBSLE6goRNzuIGZAzxpZsdUN0HCTixR5AboNnJh2NlNl+OYve/3IpRbB5AaQNysQ1Wchf6INs8Pl5AJRzHYf6d5Ut0rIBk83L8oqj2QQBkAuJtQ5XcZulOEYQ+SHUzASXZB7VqVASl2Ae1agQg3nxXEoACLk0BGqKJKZIJaPayP36KB4dziQB0ci1/AOhT2zBf/EyfA1ApmYDygs04yw7TaWL1LB6jGCk294EcAY0TG8W6AprZnhkCUIqT1a590NDSP0cJyKaRgBLrg6wa1cRS64OsGgWI7YNStGT7IO1Rj2MEpXTDTH9YiG/ShghAjAhAnLhEH5QWIE4jAKU31bBpBKB0nosZqzkwzGuiuR4IfZAmAhAjLg0omZX2S/ZB2kr7qAG5aAQgdaU9ALVGUKIJdaZkAlJX2gMQBYg135UEoIBLE4Bmx7bmBUCFTQ+STeo1JQqQsHH8czEnDRHEaAQg9EGa1NbEKhs0qbyj2NOhunxRnE9W64S64m30+WKugNTJapOSeffmvxIQknq1yWqd1FtgmiCCpJFp4aNer8nJ9F3JwACpk1WlD8oRQZTVSb0A1MF8V3ITpakEXldAKaxyJVPAnb9Jn8YfQSsBSuHR8yqA5DaBkQNapQ9K5tGzk0ZFEGu+KwlAAZcGIEZLEZDsnwGoTaxG+BUARb66Y2VAsa/uWBlQ9Ks7Vu2DsLpDk0xAUa/uaGYYGMUoUZmjAhAlrgVQzE9W1xRBET+bX18fFOHqDv0WECJoUVy4ibjJPmgHLats+Qt0cV7+U3QQN1J6zmctERTjxgImn1WaWIRbdBEPMVYAFOMWXeZDjOUBYYsuTTIBpbdFl02jALHmu5IrliafEQJQbfRT5lUARba6Y+2AYts/aP2AYlvdsfY+KKn9gzjNAIRjRBckIoJY811JAAq4NAAxGgAxGgAxGgUo5iernUsTgJI+ytiUTEBpH4ZtSIggu0YAQh+kSQQg1dSTeudnQAJQY80pmUfKeaK+KxkaIOWGmXrOqnyDpF7thlmd1CvaGDIOK0DKAK+d1DtCUq805YaZflIvAOXGDTP1pN4jNDFH813JwADNjm2LpwAoL8f5PdujH9+VDA5QLqYbuGkvJQqQWEFle/Tju5KBAdqVPsj5eelG+qDwI8g5831Dw/ww9D5om4DEOmlEUCWZgHYlV2OLfRBn3f9MVKMYAGkSANk1AGI0CtBw/6b4Lm3ZZcl3JQMDNHvZL36wkLySCEAn10UMAVAlUU0s2+uP0cQqiQDEmu9KBgYIixc0aRFQfdMeixek1BZBaGKVZAKCUYaF5C2aAcjFfFcSgAIuTQDCTpya1BZBtpQf35UMEhC+KFZSG6AId39ZqjQBqOqDMFmVUlsE2cx3JQEo4NIGIHyTXpCICCq3bI9r95flSxOAcD9Ik0xASGbRJKKJlcks8W3ytlxpChBrvisJQAGXpgBFuMnb8qUJQDFu8rZ8aQpQjJu8LV2aAIRN3jTJBIRN3jSJAMSa70qGDGie1Pv4vtebnwYJQI2pSb354ByAFiepekqmAJR8Uu/s5IOas9ok9ZZBJM33pxhUBOVX6g0zJYIGNZ/EAWmNrO6DHt+f5wBE2Dypd4CznhvD5iaqZALCHUVNMgHhnrQmIYLsGgEIfZAmEYBY811JAAq4NAAxGgAxGgAxGgUo8oNou5UmAMV+EG230gSg6A+i7VS6NYK29U3a/QiDNL9JdzgEI81RbBcAbTVfbBcAPbzb5tE1O9AHIZlFk0xAvPmuJAAFXJoChBVmqmQC4leYpWhYYdaiEYCwwkyTTEBYYaZJBCDWfFcSgAIuTQGK7BjRTQzziKBGIgBh9xdVIpoYjhFVpUVAyFldkIgIYs13JQEo4NImILFj+/TA1sISB3R1mD9cnCJfbC4tAhKDvJioYjZfSRQg8dAQs/lKMpvYablI8QpNTEoGoOKL0P6N/WwN35UMC5CDNcWdn/K5P+6KCpDz0Q0dHpgCUPdKAtBS/5tdAIQ+qDmpV0nNxCjWWJ1Ql096LwDItDol8/GvKnc1+aRe3ZSk3jq5FxGkAmqSegGIsqYPAiDa6pN6AaiD+a7kzgFS7Nn2HP3+bQBiHAGIcQQgxhEHjzAGQIwBEGMAxBgAMdYNkJjAin3xzorpbK93pN5Xa3McyQ2IeMfKpc1R8dT8F63atk+9mIOjnJpTjp0AlTfPRuW+eHJ3PGVO2+YoqvLnrYOjdGlzVD1Htr89MS7m4CivTjp2ASRvno3Eh3c2eisiSNssj3Ysfv3n0sXx7s3tpPWK+t+ev5KeubibJf9RfbU61lc3Hbs1MXEZEZpvz8TWb8Xlz9XJPukoPyoXx4mI+FZHxVO+tnsKzuU/qq9WR3l10rE7IGEjUb180v4pNo5lALUGhnrFo/zue8vHrV6y9G/zLD87lwhqHCtA64mgAvv9j5cyLFp7jMZR3lRycJTVa3XU/7Z4pT3ltn0OfZDqWF191T6o+hQHvd55OYq1jiSa490PQuAdRcM5t4xiyiUHFs+BOmraRjHNcX71FUexFA2AGAMgxgCIMQBiDIAYAyDGAIixQAFdneZiN6zjMjNieiCOppx+8cqWJrEpCxTQ+FD8XB2KzAiRCTl9fj09sJzfuTkLFNDs9c3ffUGmyowQ+6tZUgA2aIECenj32+ubMsdvr19ut/8EgHQbfntYR8/xadnEAEi16ef9MkNrvH8jyBS/ApBmD79el+kjooUNs+yzV6cApNn0q23XoLJAAQ33uE0OfFmggMIxAGIMgBgDIMYAiDEAYgyAGPsfdaYB1OnuYFgAAAAASUVORK5CYII=" /><!-- --></p>
+<p>We can see that among adults between 24 and 34 with a high school education or less, the share of those who have never been married has increased steadily over time.</p>
+<p>We can continue to add features. Let’s smooth out the plot by adding <em>geom_smooth ()</em>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> dfMarriage_Subset, <span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y=</span>High_School_Or_Less)) <span class="op">+</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span><span class="st"> </span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="st">  </span><span class="kw">ylab</span>(<span class="st">&quot;Share of adults who have never married&quot;</span>) <span class="op">+</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">9</span>))<span class="op">+</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="st">  </span><span class="kw">geom_smooth</span> ()</span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Now let’s finish our graph by including a general title, and by setting the font size for the new title so it fits on the graph. To do this we add <em>ggtitle(title)</em> and <em>theme(plot.title = element_text(size = 9))</em></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> dfMarriage_Subset, <span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y=</span>High_School_Or_Less)) <span class="op">+</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span><span class="st"> </span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="st">  </span><span class="kw">ylab</span>(<span class="st">&quot;Share of adults who have never married&quot;</span>) <span class="op">+</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">9</span>))<span class="op">+</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="st">  </span><span class="kw">geom_smooth</span> () <span class="op">+</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;Never Married by Year (with &lt;= HS degree)&quot;</span>) <span class="op">+</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">9</span>), <span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">9</span>))</span>
+<span id="cb7-8"><a href="#cb7-8"></a><span class="co">#&gt; `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>There is so much more we can do! But this introduction should get you started.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
