@@ -41,6 +41,7 @@ This is the code - however, I am hiding the block so that the password doesn't a
 
 ```{r echo=FALSE}
 #Connection String (see file in folder) goes here
+<<<<<<< HEAD
 # install.packages ("RODBC") - install RODNC if not already installed
 library(RODBC)
 
@@ -52,6 +53,8 @@ dbConnection <- odbcDriverConnect('Driver={ODBC Driver 13 for SQL Server};
                                   Encrypt=yes;
                                   TrustServerCertificate=no;
                                   Connection Timeout=30;')
+=======
+>>>>>>> bf24564d645e8689480f6a7f06f8506e347ba791
 ```
 
 Now we load the table data from two CSV files that are on github.
