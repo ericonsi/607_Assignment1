@@ -19,10 +19,10 @@ MovieID,FriendID,Overall_Rating,MovieName
 17,6,5,Lady Bird
 18,6,2,Maze Runner 1
 19,6,5,Arrival
-20,6,5,Romeo + Juliet
-21,6,5,Moonrise Kingdom
-22,6,5,Afterlife
-23,6,5,Departures
+20,6,1,Romeo + Juliet
+21,6,1,Moonrise Kingdom
+22,6,2,Afterlife
+23,6,2,Departures
 24,7,4,Afterlife
 25,7,4,Departures
 26,7,3,Arrival
