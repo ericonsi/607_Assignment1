@@ -40,11 +40,12 @@ MovieID,FriendID,Overall_Rating,MovieName
 38,10,5,MegaMind
 39,10,1,Lady Bird
 40,10,5,Maze Runner 1
-41,1,4,Maze Runner 1
+41,1,2,Maze Runner 1
 42,1,5,Moonrise Kingdom
-43,1,4,Romeo + Juliet
+43,1,5,Romeo + Juliet
 44,2,5,MegaMind
 45,2,5,Lady Bird
-46,2,5,Maze Runner 1
-47,2,4,Avengers Age of Ultron
-48,2,4,The Fifth Element
+46,2,2,Maze Runner 1
+47,2,2,Avengers Age of Ultron
+48,2,2,The Fifth Element
+48,2,5,Romeo + Juliet
