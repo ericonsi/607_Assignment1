@@ -1,0 +1,52 @@
+
+MovieID,FriendID,Overall_Rating,MovieName
+1,3,5,Avengers Age of Ultron
+2,3,5,The Fifth Element
+3,3,5,Afterlife
+4,3,4,Departures
+5,4,5,MegaMind
+6,4,1,Lady Bird
+7,4,5,Maze Runner 1
+8,4,2,Arrival
+9,4,5,Avengers Age of Ultron
+10,4,5,The Fifth Element
+11,5,3,MegaMind
+12,5,3,Lady Bird
+13,5,5,Maze Runner 1
+14,5,5,Avengers Age of Ultron
+15,5,4,The Fifth Element
+16,6,4,MegaMind
+17,6,5,Lady Bird
+18,6,2,Maze Runner 1
+19,6,5,Arrival
+20,6,1,Romeo + Juliet
+21,6,1,Moonrise Kingdom
+22,6,2,Afterlife
+23,6,2,Departures
+24,7,4,Afterlife
+25,7,4,Departures
+26,7,3,Arrival
+27,7,3,Moonrise Kingdom
+28,8,3,Lady Bird
+29,8,3,Arrival
+30,8,5,Romeo + Juliet
+31,8,4,Moonrise Kingdom
+32,8,5,Afterlife
+33,9,5,Lady Bird
+34,9,5,Maze Runner 1
+35,9,2,Moonrise Kingdom
+36,9,5,Avengers Age of Ultron
+37,9,1,The Fifth Element
+38,10,5,MegaMind
+39,10,1,Lady Bird
+40,10,5,Maze Runner 1
+41,1,2,Maze Runner 1
+42,1,5,Moonrise Kingdom
+43,1,5,Romeo + Juliet
+44,2,5,MegaMind
+45,2,5,Lady Bird
+46,2,2,Maze Runner 1
+47,2,2,Avengers Age of Ultron
+48,2,2,The Fifth Element
+49,2,5,Romeo + Juliet
+50,2,5,Departures
