@@ -1,0 +1,148 @@
+---
+title: "Eric_Hirsch_607_Assignment_2"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-packages, message=FALSE}
+library(openintro)
+library(tinytex)
+library(tidyverse)
+```
+
+## SQL and R - An Example
+
+There are a number of ways to use SQL directly in R.  SQL is extremely useful for manipulating data, especially when pulling data from multiple related tables.  What follows is an example of how R may be used to load tables from csv files into a SQL Server database, and how SQL queries can then be run from within R.  We will use the RODBC package,
+
+### Creating the Connection
+
+We are connecting to a SQL database on Azure called EHtmp.The database will consist of two tables: Friends, a parent table with the name, age and gender of some friends and MovieRatings, a child table containing movie names and friend ratings on a scale of 1 to 5. Here we create the connection with RODBC.
+
+This is the code - however, I am hiding the block so that the password doesn't appear:
+
+
+  *# install.packages ("RODBC") - install RODBC if not already installed*
+  
+  *library(RODBC)*
+
+  *dbConnection <- odbcDriverConnect('Driver={ODBC Driver 13 for SQL Server};*
+                      *Server=[server];*
+                      *Database=[db];*
+                      *Uid=[uid];*
+                      *Pwd=[pwd];*
+                      *Encrypt=yes;*
+                      *TrustServerCertificate=no;*
+                      *Connection Timeout=30;')*
+
+
+```{r echo=FALSE}
+#Redacted
+```
+
+Now we load the table data from two CSV files that are on github.
+
+``` {r load data}
+dfFriends <- read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Movie_Friends.csv", header=TRUE)
+dfMovieRatings <- read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Movies_MovieRatings.csv", header=TRUE)
+```
+
+### Creating and Filling the Tables
+
+Now we create and fill the two tables - Friends and MovieRatings. Because Friends is a parent table and MovieRatings a child table, MovieRatings contains FriendID as a foreign key. 
+
+RODBC makes it easy to create and populate the tables in the DB with the sqlSave command.  We don't even need to use the CREATE TABLE command.
+
+```{r create and populate tables}
+DropFriendsTable <- (sqlQuery(dbConnection, "DROP TABLE IF EXISTS Friends"))
+DropMovieRatingsTable <- (sqlQuery(dbConnection, "DROP TABLE IF EXISTS MovieRatings"))
+  
+PopulateFriendsTable <- (sqlSave(dbConnection, dfFriends, "Friends", append=TRUE))
+PopulateFriendsTable
+
+PopulateMovieRatingsTable <- (sqlSave(dbConnection, dfMovieRatings, "MovieRatings", append=TRUE))
+PopulateMovieRatingsTable
+
+ShowFriendsTable <- (sqlQuery(dbConnection, "SELECT * FROM Friends" ))
+ShowMovieRatingsTable <- (sqlQuery(dbConnection, "SELECT * FROM MovieRatings" ))
+
+ShowFriendsTable 
+ShowMovieRatingsTable 
+```
+### Handling Null Values
+
+Because our tables are normalized, the fact that not all friends rated all movies is not a problem.  For example, here is a query which calculates the average age of those who rated each movie, along with the number of raters for the movie:
+
+```{r movie stats}
+MovieRatingstats <- (sqlQuery(dbConnection, "SELECT MovieRatings.MovieName as Movie_Name, Avg(Friends.Age) AS Avg_Age_of_Raters, Count(MovieRatings.MovieID) AS N
+FROM MovieRatings INNER JOIN Friends ON MovieRatings.FriendID = Friends.FriendID
+GROUP BY MovieRatings.MovieName
+ORDER BY Avg(Friends.Age);"
+))
+MovieRatingstats
+```
+
+However, null values will appear if we create a crosstab of friends and movies. Here we add a table to the DB based on a crosstab which features three movies - the missing ratings appear as an "NA": 
+
+```{r}
+dfCrosstab <- as.data.frame(sqlQuery(dbConnection, "SELECT FriendID, [Arrival] AS Arrival, [Afterlife] AS Afterlife, [Departures] AS Departures
+FROM 
+   ( SELECT FriendID, MovieName, Overall_Rating
+     FROM MovieRatings 
+   ) ps
+PIVOT
+   ( SUM (Overall_Rating)
+     FOR MovieName IN ( [Arrival], [Afterlife], [Departures])
+   ) AS pvt;"))
+dfCrosstab
+
+DropCrosstabTable <- (sqlQuery(dbConnection, "DROP TABLE IF EXISTS Crosstab"))
+  
+PopulateCrosstabTable <- (sqlSave(dbConnection, dfCrosstab, "Crosstab", append=TRUE))
+```
+If we want to get an average rating for Arrival, what can we do about the nulls? In some cases we would want to extrapolate or infer the data.  In this case, it's easy enough to filter the data out:
+
+```{r na}
+AverageRatingForArrival <- (sqlQuery(dbConnection, "SELECT Avg(Arrival) AS Avg_Rating
+FROM Crosstab
+WHERE Arrival is not null;"
+))
+
+AverageRatingForArrival
+```
+
+### Running SQL Queries Within R
+
+SQL allows us to look at the data in more complex ways.  For example, this query looks at rating by gender:
+
+```{r gender}
+dfMovieRatingsByGender <- as.data.frame((sqlQuery(dbConnection, "SELECT MovieRatings.MovieName, Friends.Gender, Count(MovieRatings.MovieID) AS CountOfMovieID, Avg(MovieRatings.OverAll_Rating) AS AvgOfOverall_Rating
+FROM MovieRatings INNER JOIN Friends ON MovieRatings.FriendID = Friends.FriendID
+GROUP BY MovieRatings.MovieName, Friends.Gender
+ORDER BY MovieRatings.MovieName, Friends.Gender;
+"
+)))
+dfMovieRatingsByGender
+
+
+```
+
+```{r}
+g <- ggplot(data = dfMovieRatingsByGender, aes(x = AvgOfOverall_Rating, y= MovieName, group=Gender, fill=Gender)) +
+  geom_col(position = position_dodge()) +
+  xlab("Average Rating") + ylab("Movie") +
+  ggtitle("Average Movie Ratings By Gender")
+g
+```
+
+I wasn't surprised to see some of the more romantic movies favored by women (e.g. Romeo + Juliet) and more superhero movies favored by men  (e.g. Age of Ultron),  If I have a recommendation, it would be Departures, a beautiful Korean movie about a cellist-turned-undertaker.  It had a high average rating but few rated it so it isn't generally seen.
+
+### Conclusion
+
+RODBC makes connecting and running queries on an ODBC-connectible database easy and straightforward. There is much more that can be done but this can get you started.
+
+
+
