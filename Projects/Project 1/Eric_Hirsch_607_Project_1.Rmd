@@ -1,0 +1,129 @@
+---
+title: "Eric_Hirsch_607_Assignment_2"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-packages, message=FALSE}
+library(openintro)
+library(tinytex)
+library(tidyverse)
+library(stringr)
+library(magrittr)
+```
+
+## Working with Text Files
+
+#### Introduction 
+
+In this project we will convert a text file into a usable dataframe.  The file has extra characters and other issues which need to be resolved before it can be useful.  The exercise will show the many ways that R can help us clean a messy text file.
+
+``` {r load data}
+dfChess <- as.data.frame(read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%201/Chess.txt", header = FALSE, stringsAsFactors = FALSE, sep = "|"))
+head(dfChess)
+```
+#### Eliminating What We Don't Want and Extracting What We Do
+
+1. First we eliminate rows and columns with no information.
+
+```{r eliminate rows and column with no information}
+dfChess %<>% filter(!str_detect(dfChess$V1, "-----")) %<>% select(!V11)
+```
+
+2. Then we merge the even rows with the odd rows, since each player's info spans two rows.
+
+``` {r merge}
+EvenRows<- dfChess %>% filter(row_number() %% 2 == 1) %<>% mutate("qid" = row_number()) %<>% filter(qid!=1)
+OddRows<- dfChess %>% filter(row_number() %% 2 != 1)  %<>% mutate("qid" = row_number()) %<>% filter(qid!=1)
+dfChessMerged <- as.data.frame(merge(x = EvenRows, y = OddRows, by = c("qid")))
+```
+
+3. Then we get the pre-chess rating for each player.  To get the pre-chess rating, we need to manipulate the string to extract just the rating. (We ignore the parts of the rating that occur with "P" for some players).  We can do this with str_sub and str_extract.
+
+  Before:
+
+```{r}
+head(dfChessMerged$V2.y)
+```
+``` {r Extract}
+dfChessMerged$PreChessRating <- str_sub(str_extract(dfChessMerged$V2.y, "R:....."), -4,-1)
+```
+
+  After:
+
+```{r}
+head(dfChessMerged$PreChessRating)
+```
+
+4. Now we create a dataframe to hold our final result.  We select and rename the columns which are of interest to us. We also trim the character fields to remove whitesapce.
+```{r select}
+
+dfChessFinal <- dfChessMerged %>% 
+          subset(select = c("V2.x", "V1.y", "V3.x", "PreChessRating")) %>% 
+          rename(c(Name =  "V2.x", State = "V1.y", Points = "V3.x"))
+
+dfChessFinal$Name<-str_trim(dfChessFinal$Name)
+dfChessFinal$State<-str_trim(dfChessFinal$State)
+dfChessFinal$Points<-str_trim(dfChessFinal$Points)
+
+head(dfChessFinal)
+```
+
+#### Creating the Opponent's Average Pre-Chess Rating
+
+We have also been tasked with calculating and displaying the average of the opponent's pre-chess ratings for each player (the total ratings divided by the number of games.)  We will do this by creating a matrix which will hold the opponent rating for each player for each round.  This will simplify the task of calculating the average.
+
+1. We begin by creating a dataframe which will hold the rating and opponent ID for each round for each player.  We will need to extract the number out of the round column, as this represents the opponent's ID.  We use lapply and the gsub function (which uses a regular expression to find the first sequence of digits within the string), and then we convert the NAs (which occur in the rounds where there was no game) to 0.
+
+```{r}
+dfChessOpponentAvg <- dfChessMerged %>% 
+          subset(select = c("V1.x", "PreChessRating", "V4.x", "V5.x", "V6.x", "V7.x", "V8.x", "V9.x", "V10.x" )) %>% 
+          rename(c(ID="V1.x")) 
+
+dfChessOpponentAvg[] <- lapply(dfChessOpponentAvg, function(x) as.numeric(gsub(".*?([0-9]+).*", "\\1", x)))
+dfChessOpponentAvg[is.na(dfChessOpponentAvg)] <- 0
+```
+2. Now we are going to substitute each player's ID in the matrix with their rating. That way we can easily sum and average the opponents' ratings across the player's row. We do this with a custom function (which accepts the player's identification number and returns their rating), and map_dfr from the purrr library.  We loop through the dataframe, and as we do, we also collect the total non-zero cells in each row (.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don't want map_dfr to loop over this column as well.
+
+```{r}
+
+ConvertPlayerIDToRating<-function(playerID)
+  {
+    if(playerID==0) {return(0)}
+    x<- as.vector(filter(dfChessOpponentAvg, dfChessOpponentAvg$ID==playerID))
+    playerRating<-x$PreChessRating
+  
+return (playerRating)
+  }
+
+dfC<-subset(dfChessOpponentAvg, select= c("V4.x", "V5.x", "V6.x", "V7.x", "V8.x", "V9.x", "V10.x"))
+
+for(i in 1:nrow(dfC)) 
+  { 
+      dfC[i, ] <- map_dfr(dfC[i,], ConvertPlayerIDToRating)   #This will substitute the player identification number with their rating
+      dfChessOpponentAvg[i,10] = sum(dfC[i,] != 0)                #This column will hold the number of games per player
+  }
+
+head(dfC)
+```
+
+3. Now all we need to do is sum up the rows, divide by the number of games, and write that to the final table.  We are done!
+
+```{r}
+dfChessOpponentAvg$row_sum = rowSums(dfC[,])
+dfChessFinal$AvgRatingOfOpps = dfChessOpponentAvg$row_sum/dfChessOpponentAvg$V10
+
+dfChessFinal
+
+write.csv(dfChessFinal, "d:\\RStudio\\CUNY_607\\x.csv") 
+```
+### Conclusion
+
+R has many tools for cleaning up messy files.  We used stringr, purrr, dyplr and other libraries to accomplish this task.  As an absolute beginner to R I'm confident there are more robust solutions than mine - but it is encouraging to know how much can be done with so few lines of code!
+
+
+
