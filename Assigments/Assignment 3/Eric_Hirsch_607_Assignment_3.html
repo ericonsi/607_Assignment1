@@ -1370,9 +1370,8 @@ x</code></pre>
 ## 2  2101      COMPUTER PROGRAMMING AND DATA PROCESSING Computers &amp; Mathematics
 ## 3  3702               STATISTICS AND DECISION SCIENCE Computers &amp; Mathematics</code></pre>
 </div>
-</div>
-<div id="excercise-2." class="section level2">
-<h2>Excercise 2.</h2>
+<div id="excercise-2." class="section level3">
+<h3>Excercise 2.</h3>
 <p>Write code that transforms the data below:</p>
 <p>[1] “bell pepper” “bilberry” “blackberry” “blood orange”</p>
 <p>[5] “blueberry” “cantaloupe” “chili pepper” “cloudberry”</p>
@@ -1391,39 +1390,87 @@ vFruits&lt;-str_c(&quot;c(&quot;,str_replace_all(vFruits, &#39;\&quot;&quot;|\&q
 writeLines(vFruits)</code></pre>
 <pre><code>## c(&quot;bell pepper&quot;, &quot;bilberry&quot;, &quot;blackberry&quot;, &quot;blood orange&quot;, &quot;blueberry&quot;, &quot;cantaloupe&quot;, &quot;chili pepper&quot;, &quot;cloudberry&quot;, &quot;elderberry&quot;, &quot;lime&quot;, &quot;lychee&quot;, &quot;mulberry&quot;, &quot;olive&quot;, &quot;salal berry&quot;)</code></pre>
 </div>
-<div id="exercise-3." class="section level2">
-<h2>Exercise 3.</h2>
+<div id="exercise-3." class="section level3">
+<h3>Exercise 3.</h3>
 <p>Describe, in words, what these expressions will match:</p>
+<pre class="r"><code>words &lt;- c(&quot;house\1\1&quot;, &quot;better&quot;, &quot;Everest&quot;, &quot;reviver&quot;, &quot;remain&quot;, &quot;lesser&quot;, &quot;parallel&quot;, &quot;eleven&quot;, &quot;Yay!!!&quot;, &quot;reread&quot;, &quot;bookkeeper&quot;)</code></pre>
 <ol style="list-style-type: lower-alpha">
-<li>“(.)\1\1” - This will match sequences with \1\1 but it will read the slashes as escape characters. If properly escaped, this will match a 3 character sequence in which each character is the same.<br />
+<li>(.)\1\1 - This will match sequences with \1\1 but it will read the slashes as escape characters. If properly escaped, this will match a 3 character sequence in which each character is the same.<br />
 </li>
+</ol>
+<pre class="r"><code>a&lt;-stringr::str_view(words, &quot;(.)\1\1&quot;, match = TRUE) #Not properly escaped
+a</code></pre>
+<div id="htmlwidget-6e5c7fb3645491d84ab7" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-6e5c7fb3645491d84ab7">{"x":{"html":"<ul>\n  <li>hous<span class='match'>e\u0001\u0001<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>a1&lt;-stringr::str_view(words, &quot;(.)\\1\\1&quot;, match = TRUE) 
+a1</code></pre>
+<div id="htmlwidget-a6c1bcb4d7f8db037b89" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a6c1bcb4d7f8db037b89">{"x":{"html":"<ul>\n  <li>Yay<span class='match'>!!!<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<ol start="2" style="list-style-type: lower-alpha">
 <li>(.)(.)\2\1 - This will match a sequence which is a four character palindrome.<br />
 </li>
+</ol>
+<pre class="r"><code>b&lt;-stringr::str_view(words, &quot;(.)(.)\\2\\1&quot;, match = TRUE)
+b</code></pre>
+<div id="htmlwidget-86d5615d6586608966eb" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-86d5615d6586608966eb">{"x":{"html":"<ul>\n  <li>b<span class='match'>ette<\/span>r<\/li>\n  <li>l<span class='match'>esse<\/span>r<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<ol start="3" style="list-style-type: lower-alpha">
 <li>(..)\1 - This will match sequences with \1 after two characters but it will read the slash as an escape character. If properly escaped, this will match a four character sequence in which a pair of characters is repeated.<br />
 </li>
+</ol>
+<pre class="r"><code>c&lt;-stringr::str_view(words, &quot;(..)\1&quot;, match = TRUE) #Not properly escaped
+c</code></pre>
+<div id="htmlwidget-29abae4a4c66f79fddff" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-29abae4a4c66f79fddff">{"x":{"html":"<ul>\n  <li>hou<span class='match'>se\u0001<\/span>\u0001<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>c1&lt;-stringr::str_view(words, &quot;(..)\\1&quot;, match = TRUE)
+c1</code></pre>
+<div id="htmlwidget-29d0f8f400e6a21c69be" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-29d0f8f400e6a21c69be">{"x":{"html":"<ul>\n  <li><span class='match'>rere<\/span>ad<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<ol start="4" style="list-style-type: lower-alpha">
 <li>(.).\1.\1 - This will match a five character sequence in which the first, third and fifth character are the same.<br />
 </li>
+</ol>
+<pre class="r"><code>d&lt;-stringr::str_view(words, &quot;(.).\\1.\\1&quot;, match = TRUE)
+d</code></pre>
+<div id="htmlwidget-ec0aa4debcddfffd07cf" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ec0aa4debcddfffd07cf">{"x":{"html":"<ul>\n  <li><span class='match'>eleve<\/span>n<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<ol start="5" style="list-style-type: lower-alpha">
 <li>(.)(.)(.).*\3\2\1 - This will match a character sequence of 6 or more in which the last three characters are a reverse of the first three.</li>
 </ol>
-<pre class="r"><code>words &lt;- c(&quot;abcdefbca&quot;, &quot;remembmerabba&quot;, &quot;eleven\1\1&quot;, &quot;church&quot;, &quot;Missojh;ougovssippi&quot;)
-x&lt;-stringr::str_view(words, &quot;(.)(.)(.).*\\3\\2\\1&quot;, match = TRUE)
-x</code></pre>
-<div id="htmlwidget-2bdf53e86b4abbc68e7a" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-2bdf53e86b4abbc68e7a">{"x":{"html":"<ul>\n  <li><span class='match'>remembmer<\/span>abba<\/li>\n  <li>M<span class='match'>issojh;ougovssi<\/span>ppi<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>e&lt;-stringr::str_view(words, &quot;(.)(.)(.).*\\3\\2\\1&quot;, match = TRUE)
+e</code></pre>
+<div id="htmlwidget-01bc31affb53ba0dd19f" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-01bc31affb53ba0dd19f">{"x":{"html":"<ul>\n  <li><span class='match'>reviver<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 </div>
-<div id="exercise-4." class="section level2">
-<h2>Exercise 4.</h2>
+<div id="exercise-4." class="section level3">
+<h3>Exercise 4.</h3>
+<pre class="r"><code>words &lt;- c(&quot;demented&quot;, &quot;edified&quot;, &quot;medicalization&quot;, &quot;meelee&quot;, &quot;perjurer&quot;, &quot;parallel&quot;, &quot;eleven&quot;, &quot;reread&quot;, &quot;bookkeeper&quot;)</code></pre>
 <p>Construct regular expressions to match words that:</p>
 <ol style="list-style-type: lower-alpha">
-<li><p>Start and end with the same character. ^(.).*\1$</p></li>
-<li><p>Contain a repeated pair of letters (e.g. “church” contains “ch” repeated twice.) (.)(.).*\1\2</p></li>
-<li><p>Contain one letter repeated in at least three places (e.g. “eleven” contains three “e”s.) (.).<em>\1.</em>\1</p></li>
+<li><p>Start and end with the same character.</p>
+<p>^(.).*\1$</p></li>
 </ol>
-<pre class="r"><code>words &lt;- c(&quot;abcdefba&quot;, &quot;remebmerabbar&quot;, &quot;elevn\1\1&quot;, &quot;churcch&quot;, &quot;Missojh;ougovsippi&quot;)
-x&lt;-stringr::str_view(words, &quot;(.).*\\1.*\\1&quot;, match = TRUE)
-x</code></pre>
-<div id="htmlwidget-a9f0385bb34181d226f7" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a9f0385bb34181d226f7">{"x":{"html":"<ul>\n  <li><span class='match'>remebmerabbar<\/span><\/li>\n  <li><span class='match'>churcc<\/span>h<\/li>\n  <li>M<span class='match'>issojh;ougovsippi<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>a&lt;-stringr::str_view(words, &quot;^(.).*\\1$&quot;, match = TRUE)
+a</code></pre>
+<div id="htmlwidget-2b1d85fb69b9bbb061de" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2b1d85fb69b9bbb061de">{"x":{"html":"<ul>\n  <li><span class='match'>demented<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<ol start="2" style="list-style-type: lower-alpha">
+<li><p>Contain a repeated pair of letters (e.g. “church” contains “ch” repeated twice.)</p>
+<p>(.)(.).*\1\2</p></li>
+</ol>
+<pre class="r"><code>b&lt;-stringr::str_view(words, &quot;(.)(.).*\\1\\2&quot;, match = TRUE)
+b</code></pre>
+<div id="htmlwidget-b7c7f57b4dac12a3b1f6" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b7c7f57b4dac12a3b1f6">{"x":{"html":"<ul>\n  <li><span class='match'>edified<\/span><\/li>\n  <li>m<span class='match'>eelee<\/span><\/li>\n  <li>p<span class='match'>erjurer<\/span><\/li>\n  <li><span class='match'>rere<\/span>ad<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<ol start="3" style="list-style-type: lower-alpha">
+<li><p>Contain one letter repeated in at least three places (e.g. “eleven” contains three “e”s.)</p>
+<p>(.).<em>\1.</em>\1</p></li>
+</ol>
+<pre class="r"><code>c&lt;-stringr::str_view(words, &quot;(.).*\\1.*\\1&quot;, match = TRUE)
+c</code></pre>
+<div id="htmlwidget-10535b04a40d3dd8064b" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-10535b04a40d3dd8064b">{"x":{"html":"<ul>\n  <li>d<span class='match'>emente<\/span>d<\/li>\n  <li>med<span class='match'>icalizati<\/span>on<\/li>\n  <li>m<span class='match'>eelee<\/span><\/li>\n  <li>pe<span class='match'>rjurer<\/span><\/li>\n  <li>para<span class='match'>llel<\/span><\/li>\n  <li><span class='match'>eleve<\/span>n<\/li>\n  <li>bookk<span class='match'>eepe<\/span>r<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+</div>
 </div>
 
 

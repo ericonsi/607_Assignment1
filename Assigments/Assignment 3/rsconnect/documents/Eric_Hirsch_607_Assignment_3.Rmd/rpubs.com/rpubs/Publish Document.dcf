@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/725341/8bb43870d8cb4de99f96c5cabe52305c
+bundleId: https://api.rpubs.com/api/v1/document/725341/8bb43870d8cb4de99f96c5cabe52305c
+url: http://rpubs.com/ericonsi/725341
+when: 1613257328.32353

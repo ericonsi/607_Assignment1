@@ -34,7 +34,7 @@ x
         
 
 ```
-## Excercise 2.
+### Excercise 2.
 
 Write code that transforms the data below:
 
@@ -63,38 +63,85 @@ vFruits<-str_c("c(",str_replace_all(vFruits, '\""|\" "', '\", "'),")")
 writeLines(vFruits)
 
 ```
-## Exercise 3.
+### Exercise 3.
 
 Describe, in words, what these expressions will match:
 
-a. (.)\1\1 - This will match sequences with \1\1 but it will read the slashes as escape characters. If properly escaped, this will match a 3 character sequence in which each character is the same.\
-b. (.)(.)\\2\\1 - This will match a sequence which is a four character palindrome.\
-c. (..)\1 - This will match sequences with \1 after two characters but it will read the slash as an escape character.  If properly escaped, this will match a four character sequence in which a pair of characters is repeated.\
-d. (.).\\1.\\1 - This will match a five character sequence in which the first, third and fifth character are the same.\
-e. (.)(.)(.).*\\3\\2\\1 - This will match a character sequence of 6 or more in which the last three characters are a reverse of the first three.
-
-```{r}
-words <- c("abcdefbca", "remembmerabba", "eleven\1\1", "church", "Missojh;ougovssippi")
-x<-stringr::str_view(words, "(.)(.)(.).*\\3\\2\\1", match = TRUE)
-x
+```{r words}
+words <- c("house\1\1", "better", "Everest", "reviver", "remain", "lesser", "parallel", "eleven", "Yay!!!", "reread", "bookkeeper")
 ```
 
-## Exercise 4.
+
+a. (.)\1\1 - This will match sequences with \1\1 but it will read the slashes as escape characters. If properly escaped, this will match a 3 character sequence in which each character is the same.\
+```{r a}
+a<-stringr::str_view(words, "(.)\1\1", match = TRUE) #Not properly escaped
+a
+a1<-stringr::str_view(words, "(.)\\1\\1", match = TRUE) 
+a1
+```
+
+b. (.)(.)\\2\\1 - This will match a sequence which is a four character palindrome.\
+
+```{r b}
+b<-stringr::str_view(words, "(.)(.)\\2\\1", match = TRUE)
+b
+```
+
+c. (..)\1 - This will match sequences with \1 after two characters but it will read the slash as an escape character.  If properly escaped, this will match a four character sequence in which a pair of characters is repeated.\
+
+```{r c}
+c<-stringr::str_view(words, "(..)\1", match = TRUE) #Not properly escaped
+c
+c1<-stringr::str_view(words, "(..)\\1", match = TRUE)
+c1
+
+```
+
+d. (.).\\1.\\1 - This will match a five character sequence in which the first, third and fifth character are the same.\
+```{r d}
+
+d<-stringr::str_view(words, "(.).\\1.\\1", match = TRUE)
+d
+
+```
+
+e. (.)(.)(.).*\\3\\2\\1 - This will match a character sequence of 6 or more in which the last three characters are a reverse of the first three.
+```{r e}
+e<-stringr::str_view(words, "(.)(.)(.).*\\3\\2\\1", match = TRUE)
+e
+```
+
+### Exercise 4.
+
+```{r words 2}
+words <- c("demented", "edified", "medicalization", "meelee", "perjurer", "parallel", "eleven", "reread", "bookkeeper")
+```
 
 Construct regular expressions to match words that:
 
 a. Start and end with the same character.
+
     ^(.).*\\1$
 
+```{r}
+a<-stringr::str_view(words, "^(.).*\\1$", match = TRUE)
+a
+```
+    
 b. Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.) 
+
     (.)(.).*\\1\\2
-
-c. Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
-    (.).*\\1.*\\1
-
-```{r 2}
-words <- c("abcdefba", "remebmerabbar", "elevn\1\1", "churcch", "Missojh;ougovsippi")
-x<-stringr::str_view(words, "(.).*\\1.*\\1", match = TRUE)
-x
+```{r}
+b<-stringr::str_view(words, "(.)(.).*\\1\\2", match = TRUE)
+b
 ```
 
+
+c. Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+
+    (.).*\\1.*\\1
+
+```{r}
+c<-stringr::str_view(words, "(.).*\\1.*\\1", match = TRUE)
+c
+```
