@@ -20,6 +20,9 @@ There are a number of ways to use SQL directly in R.  SQL is extremely useful fo
 
 ### Creating the Connection
 
+
+*[This update to the document was made on 2/14/20, before homework is due but after submission.  This code relies on ODBC being installed on the host computer. ODBC is already installed on Windows. However, I was not aware that it may not be if you have a mac.  Microsoft provides this documentation for how to install ODBC to connect to SQL Server on a mac:  https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver15]*
+
 We are connecting to a SQL database on Azure called EHtmp.The database will consist of two tables: Friends, a parent table with the name, age and gender of some friends and MovieRatings, a child table containing movie names and friend ratings on a scale of 1 to 5. Here we create the connection with RODBC.
 
 This is the code - however, I am hiding the block so that the password doesn't appear:
@@ -40,7 +43,18 @@ This is the code - however, I am hiding the block so that the password doesn't a
 
 
 ```{r echo=FALSE}
-#Connection String (see file in folder) goes here
+#Connection String goes here
+# install.packages ("RODBC") - install RODNC if not already installed
+library(RODBC)
+
+dbConnection <- odbcDriverConnect('Driver={ODBC Driver 13 for SQL Server};
+                                  Server=xxx;
+                                  Database=xxx;
+                                  Uid=xxx;
+                                  Pwd=xxx;
+                                  Encrypt=yes;
+                                  TrustServerCertificate=no;
+                                  Connection Timeout=30;')
 ```
 
 Now we load the table data from two CSV files that are on github.
@@ -54,10 +68,23 @@ dfMovieRatings <- read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/
 
 Now we create and fill the two tables - Friends and MovieRatings. Because Friends is a parent table and MovieRatings a child table, MovieRatings contains FriendID as a foreign key. 
 
-RODBC makes it easy to create and populate the tables in the DB with the sqlSave command.  We don't even need to use the CREATE TABLE command.
+RODBC makes it easy to create and populate the tables in the DB with the sqlSave command.  We don't even need to use the CREATE TABLE command.  (BTW, if we needed to create the table ourselves we can still do it - this command would do the trick: 
+
+              sqlQuery(dbConnection,"
+                    CREATE TABLE Friends
+                    (
+                    	FriendID int,
+                    	LastName nvarchar(30),
+                    	FirstName nvarchar(30),
+                    	Age int,
+                    	Gender nvarchar(30),
+                      CONSTRAINT PK_Friends PRIMARY KEY
+                      (FriendID ASC)
+                    )")
 
 ```{r create and populate tables}
-DropFriendsTable <- (sqlQuery(dbConnection, "DROP TABLE IF EXISTS Friends"))
+
+FriendsTable <- (sqlQuery(dbConnection, "DROP TABLE IF EXISTS Friends"))
 DropMovieRatingsTable <- (sqlQuery(dbConnection, "DROP TABLE IF EXISTS MovieRatings"))
   
 PopulateFriendsTable <- (sqlSave(dbConnection, dfFriends, "Friends", append=TRUE))
