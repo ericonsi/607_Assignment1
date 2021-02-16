@@ -22,6 +22,8 @@ library(magrittr)
 
 In this project we will convert a text file into a usable dataframe.  The file has extra characters and other issues which need to be resolved before it can be useful.  The exercise will show the many ways that R can help us clean a messy text file.
 
+This is the file - it shows results from a chess match and some player statistics.  Our goal is to end with a file that has 5 columns: Name, State, Points, pre-chess rating and average rating of opponents.
+
 ``` {r load data}
 dfChess <- as.data.frame(read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%201/Chess.txt", header = FALSE, stringsAsFactors = FALSE, sep = "|"))
 head(dfChess)
@@ -86,8 +88,9 @@ dfChessOpponentAvg <- dfChessMerged %>%
 
 dfChessOpponentAvg[] <- lapply(dfChessOpponentAvg, function(x) as.numeric(gsub(".*?([0-9]+).*", "\\1", x)))
 dfChessOpponentAvg[is.na(dfChessOpponentAvg)] <- 0
+head(dfChessOpponentAvg)
 ```
-2. Now we are going to substitute each player's ID in the matrix with their rating. That way we can easily sum and average the opponents' ratings across the player's row. We do this with a custom function (which accepts the player's identification number and returns their rating), and map_dfr from the purrr library.  We loop through the dataframe, and as we do, we also collect the total non-zero cells in each row (.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don't want map_dfr to loop over this column as well.
+2. Now in place of all of the player IDs, we are going to put the player's rating. That way we can easily sum and average the opponents' ratings across the player's row. We do this with a custom function (which accepts the player's identification number and returns their rating), and map_dfr from the purrr library.  We loop through the dataframe, and as we do, we also collect the total number of non-zero cells in each row (i.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don't want map_dfr to loop over this column as well.
 
 ```{r}
 
@@ -111,7 +114,7 @@ for(i in 1:nrow(dfC))
 head(dfC)
 ```
 
-3. Now all we need to do is sum up the rows, divide by the number of games, and write that to the final table.  We are done!
+3. Now all we need to do is sum up the rows, divide by the number of games, write that to the final table and output it to a csv file.  We are done!
 
 ```{r}
 dfChessOpponentAvg$row_sum = rowSums(dfC[,])
@@ -119,7 +122,7 @@ dfChessFinal$AvgRatingOfOpps = dfChessOpponentAvg$row_sum/dfChessOpponentAvg$V10
 
 dfChessFinal
 
-write.csv(dfChessFinal, "d:\\RStudio\\CUNY_607\\x.csv") 
+write.csv(dfChessFinal, "d:\\RStudio\\CUNY_607\\ChessFinal.csv") 
 ```
 ### Conclusion
 

@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2021-02-13" />
+<meta name="date" content="2021-02-16" />
 
 <title>Eric_Hirsch_607_Assignment_2</title>
 
@@ -411,7 +411,7 @@ summary {
 
 
 <h1 class="title toc-ignore">Eric_Hirsch_607_Assignment_2</h1>
-<h4 class="date">2021-02-13</h4>
+<h4 class="date">2021-02-16</h4>
 
 </div>
 
@@ -426,6 +426,7 @@ library(magrittr)</code></pre>
 <div id="introduction" class="section level4">
 <h4>Introduction</h4>
 <p>In this project we will convert a text file into a usable dataframe. The file has extra characters and other issues which need to be resolved before it can be useful. The exercise will show the many ways that R can help us clean a messy text file.</p>
+<p>This is the file - it shows results from a chess match and some player statistics. Our goal is to end with a file that has 5 columns: Name, State, Points, pre-chess rating and average rating of opponents.</p>
 <pre class="r"><code>dfChess &lt;- as.data.frame(read.delim(&quot;https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%201/Chess.txt&quot;, header = FALSE, stringsAsFactors = FALSE, sep = &quot;|&quot;))
 head(dfChess)</code></pre>
 <pre><code>##                                                                                          V1
@@ -494,8 +495,8 @@ head(dfChessFinal)</code></pre>
 ## 5          HANSHI ZUO    MI    5.5           1655
 ## 6         HANSEN SONG    OH    5.0           1686</code></pre>
 </div>
-<div id="creating-the-opponents-pre-chess-rating" class="section level4">
-<h4>Creating the Opponent’s Pre-Chess Rating</h4>
+<div id="creating-the-opponents-average-pre-chess-rating" class="section level4">
+<h4>Creating the Opponent’s Average Pre-Chess Rating</h4>
 <p>We have also been tasked with calculating and displaying the average of the opponent’s pre-chess ratings for each player (the total ratings divided by the number of games.) We will do this by creating a matrix which will hold the opponent rating for each player for each round. This will simplify the task of calculating the average.</p>
 <ol style="list-style-type: decimal">
 <li>We begin by creating a dataframe which will hold the rating and opponent ID for each round for each player. We will need to extract the number out of the round column, as this represents the opponent’s ID. We use lapply and the gsub function (which uses a regular expression to find the first sequence of digits within the string), and then we convert the NAs (which occur in the rounds where there was no game) to 0.</li>
@@ -518,9 +519,17 @@ dfChessOpponentAvg[] &lt;- lapply(dfChessOpponentAvg, function(x) as.numeric(gsu
 ## Warning in FUN(X[[i]], ...): NAs introduced by coercion
 
 ## Warning in FUN(X[[i]], ...): NAs introduced by coercion</code></pre>
-<pre class="r"><code>dfChessOpponentAvg[is.na(dfChessOpponentAvg)] &lt;- 0</code></pre>
+<pre class="r"><code>dfChessOpponentAvg[is.na(dfChessOpponentAvg)] &lt;- 0
+head(dfChessOpponentAvg)</code></pre>
+<pre><code>##   ID PreChessRating V4.x V5.x V6.x V7.x V8.x V9.x V10.x
+## 1  1           1794   39   21   18   14    7   12     4
+## 2  2           1553   63   58    4   17   16   20     7
+## 3  3           1384    8   61   25   21   11   13    12
+## 4  4           1716   23   28    2   26    5   19     1
+## 5  5           1655   45   37   12   13    4   14    17
+## 6  6           1686   34   29   11   35   10   27    21</code></pre>
 <ol start="2" style="list-style-type: decimal">
-<li>Now we are going to substitute each player’s ID in the matrix with their rating. That way we can easily sum and average the opponents’ ratings across the player’s row. We do this with a custom function (which accepts the player’s identification number and returns their rating), and map_dfr from the purrr library. We loop through the dataframe, and as we do, we also collect the total non-zero cells in each row (.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don’t want map_dfr to loop over this column as well.</li>
+<li>Now in place of all of the player IDs, we are going to put the player’s rating. That way we can easily sum and average the opponents’ ratings across the player’s row. We do this with a custom function (which accepts the player’s identification number and returns their rating), and map_dfr from the purrr library. We loop through the dataframe, and as we do, we also collect the total number of non-zero cells in each row (i.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don’t want map_dfr to loop over this column as well.</li>
 </ol>
 <pre class="r"><code>ConvertPlayerIDToRating&lt;-function(playerID)
   {
@@ -548,7 +557,7 @@ head(dfC)</code></pre>
 ## 5 1242  980 1663 1666 1716 1610  1629
 ## 6 1399 1602 1712 1438 1365 1552  1563</code></pre>
 <ol start="3" style="list-style-type: decimal">
-<li>Now all we need to do is sum up the rows, divide by the number of games, and write that to the final table. We are done!</li>
+<li>Now all we need to do is sum up the rows, divide by the number of games, write that to the final table and output it to a csv file. We are done!</li>
 </ol>
 <pre class="r"><code>dfChessOpponentAvg$row_sum = rowSums(dfC[,])
 dfChessFinal$AvgRatingOfOpps = dfChessOpponentAvg$row_sum/dfChessOpponentAvg$V10
@@ -619,7 +628,7 @@ dfChessFinal</code></pre>
 ## 62              ASHWIN BALAJI    MI    1.0           1530        1186.000
 ## 63       THOMAS JOSEPH HOSMER    MI    1.0           1175        1350.200
 ## 64                     BEN LI    MI    1.0           1163        1263.000</code></pre>
-<pre class="r"><code>write.csv(dfChessFinal, &quot;d:\\RStudio\\CUNY_607\\x.csv&quot;) </code></pre>
+<pre class="r"><code>write.csv(dfChessFinal, &quot;d:\\RStudio\\CUNY_607\\ChessFinal.csv&quot;) </code></pre>
 </div>
 <div id="conclusion" class="section level3">
 <h3>Conclusion</h3>
