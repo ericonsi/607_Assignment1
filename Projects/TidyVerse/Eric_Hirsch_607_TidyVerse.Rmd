@@ -1,8 +1,8 @@
-zz---
+---
 title: "Eric_Hirsch_607_TidyVerse"
 author: "Eric Hirsch"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:  html_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
