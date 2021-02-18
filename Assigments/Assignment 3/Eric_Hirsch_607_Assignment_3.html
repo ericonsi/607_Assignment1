@@ -1345,7 +1345,7 @@ summary {
 
 <h1 class="title toc-ignore">Eric_Hirsch_Assignment_3</h1>
 <h4 class="author">Eric Hirsch</h4>
-<h4 class="date">2/11/2021</h4>
+<h4 class="date">2/18/2021</h4>
 
 </div>
 
@@ -1358,6 +1358,7 @@ library(dplyr)
 library(stringr)</code></pre>
 <div id="homework-3-working-with-strings" class="section level2">
 <h2>Homework 3: Working with Strings</h2>
+<p>Below are exercises related to the stringr packagae, which allow us to work easily and effectively with strings</p>
 <div id="excercise-1." class="section level3">
 <h3>Excercise 1.</h3>
 <p>Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [<a href="https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/" class="uri">https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/</a>], provide code that identifies the majors that contain either “DATA” or “STATISTICS”</p>
@@ -1401,47 +1402,47 @@ writeLines(vFruits)</code></pre>
 </ol>
 <pre class="r"><code>a&lt;-stringr::str_view(words, &quot;(.)\1\1&quot;, match = TRUE) #Not properly escaped
 a</code></pre>
-<div id="htmlwidget-47876b3f2848228f2d4b" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-47876b3f2848228f2d4b">{"x":{"html":"<ul>\n  <li>hous<span class='match'>e\u0001\u0001<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5674037794c457cdc4aa" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5674037794c457cdc4aa">{"x":{"html":"<ul>\n  <li>hous<span class='match'>e\u0001\u0001<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <pre class="r"><code>a1&lt;-stringr::str_view(words, &quot;(.)\\1\\1&quot;, match = TRUE) 
 a1</code></pre>
-<div id="htmlwidget-a80e8f06eb66b8b45909" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a80e8f06eb66b8b45909">{"x":{"html":"<ul>\n  <li>Yay<span class='match'>!!!<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-3542c7796d8b15af52e2" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3542c7796d8b15af52e2">{"x":{"html":"<ul>\n  <li>Yay<span class='match'>!!!<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <ol start="2" style="list-style-type: lower-alpha">
 <li>(.)(.)\2\1 - This will match a sequence which is a four character palindrome.<br />
 </li>
 </ol>
 <pre class="r"><code>b&lt;-stringr::str_view(words, &quot;(.)(.)\\2\\1&quot;, match = TRUE)
 b</code></pre>
-<div id="htmlwidget-39dcbcfb20575da2066f" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-39dcbcfb20575da2066f">{"x":{"html":"<ul>\n  <li>b<span class='match'>ette<\/span>r<\/li>\n  <li>l<span class='match'>esse<\/span>r<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-ac2f38894af2b348d83a" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ac2f38894af2b348d83a">{"x":{"html":"<ul>\n  <li>b<span class='match'>ette<\/span>r<\/li>\n  <li>l<span class='match'>esse<\/span>r<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <ol start="3" style="list-style-type: lower-alpha">
 <li>(..)\1 - This will match sequences with \1 after two characters but it will read the slash as an escape character. If properly escaped, this will match a four character sequence in which a pair of characters is repeated.<br />
 </li>
 </ol>
 <pre class="r"><code>c&lt;-stringr::str_view(words, &quot;(..)\1&quot;, match = TRUE) #Not properly escaped
 c</code></pre>
-<div id="htmlwidget-258fa071d535530cab80" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-258fa071d535530cab80">{"x":{"html":"<ul>\n  <li>hou<span class='match'>se\u0001<\/span>\u0001<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-7bab1f2de74f80d466a4" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-7bab1f2de74f80d466a4">{"x":{"html":"<ul>\n  <li>hou<span class='match'>se\u0001<\/span>\u0001<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <pre class="r"><code>c1&lt;-stringr::str_view(words, &quot;(..)\\1&quot;, match = TRUE)
 c1</code></pre>
-<div id="htmlwidget-ebda273c71aab2be7fe1" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-ebda273c71aab2be7fe1">{"x":{"html":"<ul>\n  <li><span class='match'>rere<\/span>ad<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-2698b35df203e3494e13" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2698b35df203e3494e13">{"x":{"html":"<ul>\n  <li><span class='match'>rere<\/span>ad<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <ol start="4" style="list-style-type: lower-alpha">
 <li>(.).\1.\1 - This will match a five character sequence in which the first, third and fifth character are the same.<br />
 </li>
 </ol>
 <pre class="r"><code>d&lt;-stringr::str_view(words, &quot;(.).\\1.\\1&quot;, match = TRUE)
 d</code></pre>
-<div id="htmlwidget-42785b2a94e401350219" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-42785b2a94e401350219">{"x":{"html":"<ul>\n  <li><span class='match'>eleve<\/span>n<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-4af419833c51957d0fa1" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4af419833c51957d0fa1">{"x":{"html":"<ul>\n  <li><span class='match'>eleve<\/span>n<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <ol start="5" style="list-style-type: lower-alpha">
 <li>(.)(.)(.).*\3\2\1 - This will match a character sequence of 6 or more in which the last three characters are a reverse of the first three.</li>
 </ol>
 <pre class="r"><code>e&lt;-stringr::str_view(words, &quot;(.)(.)(.).*\\3\\2\\1&quot;, match = TRUE)
 e</code></pre>
-<div id="htmlwidget-a2232d0ef88c6198a58b" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a2232d0ef88c6198a58b">{"x":{"html":"<ul>\n  <li><span class='match'>reviver<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-96328ca6c85be6f083f1" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-96328ca6c85be6f083f1">{"x":{"html":"<ul>\n  <li><span class='match'>reviver<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="exercise-4." class="section level3">
 <h3>Exercise 4.</h3>
@@ -1453,25 +1454,66 @@ e</code></pre>
 </ol>
 <pre class="r"><code>a&lt;-stringr::str_view(words, &quot;^(.).*\\1$&quot;, match = TRUE)
 a</code></pre>
-<div id="htmlwidget-567ecb4f93340bac3849" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-567ecb4f93340bac3849">{"x":{"html":"<ul>\n  <li><span class='match'>demented<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-01d7480b3e9868b3be8f" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-01d7480b3e9868b3be8f">{"x":{"html":"<ul>\n  <li><span class='match'>demented<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <ol start="2" style="list-style-type: lower-alpha">
 <li><p>Contain a repeated pair of letters (e.g. “church” contains “ch” repeated twice.)</p>
 <p>(.)(.).*\1\2</p></li>
 </ol>
 <pre class="r"><code>b&lt;-stringr::str_view(words, &quot;(.)(.).*\\1\\2&quot;, match = TRUE)
 b</code></pre>
-<div id="htmlwidget-5f1a3d9d0e42fb8b522e" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-5f1a3d9d0e42fb8b522e">{"x":{"html":"<ul>\n  <li><span class='match'>edified<\/span><\/li>\n  <li>m<span class='match'>eelee<\/span><\/li>\n  <li>p<span class='match'>erjurer<\/span><\/li>\n  <li><span class='match'>rere<\/span>ad<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-619dcc50d6b0a10b3c30" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-619dcc50d6b0a10b3c30">{"x":{"html":"<ul>\n  <li><span class='match'>edified<\/span><\/li>\n  <li>m<span class='match'>eelee<\/span><\/li>\n  <li>p<span class='match'>erjurer<\/span><\/li>\n  <li><span class='match'>rere<\/span>ad<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 <ol start="3" style="list-style-type: lower-alpha">
 <li><p>Contain one letter repeated in at least three places (e.g. “eleven” contains three “e”s.)</p>
 <p>(.).<em>\1.</em>\1</p></li>
 </ol>
 <pre class="r"><code>c&lt;-stringr::str_view(words, &quot;(.).*\\1.*\\1&quot;, match = TRUE)
 c</code></pre>
-<div id="htmlwidget-4fcf4981f141e52b643b" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-4fcf4981f141e52b643b">{"x":{"html":"<ul>\n  <li>d<span class='match'>emente<\/span>d<\/li>\n  <li>med<span class='match'>icalizati<\/span>on<\/li>\n  <li>m<span class='match'>eelee<\/span><\/li>\n  <li>pe<span class='match'>rjurer<\/span><\/li>\n  <li>para<span class='match'>llel<\/span><\/li>\n  <li><span class='match'>eleve<\/span>n<\/li>\n  <li>bookk<span class='match'>eepe<\/span>r<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-084071603d2fc53d099a" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-084071603d2fc53d099a">{"x":{"html":"<ul>\n  <li>d<span class='match'>emente<\/span>d<\/li>\n  <li>med<span class='match'>icalizati<\/span>on<\/li>\n  <li>m<span class='match'>eelee<\/span><\/li>\n  <li>pe<span class='match'>rjurer<\/span><\/li>\n  <li>para<span class='match'>llel<\/span><\/li>\n  <li><span class='match'>eleve<\/span>n<\/li>\n  <li>bookk<span class='match'>eepe<\/span>r<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 </div>
+<div id="other-useful-things-you-can-do-with-stringr-that-i-have-found" class="section level3">
+<h3>Other useful things you can do with stringr that I have found</h3>
+<ol style="list-style-type: decimal">
+<li>Trim whitespace</li>
+</ol>
+<pre class="r"><code>string = &quot;             Please read carefully the following paragraph from wikipedia about the impending robot uprising:            &quot;
+s_trimmed &lt;- str_trim(string)
+s_trimmed</code></pre>
+<pre><code>## [1] &quot;Please read carefully the following paragraph from wikipedia about the impending robot uprising:&quot;</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Wrap strings into nice paragraphs</li>
+</ol>
+<pre class="r"><code>string2 &lt;- &quot;An AI takeover is a hypothetical scenario in which artificial intelligence (AI) becomes the dominant form of intelligence on Earth, with computer programs or robots effectively taking the control of the planet away from the human species. Possible scenarios include replacement of the entire human workforce, takeover by a superintelligent AI, and the popular notion of a robot uprising.  -Wikipedia&quot;
+
+s_paragraph &lt;- cat(str_wrap(string2, width = 60, indent = 10, exdent= 5), &quot;\n&quot;)</code></pre>
+<pre><code>##           An AI takeover is a hypothetical scenario in which
+##      artificial intelligence (AI) becomes the dominant form
+##      of intelligence on Earth, with computer programs or
+##      robots effectively taking the control of the planet
+##      away from the human species. Possible scenarios include
+##      replacement of the entire human workforce, takeover
+##      by a superintelligent AI, and the popular notion of a
+##      robot uprising. -Wikipedia</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Repeat a string several times</li>
+</ol>
+<pre class="r"><code>string3 = &quot;  The robot uprising is upon us! Help!!  &quot;
+str_dup(string3, times=6)</code></pre>
+<pre><code>## [1] &quot;  The robot uprising is upon us! Help!!    The robot uprising is upon us! Help!!    The robot uprising is upon us! Help!!    The robot uprising is upon us! Help!!    The robot uprising is upon us! Help!!    The robot uprising is upon us! Help!!  &quot;</code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>Here are the techniques used all together</li>
+</ol>
+<pre class="r"><code>string3 &lt;-str_trim(cat(str_wrap( str_dup(string3, times=3), width = 44, indent = 5, exdent= 5), &quot;\n&quot;))</code></pre>
+<pre><code>##      The robot uprising is upon us! Help!!
+##      The robot uprising is upon us! Help!!
+##      The robot uprising is upon us! Help!!</code></pre>
+</div>
+</div>
+<div id="final-thoughts" class="section level2">
+<h2>Final thoughts</h2>
+<p>Stringr is a handy way to do a lot with little code.</p>
 </div>
 
 

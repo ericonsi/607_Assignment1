@@ -1,7 +1,7 @@
 ---
 title: "Eric_Hirsch_Assignment_3"
 author: "Eric Hirsch"
-date: "2/11/2021"
+date: "2/18/2021"
 output: html_document
 ---
 
@@ -20,6 +20,8 @@ library(stringr)
 ```
 
 ## Homework 3: Working with Strings
+
+Below are exercises related to the stringr packagae, which allow us to work easily and effectively with strings
 
 ### Excercise 1. 
 
@@ -145,3 +147,39 @@ c. Contain one letter repeated in at least three places (e.g. "eleven" contains 
 c<-stringr::str_view(words, "(.).*\\1.*\\1", match = TRUE)
 c
 ```
+
+### Other useful things you can do with stringr that I have found
+
+1. Trim whitespace
+
+```{r trim}
+string = "             Please read carefully the following paragraph from wikipedia about the impending robot uprising:            "
+s_trimmed <- str_trim(string)
+s_trimmed
+```
+
+2. Wrap strings into nice paragraphs
+
+```{r wrap}
+string2 <- "An AI takeover is a hypothetical scenario in which artificial intelligence (AI) becomes the dominant form of intelligence on Earth, with computer programs or robots effectively taking the control of the planet away from the human species. Possible scenarios include replacement of the entire human workforce, takeover by a superintelligent AI, and the popular notion of a robot uprising.  -Wikipedia"
+
+s_paragraph <- cat(str_wrap(string2, width = 60, indent = 10, exdent= 5), "\n")
+```
+
+3. Repeat a string several times
+```{r}
+string3 = "  The robot uprising is upon us! Help!!  "
+str_dup(string3, times=6)
+```
+
+4. Here are the techniques used all together
+
+```{r}
+string3 <-str_trim(cat(str_wrap( str_dup(string3, times=3), width = 44, indent = 5, exdent= 5), "\n"))
+```
+
+## Final thoughts
+
+Stringr is a handy way to do a lot with little code.
+
+
