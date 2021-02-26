@@ -14,6 +14,7 @@ library(tinytex)
 library(tidyverse)
 library(stringr)
 library(magrittr)
+library(gridExtra)
 ```
 
 ## Working with Text Files
@@ -26,6 +27,8 @@ This is the file - it shows results from a chess match and some player statistic
 
 ``` {r load data}
 dfChess <- as.data.frame(read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%201/Chess.txt", header = FALSE, stringsAsFactors = FALSE, sep = "|"))
+
+
 head(dfChess)
 ```
 #### Eliminating What We Don't Want and Extracting What We Do
@@ -90,7 +93,9 @@ dfChessOpponentAvg[] <- lapply(dfChessOpponentAvg, function(x) as.numeric(gsub("
 dfChessOpponentAvg[is.na(dfChessOpponentAvg)] <- 0
 head(dfChessOpponentAvg)
 ```
-2. Now in place of all of the player IDs, we are going to put the player's rating. That way we can easily sum and average the opponents' ratings across the player's row. We do this with a custom function (which accepts the player's identification number and returns their rating), and map_dfr from the purrr library.  We loop through the dataframe, and as we do, we also collect the total number of non-zero cells in each row (i.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don't want map_dfr to loop over this column as well.
+2. Now in place of all of the player IDs, we are going to put the player's rating. That way we can easily sum and average the opponents' ratings across the player's row. 
+
+In Java or C# we might need to do something complicated with a loop and a function here, but in R we can easily use a few simple commands to make this substitution over the entire matrx. Probably. In any case, as a newcomer to R I didn't manage to figure that out.  However, in R there are many ways to get to the same destination, so here is my function (which accepts the player's identification number and returns their rating), and my loop (with map_dfr from the purrr library.)  We loop through the dataframe, and as we do, we also collect the total number of non-zero cells in each row (i.e., the total number of games). We need to create a second dataframe for this exercise, since we are adding a column inside the loop and don't want map_dfr to loop over this column as well.
 
 ```{r}
 
@@ -114,7 +119,7 @@ for(i in 1:nrow(dfC))
 head(dfC)
 ```
 
-3. Now all we need to do is sum up the rows, divide by the number of games, write that to the final table and output it to a csv file.  We are done!
+3. Now all we need to do is sum up the rows, divide by the number of games, write that to the final table and output it to a csv file. But there is more we can do! 
 
 ```{r}
 dfChessOpponentAvg$row_sum = rowSums(dfC[,])
@@ -124,9 +129,55 @@ dfChessFinal
 
 write.csv(dfChessFinal, "d:\\RStudio\\CUNY_607\\ChessFinal.csv") 
 ```
+
+4. The opponent player matrix is a handy tool which we can use in other ways as well.  For example, we could use it to collect numbers of wins by player.  Here, for each round we are going to put a 1 if they won the round and a zero otherwise.
+
+
+```{r jh}
+
+dfChessWorL <- dfChessMerged %>% 
+          subset(select = c("V4.x", "V5.x", "V6.x", "V7.x", "V8.x", "V9.x", "V10.x" )) 
+
+
+for(i in 1:nrow(dfC)) 
+  { 
+      dfChessWorL[i,] <- as.numeric(str_detect(dfChessWorL[i,], "W"))
+      
+  }
+
+      dfChessWorL <- as.data.frame(apply(dfChessWorL, 2, as.numeric))  # Convert all variable types to numeric
+      dfChessWorL$NumOfWins = rowSums(dfChessWorL[,])
+      
+      dfChessFinal$NumOfWins = dfChessWorL$NumOfWins
+      
+head(dfChessWorL)
+```
+We assume that the best players are being paired with each other. It might be interesting to see if this is effectively evens the playing field.  If so, we would expect to see numbers of wins relatively evenly distributed among players.  Here we plot the number of wins against strength of opponents using boxplots:
+
+```{r  dd}
+
+EHplot <- function(i)
+  
+{
+  a <- dfChessFinal %>%
+  filter(NumOfWins==i)
+
+g1 <- ggplot(data = a, aes(x ="", y=AvgRatingOfOpps )) +
+  geom_boxplot() + ggtitle(str_c("Number of Wins: ", i))
+return(g1)
+
+}
+
+grid.arrange(EHplot(1), EHplot(2), EHplot(3), EHplot(4), EHplot(5), EHplot(6), ncol=3)
+
+
+```
+
+There are a number of interesting findings here. First, as strength of opponents increases, the number of wins also increases.  This counterintuitive finding may suggest that the best players are being paired with the other good players, but they are nonetheless dominating them.  We can also see some outliers.  For example, on the one-win boxplot we see Ethan G, a low ranked player who faced some of the strongest opponents. At the time same time we see Michael M only score 1 win against some of the easiest opponents.
+
 ### Conclusion
 
-R has many tools for cleaning up messy files.  We used stringr, purrr, dyplr and other libraries to accomplish this task.  As an absolute beginner to R I'm confident there are more robust solutions than mine - but it is encouraging to know how much can be done with so few lines of code!
+R has many tools for cleaning up messy files.  We used stringr, purrr, dyplr and other libraries to accomplish this task.  As a beginner to R I'm confident there are more robust solutions than mine - but it is encouraging to know how much can be done with so few lines of code!
 
 
 
