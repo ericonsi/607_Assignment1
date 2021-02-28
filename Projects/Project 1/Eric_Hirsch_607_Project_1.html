@@ -561,7 +561,7 @@ head(dfC)</code></pre>
 ## 5 1242  980 1663 1666 1716 1610  1629
 ## 6 1399 1602 1712 1438 1365 1552  1563</code></pre>
 <ol start="3" style="list-style-type: decimal">
-<li>Now all we need to do is sum up the rows, divide by the number of games, write that to the final table and output it to a csv file. We are done!</li>
+<li>Now all we need to do is sum up the rows, divide by the number of games, write that to the final table and output it to a csv file (we push this to the github file at <a href="https://github.com/ericonsi/CUNY_607/blob/main/ChessFinal.csv" class="uri">https://github.com/ericonsi/CUNY_607/blob/main/ChessFinal.csv</a>) But there is more we can do!</li>
 </ol>
 <pre class="r"><code>dfChessOpponentAvg$row_sum = rowSums(dfC[,])
 dfChessFinal$AvgRatingOfOpps = dfChessOpponentAvg$row_sum/dfChessOpponentAvg$V10
@@ -634,7 +634,7 @@ dfChessFinal</code></pre>
 ## 64                     BEN LI    MI    1.0           1163        1263.000</code></pre>
 <pre class="r"><code>write.csv(dfChessFinal, &quot;d:\\RStudio\\CUNY_607\\ChessFinal.csv&quot;) </code></pre>
 <ol start="4" style="list-style-type: decimal">
-<li>The opponent player matrix is a handy tool which we can use in other ways as well. For example, we could use it to collect numbers of wins by player. Here, for each round we are going to put a 1 if they won the round and a zero otherwise.</li>
+<li>The opponent player matrix is a handy tool which we can use in other ways as well. For example, we could use it to collect numbers of wins by player (unlike the “points” category which includes .5 points for a draw). Here, for each round we are going to put a 1 if they won the round and a zero otherwise.</li>
 </ol>
 <pre class="r"><code>dfChessWorL &lt;- dfChessMerged %&gt;% 
           subset(select = c(&quot;V4.x&quot;, &quot;V5.x&quot;, &quot;V6.x&quot;, &quot;V7.x&quot;, &quot;V8.x&quot;, &quot;V9.x&quot;, &quot;V10.x&quot; )) 
@@ -659,7 +659,7 @@ head(dfChessWorL)</code></pre>
 ## 4    1    0    1    1    0    1     0         4
 ## 5    1    1    0    0    0    1     1         4
 ## 6    1    0    0    1    0    1     1         4</code></pre>
-<p>We assume that the best players are being paired with each other. It might be interesting to see if this is effectively evens the playing field. If so, we would expect to see numbers of wins relatively evenly distributed among players. Here we plot the number of wins against strength of opponents using boxplots:</p>
+<p>We assume that the best players are being paired with each other. It might be interesting to see if this effectively evens the playing field. If so, we might expect to see number of wins relatively evenly distributed among players. Here we plot the number of wins against strength of opponents using boxplots:</p>
 <pre class="r"><code>EHplot &lt;- function(i)
   
 {
