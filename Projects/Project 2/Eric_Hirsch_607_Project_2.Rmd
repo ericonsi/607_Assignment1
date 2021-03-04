@@ -1,5 +1,5 @@
 ---
-title: "Eric_Hirsch_607_Project_2"
+title: "Eric_Hirsch_607_Assignment_5"
 author: "Eric Hirsch"
 date: "`r Sys.Date()`"
 output: html_document
@@ -24,13 +24,13 @@ library(gridExtra)
 
 In this project we will transform a csv file into a usable dataframe using TidyR and Dyplr. After the transformation we will conduct some analyses.
 
-Loading the data:
+We load the data ... 
 
 ``` {r load data}
 dfFlights_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/Flights.csv", header = TRUE, stringsAsFactors = TRUE, sep=","))
 ```
 
-We will also eliminate the unneccesary row and change some column names:
+... eliminate the unnecessary rows, and change some column names:
 
 ```{r bvkf}
 dfFlights <- dfFlights_raw %>% 
@@ -43,110 +43,134 @@ head(dfFlights)
 
 
   
-1. We use TidyR to normalize the table
+Now we use TidyR to normalize the table - this is an extremely powerful library that does a lot in a couple lines ...
 
 ```{r agfd}
 
 dfFlights %<>%
   gather("Los.Angeles", "Phoenix", "San.Diego", "San.Francisco", "Seattle", key="City", value="NumOfFlights") %<>%
   fill(Airline)
-  #spread(Status, "NumOfFlights")
-
 ```
 
-2. Now we can analyse the data.
+... and that's all it takes!
 
+## Analysis of Delays
 
-``` {r plot average by fiter}
+Now we can analyse the airlines delays.  We start by getting a look at the median and spread of delays for each airline.  We can also look at the delay percentage by city (delays over total flights) which might be more meaningful:
 
-EH_PlotAverageNumberOfFlights<- function(df, groupBy, title, reorder=TRUE)
-{
-
-  xx <- df %>% 
-  group_by_(groupBy) %>% 
-  summarize(ave_NumOfFlights=mean(NumOfFlights), n=n()) %>%
-  mutate(tmp = fct_reorder(.[[groupBy]], ave_NumOfFlights)) %>%
-  mutate(labelx = str_c(round(ave_NumOfFlights, digits=2), "  (", n, ")"))
-  
-  if(!reorder) {xx$tmp = as.character(xx$tmp)}
-  
-g <- ggplot(xx, aes_string(x = "tmp", y = "ave_NumOfFlights")) + 
-  geom_col(position = position_dodge(), width=.8, color = "#261d11", fill = "#912742") + 
-  xlab(groupBy) + 
-  ylab("Average Number of Flights") +
-  ggtitle(title) +
-  coord_flip() +
-  ylim(0,5) +
-  geom_text(aes(label = labelx), size = 3 , hjust = -.3)
-
-return(g)
-}
-```
-
-```{r dg}
-
-EH_PlotAverageScore_2<- function(df, groupBy1, groupBy2, title="")
-{
-  group <- c(groupBy1,groupBy2) 
-  
-xqx <- df %>% 
-  group_by_(.dots = group) %>% 
-  summarize(ave_Flights=mean(NumOfFlights), n=n())
-
-g <- ggplot(xqx, aes_string(x = groupBy1, y = "ave_Flights", group=groupBy2, fill=groupBy2)) + 
-  geom_col(position = position_dodge(), width=.8, color = "black") + 
-  xlab(groupBy1) + ylab("Average Number of Flights") +
-  ggtitle(title) +  
-  coord_flip() +
-  scale_fill_brewer(palette="Spectral") +
-  theme(legend.position="bottom")
-
-return(g)
-
-}
-```
-```{r pol}
-EH_PlotAverageScore_2(dfFlights, "Airline", "Status")
-EH_PlotAverageScore_2(dfFlights, "City", "Status")
-EH_PlotAverageNumberOfFlights(dfFlights, "City", "By City")
-
-ggplot(dfFlights, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge())
-
-ggplot(dfFlights, aes(x=Airline, y=NumOfFlights, group=Status, fill=Status)) +
-  geom_col(position = position_dodge())
-
-
-  
-xqx <- dfFlights %>% 
+```{r boxplots}
+dfSummaryStats <- dfFlights %>% 
   group_by(Airline, City) %>% 
-  summarize(ave_Flights=mean(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights))
-
-ggplot(xqx, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge())
-
-ggplot(xqx, aes(x=City, y=propOfDelay)) +
-  geom_boxplot()
-
-asd <- dfFlights %>%
+  summarize(ave_Flights=mean(NumOfFlights), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
+             
+dfDelaysOnly <- dfFlights %>%
   filter(Status=="delayed")
 
-ggplot(asd, aes(x=NumOfFlights)) +
-  geom_histogram()
+dfDelaysOnly_Amwest <- dfDelaysOnly %>%
+  filter(Airline=="AMWEST")
 
+dfDelaysOnly_Alaska <- dfDelaysOnly %>%
+  filter(Status=="ALASKA[")
+
+dfPercentDiff <- dfSummaryStats %>%
+  select(Airline, City, propOfDelay) %>%
+  group_by(City) %>%
+  summarize(propDiff=propOfDelay[Airline=="AMWEST"] - propOfDelay[Airline=="ALASKA"])
+  
+
+g1 <- ggplot(dfDelaysOnly, aes(x=Airline, y=NumOfFlights)) +
+  geom_boxplot() +
+  ggtitle("Total Delays By Airline")
+
+g2 <- ggplot(dfSummaryStats, aes(x=Airline, y=propOfDelay)) +
+  geom_boxplot() +
+  ggtitle("Percentage Delays By Airline By City")
+
+grid.arrange (g1, g2, ncol=2)
+  
+```
+
+Amwest has a higher median total delayed flights and a higher median percentage of delays per city. Might this be due to an outlier city which is skewing the results?  Apparently not, as this bar chart shows.
+
+```{r bar}
+
+g3<-ggplot(dfDelaysOnly, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
+  geom_col(position = position_dodge()) +
+  ggtitle("Number of Delays By Airline By City") +
+  theme(axis.text.x = element_text(angle = 90))
+
+
+g4<-ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) +
+  geom_col(position = position_dodge()) +
+  ggtitle("% of Delays By Airline By City") +
+  theme(axis.text.x = element_text(angle = 90))
+
+
+grid.arrange (g3, g4, ncol=2)
+```
+
+Amwest has a higher % of delays for every city.  
+
+So is there anything in the data that might explain this (besides incompetence, priority or some other reason internal to Amwest?  One difference might be the level of traffic - maybe the larger (or smaller) an airline is, the higher its delay percentage is.  
+
+These graphs display the percentage of delays by total flights for each airline.  The second one has two outliers removed:
+
+```{r size}
+
+g4<-ggplot(dfSummaryStats, aes(x=sum_Flights, y=propOfDelay)) +
+  geom_point() +
+  ggtitle("% of Delays By Total Flights") 
+
+
+dfSummaryStats_OutliersRemoved <- dfSummaryStats %>%
+  filter(sum_Flights<2000)
+
+g5<-ggplot(dfSummaryStats_OutliersRemoved, aes(x=sum_Flights, y=propOfDelay)) +
+  geom_point() +
+  ggtitle("% of Delays By Total Flights _ outliers removed") 
+
+grid.arrange(g4, g5, ncol=2)
+```
+
+```{r regression}
+
+lmHeight = lm(sum_Flights~propOfDelay, data = dfSummaryStats_OutliersRemoved) #Create the linear regression
+summary(lmHeight) #Review the results
 
 
 ```
 
+Neither of the graphs nor the regression analysis suggest that % of delays is correlated with number of flights.  
 
-EH_PlotAverageScore_2<- function(df, groupBy1, groupBy2, title)
-{
+Perhaps it's something more sinister.  Is it possible there is some kind of favoritism going on among airport staff and crew?  There is no easy way to measure that directly, but as an albeit weak proxy we observe that Phoenix appears to be some kind of hub for Amwest and Seattle a hub for Alaska:
 
-There are a number of interesting findings here. First, as strength of opponents increases, the number of wins also increases.  This counterintuitive finding may suggest that the best players are being paired with the other good players, but they are nonetheless dominating them.  We can also see some outliers.  For example, on the one-win boxplot we see Ethan G, a low ranked player who faced some of the strongest opponents. At the time same time we see Michael M only score 1 win against some of the easiest opponents.
+```{r traffic}
+
+g3<-ggplot(dfFlights, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
+  geom_col(position = position_dodge()) +
+  ggtitle("Number of Flights By Airline By City") +
+  theme(axis.text.x = element_text(angle = 90))
+g3
+```
+
+While Amwest has a higher percentage of delays across the board, is the gap between Amwest's and Alaska's delay percentages lowest in Phoenix and highest in Seattle?  This might suggest that where Amwest is most prominent they get favored treatment by the airport, and where Alaska is most prominent Amwest gets the least favored treatment.
+
+
+This barchart shows the difference in the % delays between the two airlines, by city.  
+
+```{r diff 2}
+
+g2<-ggplot(dfPercentDiff, aes(x=City, y=propDiff)) +
+  geom_col(position = position_dodge()) +
+  ggtitle("Diff in % of Delays By City") +
+  theme(axis.text.x = element_text(angle = 90))
+g2
+
+```
+
+
+Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seattle, but the biggest difference is in San Francisco where they have MORE total flights than Alaska.  Could it be the weather? Amwest does worst in the Northern cities - but at this point there is too little data to determine.  Besides, blaming it on the weather, while we have all done it, is hardly a viable excuse.
 
 ### Conclusion
 
-R has many tools for cleaning up messy files.  We used stringr, purrr, dyplr and other libraries to accomplish this task.  As a beginner to R I'm confident there are more robust solutions than mine - but it is encouraging to know how much can be done with so few lines of code!
-
-
-
+Amwest filed for bankruptcy in the early ninieties and eventually was swallowed up by US Air. This is a prophetic story.  Had they employed data scientists who could have shown them the above charts they may have still existed to this day.
