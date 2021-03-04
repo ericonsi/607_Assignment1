@@ -56,13 +56,17 @@ dfFlights %<>%
 
 ## Analysis of Delays
 
-Now we can analyse the airlines delays.  We start by getting a look at the median and spread of delays for each airline.  We can also look at the delay percentage by city (delays over total flights) which might be more meaningful:
+Now we can analyse the airlines delays.  We start with the mean delay percentage (flights delayed over total flights) for each airline.  Amwest appears to have a better track record than Alaska.
 
-```{r boxplots}
+```{r dfs}
 dfSummaryStats <- dfFlights %>% 
   group_by(Airline, City) %>% 
-  summarize(ave_Flights=mean(NumOfFlights), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
-             
+  summarize(sum_DelayedFlights=sum(NumOfFlights[Status=="delayed"]), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
+
+dfSummaryStats2 <- dfFlights %>% 
+  group_by(Airline) %>% 
+  summarize(sum_DelayedFlights=sum(NumOfFlights[Status=="delayed"]), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
+
 dfDelaysOnly <- dfFlights %>%
   filter(Status=="delayed")
 
@@ -76,21 +80,18 @@ dfPercentDiff <- dfSummaryStats %>%
   select(Airline, City, propOfDelay) %>%
   group_by(City) %>%
   summarize(propDiff=propOfDelay[Airline=="AMWEST"] - propOfDelay[Airline=="ALASKA"])
-  
 
-g1 <- ggplot(dfDelaysOnly, aes(x=Airline, y=NumOfFlights)) +
-  geom_boxplot() +
-  ggtitle("Total Delays By Airline")
+```
+Here are the numbers showing proportion of delayed flights per airline:
 
-g2 <- ggplot(dfSummaryStats, aes(x=Airline, y=propOfDelay)) +
-  geom_boxplot() +
-  ggtitle("Percentage Delays By Airline By City")
+```{r mean}
 
-grid.arrange (g1, g2, ncol=2)
-  
+print(dfSummaryStats2)
+
 ```
 
-Amwest has a higher median total delayed flights and a higher median percentage of delays per city. Might this be due to an outlier city which is skewing the results?  Apparently not, as this bar chart shows.
+However, when we look at the percentage of delayed flights by city, Alaska is the clear winner, beating Amwest in every city:.
+
 
 ```{r bar}
 
@@ -107,11 +108,19 @@ g4<-ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airlin
 
 
 grid.arrange (g3, g4, ncol=2)
+
 ```
 
-Amwest has a higher % of delays for every city.  
+How is this possible?
 
-So is there anything in the data that might explain this (besides incompetence, priority or some other reason internal to Amwest?  One difference might be the level of traffic - maybe the larger (or smaller) an airline is, the higher its delay percentage is.  
+If we look at the distribution of delay % by city, we can see that although Alaska beats Amwest when they are head to head in a city, in fact some of the % delays for Amwest are lower than some of those for Alaska. And Amwest's delay percentage is at its lowest in a city that has a highly disproportionate number of Amwest flights (Phoenix). This is going to bring the overall mean % of Amwest's delays way down:
+
+```{r paradox}
+print(dfSummaryStats)
+```
+
+
+Is there anything in the data that might explain Amwest's poorer per city performance relative to Alaska's (besides incompetence, priority or some other reason internal to Amwest)? There is not much data to work with, but one difference might be the level of traffic - maybe the larger (or smaller) an airline is, the higher its delay percentage is.  
 
 These graphs display the percentage of delays by total flights for each airline.  The second one has two outliers removed:
 
@@ -140,7 +149,7 @@ summary(lmHeight) #Review the results
 
 ```
 
-Neither of the graphs nor the regression analysis suggest that % of delays is correlated with number of flights.  
+Neither of the graphs nor the regression analysis that follows suggest that % of delays is correlated with number of flights.  
 
 Perhaps it's something more sinister.  Is it possible there is some kind of favoritism going on among airport staff and crew?  There is no easy way to measure that directly, but as an albeit weak proxy we observe that Phoenix appears to be some kind of hub for Amwest and Seattle a hub for Alaska:
 
@@ -169,7 +178,9 @@ g2
 ```
 
 
-Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seattle, but the biggest difference is in San Francisco where they have MORE total flights than Alaska.  Could it be the weather? Amwest does worst in the Northern cities - but at this point there is too little data to determine.  Besides, blaming it on the weather, while we have all done it, is hardly a viable excuse.
+Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seattle.  However, the biggest difference between the two is in San Francisco where Amwest has MORE total flights than Alaska. 
+
+Perhaps it is the weather. Amwest does worst in the Northern cities - but at this point there is too little data to determine anything more than anecdotal.  Besides, blaming it on the weather, while we have all done it, is hardly a viable excuse.
 
 ### Conclusion
 
