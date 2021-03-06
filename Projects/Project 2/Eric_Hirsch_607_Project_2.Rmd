@@ -1,5 +1,5 @@
 ---
-title: "Eric_Hirsch_607_Assignment_5"
+title: "Eric_Hirsch_607_Project_2"
 author: "Eric Hirsch"
 date: "`r Sys.Date()`"
 output: html_document
@@ -28,7 +28,8 @@ In this project we will transform a csv file into a usable dataframe using TidyR
 First we load the data: 
 
 ``` {r load data}
-dfBLS_raw <- read_excel("D:\\RStudio\\CUNY_607\\Projects\\Project 2\\bls-2015.xlsx", "cpsaat17")
+dfBLS_raw <- read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-2020.csv", sep=",")
+
 ```
 A. Headers are no good
 B. How to separate out the demographic sections
@@ -39,7 +40,7 @@ C. Need to create "other" for race
 ```{r drop totals column}
 
 dfBLS <- dfBLS_raw %>%
-  select(-"...2")
+  select(-"X")
 ```
 
 2. Add the year
@@ -52,21 +53,23 @@ dfBLS %<>%
 
 3. Fix the column names
   a. Get a vector for the column names from the row tht contains them
-  b. Clean the column names by replacing the hyphens
+  b. Clean the column names by replacing the hyphens and paragraph breaks, taking out 'occupations', etc.
   c. rename the columns using the vector
 
 ```{r columns}
 
 vColumnNames <- as.character(dfBLS %>%
   filter(row_number() %in% 5) %>%
-  select(-starts_with("House") & -"Year"))
+  select(-contains("Household") & -"Year"))
 
 vColumnNames = str_replace_all(vColumnNames, "[\r\n]", " ")
-vColumnNames = str_replace_all(vColumnNames, "-  ", "")
+vColumnNames = str_replace_all(vColumnNames, "-   ", "")
+vColumnNames = str_replace_all(vColumnNames, "- ", "")
+vColumnNames = str_replace_all(vColumnNames, "  ", "")
 vColumnNames = str_replace_all(vColumnNames, " occupations", "")
 
 dfBLS %<>%
-  rename(Industry = starts_with("House"), !!vColumnNames[1] := ...3, !!vColumnNames[2] := ...4, !!vColumnNames[3] := ...5, !!vColumnNames[4] := ...6, !!vColumnNames[5] := ...7, !!vColumnNames[6] := ...8, !!vColumnNames[7] := ...9, !!vColumnNames[8] := ...10, !!vColumnNames[9] := ...11, !!vColumnNames[10] := ...12, !!vColumnNames[11] := ...13)
+  rename(Industry = contains("Household"), !!vColumnNames[1] := X.1, !!vColumnNames[2] := X.2, !!vColumnNames[3] := X.3, !!vColumnNames[4] := X.4, !!vColumnNames[5] := X.5, !!vColumnNames[6] := X.6, !!vColumnNames[7] := X.7, !!vColumnNames[8] := X.8, !!vColumnNames[9] := X.9, !!vColumnNames[10] := X.10, !!vColumnNames[11] := X.11)
 ```
 
 4. Extract the data into the 5 demographic units (female, male, Black, white and asian)
@@ -82,17 +85,20 @@ dfBLS %<>%
 
 DemographicUnit <- function(df, rowStart, rowEnd, demoCategory, demoContent)
 {
+  
 dfNew <- df %>% 
   filter(row_number() %in% rowStart:rowEnd) %>%
   mutate(!!demoCategory := demoContent) %>%
   filter(Industry !="Manufacturing" & Industry !="Wholesale and retail trade" & Industry !="Other services") %>%
-  gather(vColumnNames,  key="Occupation", value="NumberEmployed") %>%
-    mutate_at(vars(NumberEmployed), list(as.numeric)) %>%
+  gather(vColumnNames,  key="Occupation", value="NumberEmployed")
+
+  dfNew$NumberEmployed = str_replace_all(dfNew$NumberEmployed, ",", "")
+  dfNew <- mutate_at(dfNew, vars(NumberEmployed), list(as.integer)) %>%
   mutate(RowID = row_number())
 
-dfNew$Industry = str_replace_all(dfNew$Industry, "Durable goods", "Manufacturing, durable goods")
-dfNew$Industry = str_replace_all(dfNew$Industry, "Nondurable goods", "Manufacturing, nondurable goods")
-dfNew$Industry = str_replace_all(dfNew$Industry, "Private households", "Other services, private households only")
+  dfNew$Industry = str_replace_all(dfNew$Industry, "Durable goods", "Manufacturing, durable goods")
+  dfNew$Industry = str_replace_all(dfNew$Industry, "Nondurable goods", "Manufacturing, nondurable goods")
+  dfNew$Industry = str_replace_all(dfNew$Industry, "Private households", "Other services, private households only")
 
 return (dfNew)
 }
@@ -113,7 +119,6 @@ dfRace <- rbind(dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
 dfGender <- rbind(dfBLS_Women, dfBLS_Men)
 
 ```
-
 
 6. Create the "Other Race" unit within the race dataframe by comparing the three race units to the total
   a. spread the dataframe using TidyR so each race is a column
@@ -147,10 +152,20 @@ g3
 ```
 ```{r}
 
-dfInfo=dfGender %>%
-  filter(Industry=="Information" & NumberEmployed>100)
+dfInfoGender=dfGender %>%
+  filter(Industry=="Information") %>%
+  group_by(Occupation) %>%
+    summarize(n=n(), percentEmployed = sum(NumberEmployed/n))
+  
 dfInfoRace=dfRace %>%
-  filter(Industry=="Information" & NumberEmployed>100)
+  filter(Industry=="Information")
+
+
+  g5<-ggplot(dfInfoGender, aes(x=Occupation, y=percentEmployed, group=Gender, fill=Gender)) +
+  geom_col(position = position_dodge()) +
+  ggtitle("Percent Employed in Information by Gender") +
+    coord_flip()
+g5
 
   g3<-ggplot(dfInfo, aes(x=Occupation, y=NumberEmployed, group=Gender, fill=Gender)) +
   geom_col(position = position_dodge()) +
@@ -161,126 +176,8 @@ g3
     g4<-ggplot(dfInfoRace, aes(x=Occupation, y=NumberEmployed, group=Race, fill=Race)) +
   geom_col(position = position_dodge()) +
   ggtitle("Number Employed in Information by Race") +
-  theme(axis.text.x = element_text(angle = 90)) 
+  theme(axis.text.x = element_text(angle = 90))  +
+      coord_flip()
 g4
 ```
 
-
-Now we can analyse the airlines delays.  We start by getting a look at the median and spread of delays for each airline.  We can also look at the delay percentage by city (delays over total flights) which might be more meaningful:
-
-```{r boxplots}
-dfSummaryStats <- dfFlights %>% 
-  group_by(Airline, City) %>% 
-  summarize(ave_Flights=mean(NumOfFlights), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
-             
-dfDelaysOnly <- dfFlights %>%
-  filter(Status=="delayed")
-
-dfDelaysOnly_Amwest <- dfDelaysOnly %>%
-  filter(Airline=="AMWEST")
-
-dfDelaysOnly_Alaska <- dfDelaysOnly %>%
-  filter(Status=="ALASKA[")
-
-dfPercentDiff <- dfSummaryStats %>%
-  select(Airline, City, propOfDelay) %>%
-  group_by(City) %>%
-  summarize(propDiff=propOfDelay[Airline=="AMWEST"] - propOfDelay[Airline=="ALASKA"])
-  
-
-g1 <- ggplot(dfDelaysOnly, aes(x=Airline, y=NumOfFlights)) +
-  geom_boxplot() +
-  ggtitle("Total Delays By Airline")
-
-g2 <- ggplot(dfSummaryStats, aes(x=Airline, y=propOfDelay)) +
-  geom_boxplot() +
-  ggtitle("Percentage Delays By Airline By City")
-
-grid.arrange (g1, g2, ncol=2)
-  
-```
-
-Amwest has a higher median total delayed flights and a higher median percentage of delays per city. Might this be due to an outlier city which is skewing the results?  Apparently not, as this bar chart shows.
-
-```{r bar}
-
-g3<-ggplot(dfDelaysOnly, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Number of Delays By Airline By City") +
-  theme(axis.text.x = element_text(angle = 90))
-
-
-g4<-ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("% of Delays By Airline By City") +
-  theme(axis.text.x = element_text(angle = 90))
-
-
-grid.arrange (g3, g4, ncol=2)
-```
-
-Amwest has a higher % of delays for every city.  
-
-So is there anything in the data that might explain this (besides incompetence, priority or some other reason internal to Amwest?  One difference might be the level of traffic - maybe the larger (or smaller) an airline is, the higher its delay percentage is.  
-
-These graphs display the percentage of delays by total flights for each airline.  The second one has two outliers removed:
-
-```{r size}
-
-g4<-ggplot(dfSummaryStats, aes(x=sum_Flights, y=propOfDelay)) +
-  geom_point() +
-  ggtitle("% of Delays By Total Flights") 
-
-
-dfSummaryStats_OutliersRemoved <- dfSummaryStats %>%
-  filter(sum_Flights<2000)
-
-g5<-ggplot(dfSummaryStats_OutliersRemoved, aes(x=sum_Flights, y=propOfDelay)) +
-  geom_point() +
-  ggtitle("% of Delays By Total Flights _ outliers removed") 
-
-grid.arrange(g4, g5, ncol=2)
-```
-
-```{r regression}
-
-lmHeight = lm(sum_Flights~propOfDelay, data = dfSummaryStats_OutliersRemoved) #Create the linear regression
-summary(lmHeight) #Review the results
-
-
-```
-
-Neither of the graphs nor the regression analysis suggest that % of delays is correlated with number of flights.  
-
-Perhaps it's something more sinister.  Is it possible there is some kind of favoritism going on among airport staff and crew?  There is no easy way to measure that directly, but as an albeit weak proxy we observe that Phoenix appears to be some kind of hub for Amwest and Seattle a hub for Alaska:
-
-```{r traffic}
-
-g3<-ggplot(dfFlights, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Number of Flights By Airline By City") +
-  theme(axis.text.x = element_text(angle = 90))
-g3
-```
-
-While Amwest has a higher percentage of delays across the board, is the gap between Amwest's and Alaska's delay percentages lowest in Phoenix and highest in Seattle?  This might suggest that where Amwest is most prominent they get favored treatment by the airport, and where Alaska is most prominent Amwest gets the least favored treatment.
-
-
-This barchart shows the difference in the % delays between the two airlines, by city.  
-
-```{r diff 2}
-
-g2<-ggplot(dfPercentDiff, aes(x=City, y=propDiff)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Diff in % of Delays By City") +
-  theme(axis.text.x = element_text(angle = 90))
-g2
-
-```
-
-
-Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seattle, but the biggest difference is in San Francisco where they have MORE total flights than Alaska.  Could it be the weather? Amwest does worst in the Northern cities - but at this point there is too little data to determine.  Besides, blaming it on the weather, while we have all done it, is hardly a viable excuse.
-
-### Conclusion
-
-Amwest filed for bankruptcy in the early ninieties and eventually was swallowed up by US Air. This is a prophetic story.  Had they employed data scientists who could have shown them the above charts they might have survived to this day.
