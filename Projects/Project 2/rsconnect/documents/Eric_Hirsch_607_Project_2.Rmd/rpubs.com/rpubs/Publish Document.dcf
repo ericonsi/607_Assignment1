@@ -6,5 +6,5 @@ server: rpubs.com
 hostUrl: rpubs.com
 appId: https://api.rpubs.com/api/v1/document/735964/80807f96898f46b9a7660e9f3a154c33
 bundleId: https://api.rpubs.com/api/v1/document/735964/80807f96898f46b9a7660e9f3a154c33
-url: http://rpubs.com/publish/claim/735964/65cdb5f5d3b940258ee3bfc388ff105d
-when: 1615255300.658
+url: http://rpubs.com/ericonsi/735964
+when: 1615304957.07196

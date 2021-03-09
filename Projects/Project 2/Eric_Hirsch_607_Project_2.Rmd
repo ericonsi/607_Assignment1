@@ -236,15 +236,8 @@ dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
 
 ## Analysis
 
-```{r analysis1}
-g3<-ggplot(dfGender, aes(x=Industry, y=NumberEmployed, group=Gender, fill=Gender)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Number Employed by Industry and Gender") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  coord_flip()
-g3
+Some analysis here ... 
 
-```
 ```{r analysis2}
 
 dfInfoGender=dfGenderFinal %>%
@@ -255,7 +248,7 @@ dfInfoGender=dfGenderFinal %>%
 dfInfoRace=dfRace %>%
   filter(Industry=="Information")
 
-g <- ggplot(dfInfoGender, aes(x = Occupation, y = percentFemale, group=Year, fill=Year)) + 
+g <- ggplot(dfInfoGender, aes(x = reorder(Occupation, percentFemale), y = percentFemale, group=Year, fill=Year)) + 
   geom_col(position = position_dodge(), width=.8, color = "black") + 
   xlab("Occupation") + ylab("Percent Women Employed") +
   ggtitle("Percentage of Women Employed, All Industries") +  
@@ -264,12 +257,5 @@ g <- ggplot(dfInfoGender, aes(x = Occupation, y = percentFemale, group=Year, fil
   theme(legend.position="bottom")
 g
 
- 
-    g4<-ggplot(dfInfoRace, aes(x=Occupation, y=NumberEmployed, group=Race, fill=Race)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Number Employed in Information by Race") +
-  theme(axis.text.x = element_text(angle = 90))  +
-      coord_flip()
-g4
 ```
 
