@@ -19,83 +19,101 @@ library(gridExtra)
 library(readxl)
 ```
 
-## Using TidyR and Dyplr for Data Transformation
+# Tidying Three Datasets
 
-#### Introduction 
+## Introduction 
 
-In this project we will transform a csv file into a usable dataframe using TidyR and Dyplr. After the transformation we will conduct some analyses.
+In this project we will tidy three datasets using TidyR and Dyplr and other handy R tools. After the transformation we will conduct some analyses. This is a joint project with Cassie Coste and Dan Sullivan.  We each cleaned a data set and then showed each other what our challenges were and how we overcame them. This first data set was the data set that I tidied.
 
-First we load the data: 
+### Dataset 1: Bureau of Labor Statistics Data
+
+*Description of the dataset:*
+
+  The data consists of six CSV files from the Bureau of Labor Statistics showing numbers of Americans involved in various occupations and industries, spanning the years 2015 through 2020.  Each file is in the same format. The data set is “wide” – occupations run horizontally and industries run vertically.  
+
+*Challenges with the data set:*
+ 
+  1.	The data set needs to be converted from wide to long, and needs to include a year column and a demographic column.
+  2.	The industries which run vertically are repeated six times  - for two genders, three races, and a total.  Because race and gender are treated separately, they will need to be collected together into two different data frames.
+  3.	The race categories do not add up to the total because they don’t comprise all of the possible races. Therefore an “other race” category will need to calculated and then created.
+  4.	The occupations do not appear at the top of the raw data (they appear in the fifth row), which means they need to be extracted and inserted as column headings for the data set.  There are a number of issues with these column headings - for example, they are too long, and they include the insertion of dashes and carriage returns which will need to be removed.
+  5.	Some of the rows are summary rows and will need to be removed. In some cases, remaining rows will need to be renamed as they don’t make sense standing alone without the summary row.
+  6.	All of the years of the data set need to be appended to the two data frames (gender and race)
+
+
+### Tidying The Dataset
+
+1. First the data is read into a data frame: 
 
 ``` {r load data}
 dfBLS_raw <- read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-2020.csv", sep=",")
 
 ```
-A. Headers are no good
-B. How to separate out the demographic sections
-C. Need to create "other" for race
+2. Next, we drop any columns we don't need and add any columns we do.  In this case there is one of each:
 
-1. Drop the totals column
+  a. Drop the Totals column
+  b. Add the Year column
 
-```{r drop totals column}
+```{r drop totals column and add year}
 
 dfBLS <- dfBLS_raw %>%
-  select(-"X")
-```
-
-2. Add the year
-
-```{r add year}
-
-dfBLS %<>%
+  select(-"X") %>%
   mutate(Year = "2015") 
 ```
 
-3. Fix the column names
-  a. Get a vector for the column names from the row tht contains them
-  b. Clean the column names by replacing the hyphens and paragraph breaks, taking out 'occupations', etc.
-  c. rename the columns using the vector
+3. Now we need to fix the column names (the column names should be the occupations, but they are not because the occupations were not at the top of the file.)  We will need to extract the column names into a vector, clean the names of any extraneous characters and other issues, and use the vector to rename the dataframe columns:
+
+  a. Get a vector for the column names from the row that contains them
+  b. Clean the column names by replacing the hyphens and paragraph breaks, taking out unneeded words like 'occupations', etc.
+  c. Rename the columns using the vector
 
 ```{r columns}
 
+#Extract the names
 vColumnNames <- as.character(dfBLS %>%
   filter(row_number() %in% 5) %>%
   select(-contains("Household") & -"Year"))
 
+#Clean the names
 vColumnNames = str_replace_all(vColumnNames, "[\r\n]", " ")
 vColumnNames = str_replace_all(vColumnNames, "-   ", "")
 vColumnNames = str_replace_all(vColumnNames, "- ", "")
 vColumnNames = str_replace_all(vColumnNames, "  ", "")
 vColumnNames = str_replace_all(vColumnNames, " occupations", "")
 
+#Replace the dataframe names with the extracted names
 dfBLS %<>%
   rename(Industry = contains("Household"), !!vColumnNames[1] := X.1, !!vColumnNames[2] := X.2, !!vColumnNames[3] := X.3, !!vColumnNames[4] := X.4, !!vColumnNames[5] := X.5, !!vColumnNames[6] := X.6, !!vColumnNames[7] := X.7, !!vColumnNames[8] := X.8, !!vColumnNames[9] := X.9, !!vColumnNames[10] := X.10, !!vColumnNames[11] := X.11)
 ```
 
-4. Extract the data into the 5 demographic units (female, male, Black, white and asian)
-  a. select rows using 'filter'
-  b. add the relevant demographic info as a column (.e.g Gender or Race)
-  c. Handling rows which merely summarize other rows
-    1. Remove the summary row
-    s. Rename the remaining rows where necessary
-  c. gather columns(using handy vector names column) to convert from wide to long
+4. The industries are repeated six times for total, female, male, Black, Asian, and White.  Each of these units will need to be extracted into its own data frame, and the columns gathered into "long" format.  We will also do some cleaning of extraneous rows:
+
+  a. Select rows using 'filter'
+  b. Add the relevant demographic info as a column (.e.g Gender or Race)
+  c. Handle rows which merely summarize other rows\
+    1. Remove the summary row\
+    2. Rename the remaining rows where necessary
+  c. Gather columns (using handy vector names column) to convert from wide to long
  
 
 ```{r filter into demographic units}
 
 DemographicUnit <- function(df, rowStart, rowEnd, demoCategory, demoContent)
 {
-  
+ 
+#Extract units based on rows, insert a column with demographic category, remove summary rows and gather the dataframe into long format 
 dfNew <- df %>% 
   filter(row_number() %in% rowStart:rowEnd) %>%
   mutate(!!demoCategory := demoContent) %>%
   filter(Industry !="Manufacturing" & Industry !="Wholesale and retail trade" & Industry !="Other services") %>%
-  gather(vColumnNames,  key="Occupation", value="NumberEmployed")
+  gather(all_of(vColumnNames),  key="Occupation", value="NumberEmployed")
 
+#The new "NumberEmployed" category needs to be turned into an integer from character. This means removing the comma, and recasting it as an integer. A unique row ID is also created here which will simplify merging the data frame with others.
   dfNew$NumberEmployed = str_replace_all(dfNew$NumberEmployed, ",", "")
   dfNew <- mutate_at(dfNew, vars(NumberEmployed), list(as.integer)) %>%
   mutate(RowID = row_number())
 
+#Some of the rows which were summarized by summary rows need to be reworded.
   dfNew$Industry = str_replace_all(dfNew$Industry, "Durable goods", "Manufacturing, durable goods")
   dfNew$Industry = str_replace_all(dfNew$Industry, "Nondurable goods", "Manufacturing, nondurable goods")
   dfNew$Industry = str_replace_all(dfNew$Industry, "Private households", "Other services, private households only")
@@ -103,6 +121,7 @@ dfNew <- df %>%
 return (dfNew)
 }
 
+#Each of the units is extracted using the function we've just created
 dfBLS_Men = DemographicUnit(dfBLS, 29, 47, "Gender", "Male")
 dfBLS_Women = DemographicUnit(dfBLS, 50, 68, "Gender", "Female")
 dfBLS_White = DemographicUnit(dfBLS, 71, 89, "Race", "White")
@@ -112,7 +131,7 @@ dfBLS_Total = DemographicUnit(dfBLS, 8, 26, "Race", "Total")
 
   
 ```
-5. Create the Race and Gender dataframes:
+5. Create the race and gender dataframes by binding the race dataframes into one unified dataframe and the gender dataframes into another.:
 
 ```{r cr}
 dfRace <- rbind(dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
@@ -121,7 +140,7 @@ dfGender <- rbind(dfBLS_Women, dfBLS_Men)
 ```
 
 6. Create the "Other Race" unit within the race dataframe by comparing the three race units to the total
-  a. spread the dataframe using TidyR so each race is a column
+  a. Spread the dataframe using TidyR so each race is a column
   b. Create a category called "Other" which is the Total minus the other categories
   b. Eliminate the total category
   c. Re-gather the dataframe by race
@@ -137,6 +156,8 @@ dfRace %<>%
   gather(Black, White, Asian, Other, key="Race", value="NumberEmployed")
 
 ```
+
+This is the last step. We now have two clean data frames in long form. The only thing that remains is using the same steps to read in the other years and appending those dataframes to these.
 
 ## Analysis
 
@@ -160,19 +181,7 @@ dfInfoGender=dfGender %>%
 dfInfoRace=dfRace %>%
   filter(Industry=="Information")
 
-
-  g5<-ggplot(dfInfoGender, aes(x=Occupation, y=percentEmployed, group=Gender, fill=Gender)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Percent Employed in Information by Gender") +
-    coord_flip()
-g5
-
-  g3<-ggplot(dfInfo, aes(x=Occupation, y=NumberEmployed, group=Gender, fill=Gender)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Number Employed in Information by Gender") +
-    coord_flip()
-  
-g3  
+ 
     g4<-ggplot(dfInfoRace, aes(x=Occupation, y=NumberEmployed, group=Race, fill=Race)) +
   geom_col(position = position_dodge()) +
   ggtitle("Number Employed in Information by Race") +
