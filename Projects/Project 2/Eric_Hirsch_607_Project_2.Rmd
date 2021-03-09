@@ -144,6 +144,7 @@ dfGender <- rbind(dfBLS_Women, dfBLS_Men)
   b. Create a category called "Other" which is the Total minus the other categories
   b. Eliminate the total category
   c. Re-gather the dataframe by race
+  d. Create Final dataframes to accept more years
   
 
 ```{r Other Race}
@@ -155,13 +156,70 @@ dfRace %<>%
   select(-"Total") %<>%
   gather(Black, White, Asian, Other, key="Race", value="NumberEmployed")
 
+dfRaceFinal <- dfRace
+dfGenderFinal <- dfGender
+
 ```
 
-This is the last step. We now have two clean data frames in long form. The only thing that remains is using the same steps to read in the other years and appending those dataframes to these.
+This is the last step. We now have two clean data frames in long form. The only thing that remains is using the same steps to read in the other years and appending those dataframes to these.  We do this with a function that brings all of the steps together.  
+
+```{r years}
+
+ReadYear <- function(bls_Year)
+{
+
+fileName <- str_c("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-", bls_Year, ".csv")
+dfBLS_raw <- read.delim(fileName, sep=",")
+
+dfBLS <- dfBLS_raw %>%
+  select(-"X") %>%
+  mutate(Year = bls_Year) 
+
+vColumnNames <- as.character(dfBLS %>%
+  filter(row_number() %in% 5) %>%
+  select(-contains("Household") & -"Year"))
+
+vColumnNames = str_replace_all(vColumnNames, "[\r\n]", " ")
+vColumnNames = str_replace_all(vColumnNames, "-   ", "")
+vColumnNames = str_replace_all(vColumnNames, "- ", "")
+vColumnNames = str_replace_all(vColumnNames, "  ", "")
+vColumnNames = str_replace_all(vColumnNames, " occupations", "")
+
+dfBLS %<>%
+  rename(Industry = contains("Household"), !!vColumnNames[1] := X.1, !!vColumnNames[2] := X.2, !!vColumnNames[3] := X.3, !!vColumnNames[4] := X.4, !!vColumnNames[5] := X.5, !!vColumnNames[6] := X.6, !!vColumnNames[7] := X.7, !!vColumnNames[8] := X.8, !!vColumnNames[9] := X.9, !!vColumnNames[10] := X.10, !!vColumnNames[11] := X.11)
+
+
+dfBLS_Men = DemographicUnit(dfBLS, 29, 47, "Gender", "Male")
+dfBLS_Women = DemographicUnit(dfBLS, 50, 68, "Gender", "Female")
+dfBLS_White = DemographicUnit(dfBLS, 71, 89, "Race", "White")
+dfBLS_Black = DemographicUnit(dfBLS, 92, 110, "Race", "Black")
+dfBLS_Asian = DemographicUnit(dfBLS, 113, 131, "Race", "Asian")
+dfBLS_Total = DemographicUnit(dfBLS, 8, 26, "Race", "Total")
+
+dfRace <- rbind(dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
+dfGender <- rbind(dfBLS_Women, dfBLS_Men)
+
+dfRace %<>% 
+  spread(Race, NumberEmployed) %<>%
+  mutate_at(vars(Black, White, Asian, Total), list(as.numeric)) %<>%
+  mutate(Other = Total-(Black + White + Asian)) %<>%
+  select(-"Total") %<>%
+  gather(Black, White, Asian, Other, key="Race", value="NumberEmployed")
+
+
+  return(list(dfRace,dfGender))
+
+}
+
+dfs <- ReadYear("2020")
+dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
+dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+
+```
 
 ## Analysis
 
-```{r}
+```{r analysis1}
 g3<-ggplot(dfGender, aes(x=Industry, y=NumberEmployed, group=Gender, fill=Gender)) +
   geom_col(position = position_dodge()) +
   ggtitle("Number Employed by Industry and Gender") +
@@ -169,9 +227,8 @@ g3<-ggplot(dfGender, aes(x=Industry, y=NumberEmployed, group=Gender, fill=Gender
   coord_flip()
 g3
 
-
 ```
-```{r}
+```{r analysis2}
 
 dfInfoGender=dfGender %>%
   filter(Industry=="Information") %>%
