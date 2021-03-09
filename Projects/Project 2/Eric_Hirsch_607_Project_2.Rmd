@@ -46,7 +46,7 @@ In this project we will tidy three datasets using TidyR and Dyplr and other hand
 1. First the data is read into a data frame: 
 
 ``` {r load data}
-dfBLS_raw <- read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-2020.csv", sep=",")
+dfBLS_raw <- read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-2015.csv", sep=",")
 
 ```
 2. Next, we drop any columns we don't need and add any columns we do.  In this case there is one of each:
@@ -182,6 +182,7 @@ vColumnNames <- as.character(dfBLS %>%
 vColumnNames = str_replace_all(vColumnNames, "[\r\n]", " ")
 vColumnNames = str_replace_all(vColumnNames, "-   ", "")
 vColumnNames = str_replace_all(vColumnNames, "- ", "")
+vColumnNames = str_replace_all(vColumnNames, "-", "")
 vColumnNames = str_replace_all(vColumnNames, "  ", "")
 vColumnNames = str_replace_all(vColumnNames, " occupations", "")
 
@@ -211,6 +212,22 @@ dfRace %<>%
 
 }
 
+dfs <- ReadYear("2016")
+dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
+dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+
+dfs <- ReadYear("2017")
+dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
+dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+
+dfs <- ReadYear("2018")
+dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
+dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+
+dfs <- ReadYear("2019")
+dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
+dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+
 dfs <- ReadYear("2020")
 dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
 dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
@@ -230,13 +247,22 @@ g3
 ```
 ```{r analysis2}
 
-dfInfoGender=dfGender %>%
-  filter(Industry=="Information") %>%
-  group_by(Occupation) %>%
-    summarize(n=n(), percentEmployed = sum(NumberEmployed/n))
+dfInfoGender=dfGenderFinal %>%
+  group_by(Year, Occupation) %>%
+    summarize(n=sum(NumberEmployed), n_Female = sum(NumberEmployed[Gender=="Female"]), percentFemale = (n_Female/n)*100) %>%
+  mutate(percentFemale = ifelse(is.nan(percentFemale), 0, percentFemale))
   
 dfInfoRace=dfRace %>%
   filter(Industry=="Information")
+
+g <- ggplot(dfInfoGender, aes(x = Occupation, y = percentFemale, group=Year, fill=Year)) + 
+  geom_col(position = position_dodge(), width=.8, color = "black") + 
+  xlab("Occupation") + ylab("Percent Women Employed") +
+  ggtitle("Percentage of Women Employed, All Industries") +  
+  coord_flip() +
+  scale_fill_brewer(palette="Spectral") +
+  theme(legend.position="bottom")
+g
 
  
     g4<-ggplot(dfInfoRace, aes(x=Occupation, y=NumberEmployed, group=Race, fill=Race)) +
