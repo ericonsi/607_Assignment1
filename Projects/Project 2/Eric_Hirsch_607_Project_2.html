@@ -11,7 +11,7 @@
 
 <meta name="author" content="Eric Hirsch" />
 
-<meta name="date" content="2021-03-11" />
+<meta name="date" content="2021-03-13" />
 
 <title>Eric_Hirsch_607_Project_2</title>
 
@@ -413,7 +413,7 @@ summary {
 
 <h1 class="title toc-ignore">Eric_Hirsch_607_Project_2</h1>
 <h4 class="author">Eric Hirsch</h4>
-<h4 class="date">2021-03-11</h4>
+<h4 class="date">2021-03-13</h4>
 
 </div>
 
@@ -425,16 +425,16 @@ library(stringr)
 library(magrittr)
 library(gridExtra)
 library(readxl)</code></pre>
-<div id="tidying-three-datasets" class="section level1">
-<h1>Tidying Three Datasets</h1>
+<div id="project-2" class="section level1">
+<h1>Project 2</h1>
+<p>Team members: Eric Hirsch, Dan Sullivan, Cassie Coste</p>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>In this project we will tidy three datasets using TidyR and Dyplr and other handy R tools. After the transformation we will conduct some analyses. This is a joint project with Cassie Coste and Dan Sullivan. We each cleaned a data set and then showed each other what our challenges were and how we overcame them. This first data set was the data set that I tidied.</p>
 <div id="dataset-1-bureau-of-labor-statistics-data" class="section level3">
 <h3>Dataset 1: Bureau of Labor Statistics Data</h3>
-<p><em>Description of the dataset:</em></p>
 <p>The data consists of six CSV files from the Bureau of Labor Statistics showing numbers of Americans involved in various occupations and industries, spanning the years 2015 through 2020. Each file is in the same format. The data set is “wide” – occupations run horizontally and industries run vertically.</p>
-<p><em>Challenges with the data set:</em></p>
+<p><strong>Challenges with the data set:</strong></p>
 <ol style="list-style-type: decimal">
 <li>The data set needs to be converted from wide to long, and needs to include a year column and a demographic column.</li>
 <li>The industries which run vertically are repeated six times - for two genders, three races, and a total. These will need to be collected together.</li>
@@ -445,10 +445,25 @@ library(readxl)</code></pre>
 <li>The demographic categories (race, gender and total) need to be spread out as columns and arranged in order.</li>
 </ol>
 </div>
-<div id="tidying-the-dataset" class="section level3">
-<h3>Tidying The Dataset</h3>
+<div id="dataset-2---the-upshot---prison-admissions-by-county" class="section level3">
+<h3>Dataset 2 - The Upshot - Prison Admissions by County</h3>
+<p>This dataset is a long dataset used by The Upshot NYT in their article “A Small Indiana County Sends More People to Prison Than San Francisco and Durham, N.C., Combined. Why?” to report on the increase in rural prison populations in recent years.</p>
+<p><strong>Challenges:</strong></p>
+<p>The primary issue with the data set is that it contains years in the variable names for three different variables. The goal is to get to a data set with columns for the three prison admission variables and one for the year. There are also some minor tidying edits such as converting columns to numeric or factor and or removing/adding words to columns or column names.</p>
+<p>As this dataset is only part of the picture that was being looked at by The Upshot, to gain further insight into this dataset and look at some of the things that the article was referring to as well as comments made in the class discussion board, new variables need to be computed and more county data is needed that was not made available by The Upshot. For county data, an additional dataset (2.b) from the US Department of Agriculture (USDA) is joined with The Upshot dataset to perform the final analyses.</p>
+<p>This county dataset had its own set of challenges. There is a rural-urban variable at two time points that is on a 1-9 spectrum and will be re-coded to match Metropolitan/Urban/Rural categories provided by the USDA. When these variables are incorporated into the original dataset, the rural-urban variable must then be made long through the creation of a new variable using ifelse statements to make sure that prison county data from the 2000s receives the urbanicity variable from the 2000 census and county data from the 2010s receives the urbanicity variable from the 2010 census.</p>
+</div>
+<div id="dataset-3---historic-epidemic-data" class="section level3">
+<h3>Dataset 3 - Historic Epidemic Data</h3>
+<p>Dataset three Uses historic epidemic data as well as estimates and measurements on global population in the form of two separate tables for pre 1950 populations and post 1950 populations. It incorporates these three csv to get estimates on how impactful certain epidemics were based on the total deaths as compared to global population.</p>
+<p><strong>Challenges:</strong></p>
+<p>The biggest challenge with this data was data formation. It contained many pieces of data that were mixed strings and numbers, notes within data points, as well as hyperlink references. Because many columns were not standardized I used a lot of regex to tackle a lot of these issues ultimately paring things down to a point where the values could be standardized and used.</p>
+<p>The next challenge was creating a metric to join population data that fluctuated depending on the year. I found population data that was yearly from 1950-2017, by decade from 1900-1950 and every century from 1AD to 1900. Because of this I had to make my own rounding function. where depending on what year the event was it rounded so that population metrics could be added accordingly.</p>
+</div>
+<div id="tidying-dataset-1" class="section level3">
+<h3>Tidying Dataset #1</h3>
 <ol style="list-style-type: decimal">
-<li>First the data is read into a data frame:</li>
+<li>First, the first year of data is read into a data frame:</li>
 </ol>
 <pre class="r"><code>dfBLS_raw &lt;- read.delim(&quot;https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-2015.csv&quot;, sep=&quot;,&quot;)</code></pre>
 <ol start="2" style="list-style-type: decimal">
@@ -603,7 +618,9 @@ dfFinal &lt;- rbind(dfFinal, dfs)
 
 dfFinal %&lt;&gt;%
   select(-&quot;RowID&quot;) %&lt;&gt;%
-  select(&quot;Year&quot;, &quot;Industry&quot;, &quot;Occupation&quot;, &quot;Female&quot;, &quot;Male&quot;, &quot;Black&quot;, &quot;White&quot;, &quot;Asian&quot;, &quot;Other&quot;, &quot;Total&quot;)</code></pre>
+  select(&quot;Year&quot;, &quot;Industry&quot;, &quot;Occupation&quot;, &quot;Female&quot;, &quot;Male&quot;, &quot;Black&quot;, &quot;White&quot;, &quot;Asian&quot;, &quot;Other&quot;, &quot;Total&quot;)
+
+write.csv(dfFinal, &quot;D:\\RStudio\\CUNY_607\\Projects\\Project 2\\Final.csv&quot;)</code></pre>
 </div>
 </div>
 <div id="analysis" class="section level2">

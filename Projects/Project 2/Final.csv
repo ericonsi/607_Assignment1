@@ -439,28 +439,17 @@
 "438","2017","Manufacturing, nondurable goods","Sales and related",148,164,17,271,15,9,312
 "439","2017","Manufacturing, nondurable goods","Service, except protective",51,75,16,90,9,11,126
 "440","2017","Manufacturing, nondurable goods","Transportation and material moving",137,448,99,441,20,25,585
-"441","2017","Mining, quarrying, and
-oil and gas extraction","Construction and extraction",5,231,13,207,4,11,235
-"442","2017","Mining, quarrying, and
-oil and gas extraction","Farming, fishing, and forestry",0,1,0,1,0,0,1
-"443","2017","Mining, quarrying, and
-oil and gas extraction","Installation, maintenance, and repair",1,54,3,49,1,2,55
-"444","2017","Mining, quarrying, and
-oil and gas extraction","Management, business, and financial operations",27,119,4,135,3,4,146
-"445","2017","Mining, quarrying, and
-oil and gas extraction","Office and administrative support",31,21,6,44,0,2,52
-"446","2017","Mining, quarrying, and
-oil and gas extraction","Production",1,46,4,38,2,3,47
-"447","2017","Mining, quarrying, and
-oil and gas extraction","Professional and related",25,86,6,95,10,0,111
-"448","2017","Mining, quarrying, and
-oil and gas extraction","Protective service",0,4,0,4,0,0,4
-"449","2017","Mining, quarrying, and
-oil and gas extraction","Sales and related",1,9,0,7,0,4,11
-"450","2017","Mining, quarrying, and
-oil and gas extraction","Service, except protective",1,4,1,4,0,0,5
-"451","2017","Mining, quarrying, and
-oil and gas extraction","Transportation and material moving",1,80,6,70,1,4,81
+"441","2017","Mining, quarrying, and oil and gas extraction","Construction and extraction",5,231,13,207,4,11,235
+"442","2017","Mining, quarrying, and oil and gas extraction","Farming, fishing, and forestry",0,1,0,1,0,0,1
+"443","2017","Mining, quarrying, and oil and gas extraction","Installation, maintenance, and repair",1,54,3,49,1,2,55
+"444","2017","Mining, quarrying, and oil and gas extraction","Management, business, and financial operations",27,119,4,135,3,4,146
+"445","2017","Mining, quarrying, and oil and gas extraction","Office and administrative support",31,21,6,44,0,2,52
+"446","2017","Mining, quarrying, and oil and gas extraction","Production",1,46,4,38,2,3,47
+"447","2017","Mining, quarrying, and oil and gas extraction","Professional and related",25,86,6,95,10,0,111
+"448","2017","Mining, quarrying, and oil and gas extraction","Protective service",0,4,0,4,0,0,4
+"449","2017","Mining, quarrying, and oil and gas extraction","Sales and related",1,9,0,7,0,4,11
+"450","2017","Mining, quarrying, and oil and gas extraction","Service, except protective",1,4,1,4,0,0,5
+"451","2017","Mining, quarrying, and oil and gas extraction","Transportation and material moving",1,80,6,70,1,4,81
 "452","2017","Other services, except private households","Construction and extraction",0,23,0,22,0,1,23
 "453","2017","Other services, except private households","Farming, fishing, and forestry",0,2,0,2,0,0,2
 "454","2017","Other services, except private households","Installation, maintenance, and repair",35,1075,92,943,41,34,1110
@@ -626,28 +615,17 @@ oil and gas extraction","Transportation and material moving",1,80,6,70,1,4,81
 "614","2018","Manufacturing, nondurable goods","Sales and related",145,144,14,255,12,8,289
 "615","2018","Manufacturing, nondurable goods","Service, except protective",58,87,25,106,10,4,145
 "616","2018","Manufacturing, nondurable goods","Transportation and material moving",141,445,115,421,20,31,587
-"617","2018","Mining, quarrying, and
-oil and gas extraction","Construction and extraction",6,240,12,222,1,11,246
-"618","2018","Mining, quarrying, and
-oil and gas extraction","Farming, fishing, and forestry",0,0,0,0,0,0,0
-"619","2018","Mining, quarrying, and
-oil and gas extraction","Installation, maintenance, and repair",1,54,3,47,3,2,55
-"620","2018","Mining, quarrying, and
-oil and gas extraction","Management, business, and financial operations",33,111,11,126,5,2,144
-"621","2018","Mining, quarrying, and
-oil and gas extraction","Office and administrative support",35,17,6,44,0,1,51
-"622","2018","Mining, quarrying, and
-oil and gas extraction","Production",3,47,6,43,0,2,51
-"623","2018","Mining, quarrying, and
-oil and gas extraction","Professional and related",24,85,3,94,12,0,109
-"624","2018","Mining, quarrying, and
-oil and gas extraction","Protective service",0,4,0,3,0,1,4
-"625","2018","Mining, quarrying, and
-oil and gas extraction","Sales and related",1,10,0,10,0,1,11
-"626","2018","Mining, quarrying, and
-oil and gas extraction","Service, except protective",2,8,1,9,0,0,10
-"627","2018","Mining, quarrying, and
-oil and gas extraction","Transportation and material moving",3,99,8,85,2,7,102
+"617","2018","Mining, quarrying, and oil and gas extraction","Construction and extraction",6,240,12,222,1,11,246
+"618","2018","Mining, quarrying, and oil and gas extraction","Farming, fishing, and forestry",0,0,0,0,0,0,0
+"619","2018","Mining, quarrying, and oil and gas extraction","Installation, maintenance, and repair",1,54,3,47,3,2,55
+"620","2018","Mining, quarrying, and oil and gas extraction","Management, business, and financial operations",33,111,11,126,5,2,144
+"621","2018","Mining, quarrying, and oil and gas extraction","Office and administrative support",35,17,6,44,0,1,51
+"622","2018","Mining, quarrying, and oil and gas extraction","Production",3,47,6,43,0,2,51
+"623","2018","Mining, quarrying, and oil and gas extraction","Professional and related",24,85,3,94,12,0,109
+"624","2018","Mining, quarrying, and oil and gas extraction","Protective service",0,4,0,3,0,1,4
+"625","2018","Mining, quarrying, and oil and gas extraction","Sales and related",1,10,0,10,0,1,11
+"626","2018","Mining, quarrying, and oil and gas extraction","Service, except protective",2,8,1,9,0,0,10
+"627","2018","Mining, quarrying, and oil and gas extraction","Transportation and material moving",3,99,8,85,2,7,102
 "628","2018","Other services, except private households","Construction and extraction",0,15,0,15,0,0,15
 "629","2018","Other services, except private households","Farming, fishing, and forestry",1,2,0,3,0,0,3
 "630","2018","Other services, except private households","Installation, maintenance, and repair",37,1115,94,969,41,48,1152

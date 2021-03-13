@@ -19,7 +19,8 @@ library(gridExtra)
 library(readxl)
 ```
 
-# Tidying Three Datasets
+# Project 2 
+Team members: Eric Hirsch, Dan Sullivan, Cassie Coste
 
 ## Introduction 
 
@@ -27,11 +28,9 @@ In this project we will tidy three datasets using TidyR and Dyplr and other hand
 
 ### Dataset 1: Bureau of Labor Statistics Data
 
-*Description of the dataset:*
+The data consists of six CSV files from the Bureau of Labor Statistics showing numbers of Americans involved in various occupations and industries, spanning the years 2015 through 2020.  Each file is in the same format. The data set is “wide” – occupations run horizontally and industries run vertically.  
 
-  The data consists of six CSV files from the Bureau of Labor Statistics showing numbers of Americans involved in various occupations and industries, spanning the years 2015 through 2020.  Each file is in the same format. The data set is “wide” – occupations run horizontally and industries run vertically.  
-
-*Challenges with the data set:*
+__Challenges with the data set:__
  
   1.	The data set needs to be converted from wide to long, and needs to include a year column and a demographic column.
   2.	The industries which run vertically are repeated six times  - for two genders, three races, and a total. These will need to be collected together.
@@ -42,9 +41,33 @@ In this project we will tidy three datasets using TidyR and Dyplr and other hand
   7.  The demographic categories (race, gender and total) need to be spread out as columns and arranged in order.
 
 
-### Tidying The Dataset
+### Dataset 2 - The Upshot - Prison Admissions by County
 
-1. First the data is read into a data frame: 
+This dataset is a long dataset used by The Upshot NYT in their article “A Small Indiana County Sends More People to Prison Than San Francisco and Durham, N.C., Combined. Why?” to report on the increase in rural prison populations in recent years.
+
+
+__Challenges:__
+
+The primary issue with the data set is that it contains years in the variable names for three different variables. The goal is to get to a data set with columns for the three prison admission variables and one for the year. There are also some minor tidying edits such as converting columns to numeric or factor and or removing/adding words to columns or column names. 
+
+As this dataset is only part of the picture that was being looked at by The Upshot, to gain further insight into this dataset and look at some of the things that the article was referring to as well as comments made in the class discussion board, new variables need to be computed and more county data is needed that was not made available by The Upshot. For county data, an additional dataset (2.b) from the US Department of Agriculture (USDA) is joined with The Upshot dataset to perform the final analyses. 
+
+This county dataset had its own set of challenges. There is a rural-urban variable at two time points that is on a 1-9 spectrum and will be re-coded to match Metropolitan/Urban/Rural categories provided by the USDA. When these variables are incorporated into the original dataset, the  rural-urban variable must then be made long through the creation of a new variable using ifelse statements to make sure that prison county data from the 2000s receives the urbanicity variable from the 2000 census and county data from the 2010s receives the urbanicity variable from the 2010 census. 
+ 
+### Dataset 3 - Historic Epidemic Data
+
+Dataset three Uses historic epidemic data as well as estimates and measurements on global population in the form of two separate tables for pre 1950 populations and post 1950 populations. It incorporates these three csv to get estimates on how impactful certain epidemics were based on the total deaths as compared to global population.
+
+__Challenges:__
+
+The biggest challenge with this data was data formation. It contained many pieces of data that were mixed strings and numbers, notes within data points, as well as hyperlink references. Because many columns were not standardized I used a lot of regex to tackle a lot of these issues ultimately paring things down to a point where the values could be standardized and used.
+
+The next challenge was creating a metric to join population data that fluctuated depending on the year. I found population data that was yearly from 1950-2017, by decade from 1900-1950 and every century from 1AD to 1900. Because of this I had to make my own rounding function. where depending on what year the event was it rounded so that population metrics could be added accordingly.
+
+
+### Tidying Dataset #1
+
+1. First, the first year of data is read into a data frame: 
 
 ``` {r load data}
 dfBLS_raw <- read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/bls-2015.csv", sep=",")
