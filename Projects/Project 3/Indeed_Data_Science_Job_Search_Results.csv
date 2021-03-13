@@ -1,0 +1,145 @@
+"Base_Term","Skill_Term","City","radius","indeed_url","new_jobs_count"
+"Data Scientist","Python","Chicago,IL,","25","http://www.indeed.com/jobs?q=Python+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","Python","Chicago,IL,","25","http://www.indeed.com/jobs?q=Python+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","coding","Chicago,IL,","25","http://www.indeed.com/jobs?q=coding+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","coding","Chicago,IL,","25","http://www.indeed.com/jobs?q=coding+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","R","Chicago,IL,","25","http://www.indeed.com/jobs?q=R+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","R","Chicago,IL,","25","http://www.indeed.com/jobs?q=R+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","analysis","Chicago,IL,","25","http://www.indeed.com/jobs?q=analysis+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","analysis","Chicago,IL,","25","http://www.indeed.com/jobs?q=analysis+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","data","Chicago,IL,","25","http://www.indeed.com/jobs?q=data+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","data","Chicago,IL,","25","http://www.indeed.com/jobs?q=data+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","Science","Chicago,IL,","25","http://www.indeed.com/jobs?q=Science+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","Science","Chicago,IL,","25","http://www.indeed.com/jobs?q=Science+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","Skills","Chicago,IL,","25","http://www.indeed.com/jobs?q=Skills+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","Skills","Chicago,IL,","25","http://www.indeed.com/jobs?q=Skills+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","Big Data","Chicago,IL,","25","http://www.indeed.com/jobs?q=Big Data+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","Big Data","Chicago,IL,","25","http://www.indeed.com/jobs?q=Big Data+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","Data Analytics","Chicago,IL,","25","http://www.indeed.com/jobs?q=Data Analytics+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","Data Analytics","Chicago,IL,","25","http://www.indeed.com/jobs?q=Data Analytics+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","GIS","Chicago,IL,","25","http://www.indeed.com/jobs?q=GIS+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","GIS","Chicago,IL,","25","http://www.indeed.com/jobs?q=GIS+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","Hadoop","Chicago,IL,","25","http://www.indeed.com/jobs?q=Hadoop+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","Hadoop","Chicago,IL,","25","http://www.indeed.com/jobs?q=Hadoop+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","science","Chicago,IL,","25","http://www.indeed.com/jobs?q=science+Data Scientist&l=Chicago,IL,&radius=25",0
+"Data Analytics","science","Chicago,IL,","25","http://www.indeed.com/jobs?q=science+Data Analytics&l=Chicago,IL,&radius=25",0
+"Data Scientist","Python","New York,NY,","25","http://www.indeed.com/jobs?q=Python+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","Python","New York,NY,","25","http://www.indeed.com/jobs?q=Python+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","coding","New York,NY,","25","http://www.indeed.com/jobs?q=coding+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","coding","New York,NY,","25","http://www.indeed.com/jobs?q=coding+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","R","New York,NY,","25","http://www.indeed.com/jobs?q=R+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","R","New York,NY,","25","http://www.indeed.com/jobs?q=R+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","analysis","New York,NY,","25","http://www.indeed.com/jobs?q=analysis+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","analysis","New York,NY,","25","http://www.indeed.com/jobs?q=analysis+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","data","New York,NY,","25","http://www.indeed.com/jobs?q=data+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","data","New York,NY,","25","http://www.indeed.com/jobs?q=data+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","Science","New York,NY,","25","http://www.indeed.com/jobs?q=Science+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","Science","New York,NY,","25","http://www.indeed.com/jobs?q=Science+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","Skills","New York,NY,","25","http://www.indeed.com/jobs?q=Skills+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","Skills","New York,NY,","25","http://www.indeed.com/jobs?q=Skills+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","Big Data","New York,NY,","25","http://www.indeed.com/jobs?q=Big Data+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","Big Data","New York,NY,","25","http://www.indeed.com/jobs?q=Big Data+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","Data Analytics","New York,NY,","25","http://www.indeed.com/jobs?q=Data Analytics+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","Data Analytics","New York,NY,","25","http://www.indeed.com/jobs?q=Data Analytics+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","GIS","New York,NY,","25","http://www.indeed.com/jobs?q=GIS+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","GIS","New York,NY,","25","http://www.indeed.com/jobs?q=GIS+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","Hadoop","New York,NY,","25","http://www.indeed.com/jobs?q=Hadoop+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","Hadoop","New York,NY,","25","http://www.indeed.com/jobs?q=Hadoop+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","science","New York,NY,","25","http://www.indeed.com/jobs?q=science+Data Scientist&l=New York,NY,&radius=25",0
+"Data Analytics","science","New York,NY,","25","http://www.indeed.com/jobs?q=science+Data Analytics&l=New York,NY,&radius=25",0
+"Data Scientist","Python","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Python+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","Python","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Python+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","coding","San Francisco,CA,","25","http://www.indeed.com/jobs?q=coding+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","coding","San Francisco,CA,","25","http://www.indeed.com/jobs?q=coding+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","R","San Francisco,CA,","25","http://www.indeed.com/jobs?q=R+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","R","San Francisco,CA,","25","http://www.indeed.com/jobs?q=R+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","analysis","San Francisco,CA,","25","http://www.indeed.com/jobs?q=analysis+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","analysis","San Francisco,CA,","25","http://www.indeed.com/jobs?q=analysis+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","data","San Francisco,CA,","25","http://www.indeed.com/jobs?q=data+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","data","San Francisco,CA,","25","http://www.indeed.com/jobs?q=data+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","Science","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Science+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","Science","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Science+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","Skills","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Skills+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","Skills","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Skills+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","Big Data","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Big Data+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","Big Data","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Big Data+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","Data Analytics","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Data Analytics+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","Data Analytics","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Data Analytics+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","GIS","San Francisco,CA,","25","http://www.indeed.com/jobs?q=GIS+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","GIS","San Francisco,CA,","25","http://www.indeed.com/jobs?q=GIS+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","Hadoop","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Hadoop+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","Hadoop","San Francisco,CA,","25","http://www.indeed.com/jobs?q=Hadoop+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","science","San Francisco,CA,","25","http://www.indeed.com/jobs?q=science+Data Scientist&l=San Francisco,CA,&radius=25",0
+"Data Analytics","science","San Francisco,CA,","25","http://www.indeed.com/jobs?q=science+Data Analytics&l=San Francisco,CA,&radius=25",0
+"Data Scientist","Python","Chicago,IL,","50","http://www.indeed.com/jobs?q=Python+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","Python","Chicago,IL,","50","http://www.indeed.com/jobs?q=Python+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","coding","Chicago,IL,","50","http://www.indeed.com/jobs?q=coding+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","coding","Chicago,IL,","50","http://www.indeed.com/jobs?q=coding+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","R","Chicago,IL,","50","http://www.indeed.com/jobs?q=R+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","R","Chicago,IL,","50","http://www.indeed.com/jobs?q=R+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","analysis","Chicago,IL,","50","http://www.indeed.com/jobs?q=analysis+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","analysis","Chicago,IL,","50","http://www.indeed.com/jobs?q=analysis+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","data","Chicago,IL,","50","http://www.indeed.com/jobs?q=data+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","data","Chicago,IL,","50","http://www.indeed.com/jobs?q=data+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","Science","Chicago,IL,","50","http://www.indeed.com/jobs?q=Science+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","Science","Chicago,IL,","50","http://www.indeed.com/jobs?q=Science+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","Skills","Chicago,IL,","50","http://www.indeed.com/jobs?q=Skills+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","Skills","Chicago,IL,","50","http://www.indeed.com/jobs?q=Skills+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","Big Data","Chicago,IL,","50","http://www.indeed.com/jobs?q=Big Data+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","Big Data","Chicago,IL,","50","http://www.indeed.com/jobs?q=Big Data+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","Data Analytics","Chicago,IL,","50","http://www.indeed.com/jobs?q=Data Analytics+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","Data Analytics","Chicago,IL,","50","http://www.indeed.com/jobs?q=Data Analytics+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","GIS","Chicago,IL,","50","http://www.indeed.com/jobs?q=GIS+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","GIS","Chicago,IL,","50","http://www.indeed.com/jobs?q=GIS+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","Hadoop","Chicago,IL,","50","http://www.indeed.com/jobs?q=Hadoop+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","Hadoop","Chicago,IL,","50","http://www.indeed.com/jobs?q=Hadoop+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","science","Chicago,IL,","50","http://www.indeed.com/jobs?q=science+Data Scientist&l=Chicago,IL,&radius=50",0
+"Data Analytics","science","Chicago,IL,","50","http://www.indeed.com/jobs?q=science+Data Analytics&l=Chicago,IL,&radius=50",0
+"Data Scientist","Python","New York,NY,","50","http://www.indeed.com/jobs?q=Python+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","Python","New York,NY,","50","http://www.indeed.com/jobs?q=Python+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","coding","New York,NY,","50","http://www.indeed.com/jobs?q=coding+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","coding","New York,NY,","50","http://www.indeed.com/jobs?q=coding+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","R","New York,NY,","50","http://www.indeed.com/jobs?q=R+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","R","New York,NY,","50","http://www.indeed.com/jobs?q=R+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","analysis","New York,NY,","50","http://www.indeed.com/jobs?q=analysis+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","analysis","New York,NY,","50","http://www.indeed.com/jobs?q=analysis+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","data","New York,NY,","50","http://www.indeed.com/jobs?q=data+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","data","New York,NY,","50","http://www.indeed.com/jobs?q=data+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","Science","New York,NY,","50","http://www.indeed.com/jobs?q=Science+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","Science","New York,NY,","50","http://www.indeed.com/jobs?q=Science+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","Skills","New York,NY,","50","http://www.indeed.com/jobs?q=Skills+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","Skills","New York,NY,","50","http://www.indeed.com/jobs?q=Skills+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","Big Data","New York,NY,","50","http://www.indeed.com/jobs?q=Big Data+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","Big Data","New York,NY,","50","http://www.indeed.com/jobs?q=Big Data+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","Data Analytics","New York,NY,","50","http://www.indeed.com/jobs?q=Data Analytics+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","Data Analytics","New York,NY,","50","http://www.indeed.com/jobs?q=Data Analytics+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","GIS","New York,NY,","50","http://www.indeed.com/jobs?q=GIS+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","GIS","New York,NY,","50","http://www.indeed.com/jobs?q=GIS+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","Hadoop","New York,NY,","50","http://www.indeed.com/jobs?q=Hadoop+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","Hadoop","New York,NY,","50","http://www.indeed.com/jobs?q=Hadoop+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","science","New York,NY,","50","http://www.indeed.com/jobs?q=science+Data Scientist&l=New York,NY,&radius=50",0
+"Data Analytics","science","New York,NY,","50","http://www.indeed.com/jobs?q=science+Data Analytics&l=New York,NY,&radius=50",0
+"Data Scientist","Python","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Python+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","Python","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Python+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","coding","San Francisco,CA,","50","http://www.indeed.com/jobs?q=coding+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","coding","San Francisco,CA,","50","http://www.indeed.com/jobs?q=coding+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","R","San Francisco,CA,","50","http://www.indeed.com/jobs?q=R+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","R","San Francisco,CA,","50","http://www.indeed.com/jobs?q=R+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","analysis","San Francisco,CA,","50","http://www.indeed.com/jobs?q=analysis+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","analysis","San Francisco,CA,","50","http://www.indeed.com/jobs?q=analysis+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","data","San Francisco,CA,","50","http://www.indeed.com/jobs?q=data+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","data","San Francisco,CA,","50","http://www.indeed.com/jobs?q=data+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","Science","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Science+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","Science","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Science+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","Skills","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Skills+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","Skills","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Skills+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","Big Data","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Big Data+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","Big Data","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Big Data+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","Data Analytics","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Data Analytics+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","Data Analytics","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Data Analytics+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","GIS","San Francisco,CA,","50","http://www.indeed.com/jobs?q=GIS+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","GIS","San Francisco,CA,","50","http://www.indeed.com/jobs?q=GIS+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","Hadoop","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Hadoop+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","Hadoop","San Francisco,CA,","50","http://www.indeed.com/jobs?q=Hadoop+Data Analytics&l=San Francisco,CA,&radius=50",0
+"Data Scientist","science","San Francisco,CA,","50","http://www.indeed.com/jobs?q=science+Data Scientist&l=San Francisco,CA,&radius=50",0
+"Data Analytics","science","San Francisco,CA,","50","http://www.indeed.com/jobs?q=science+Data Analytics&l=San Francisco,CA,&radius=50",0

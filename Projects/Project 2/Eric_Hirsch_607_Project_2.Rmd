@@ -34,11 +34,12 @@ In this project we will tidy three datasets using TidyR and Dyplr and other hand
 *Challenges with the data set:*
  
   1.	The data set needs to be converted from wide to long, and needs to include a year column and a demographic column.
-  2.	The industries which run vertically are repeated six times  - for two genders, three races, and a total.  Because race and gender are treated separately, they will need to be collected together into two different data frames.
+  2.	The industries which run vertically are repeated six times  - for two genders, three races, and a total. These will need to be collected together.
   3.	The race categories do not add up to the total because they don’t comprise all of the possible races. Therefore an “other race” category will need to calculated and then created.
   4.	The occupations do not appear at the top of the raw data (they appear in the fifth row), which means they need to be extracted and inserted as column headings for the data set.  There are a number of issues with these column headings - for example, they are too long, and they include the insertion of dashes and carriage returns which will need to be removed.
   5.	Some of the rows are summary rows and will need to be removed. In some cases, remaining rows will need to be renamed as they don’t make sense standing alone without the summary row.
-  6.	All of the years of the data set need to be appended to the two data frames (gender and race)
+  6.	All of the years of the data set need to be appended to the data frame
+  7.  The demographic categories (race, gender and total) need to be spread out as columns and arranged in order.
 
 
 ### Tidying The Dataset
@@ -98,13 +99,13 @@ dfBLS %<>%
 
 ```{r filter into demographic units}
 
-DemographicUnit <- function(df, rowStart, rowEnd, demoCategory, demoContent)
+DemographicUnit <- function(df, rowStart, rowEnd, demoContent)
 {
  
 #Extract units based on rows, insert a column with demographic category, remove summary rows and gather the dataframe into long format 
 dfNew <- df %>% 
   filter(row_number() %in% rowStart:rowEnd) %>%
-  mutate(!!demoCategory := demoContent) %>%
+  mutate(demog := demoContent) %>%
   filter(Industry !="Manufacturing" & Industry !="Wholesale and retail trade" & Industry !="Other services") %>%
   gather(all_of(vColumnNames),  key="Occupation", value="NumberEmployed")
 
@@ -122,46 +123,40 @@ return (dfNew)
 }
 
 #Each of the units is extracted using the function we've just created
-dfBLS_Men = DemographicUnit(dfBLS, 29, 47, "Gender", "Male")
-dfBLS_Women = DemographicUnit(dfBLS, 50, 68, "Gender", "Female")
-dfBLS_White = DemographicUnit(dfBLS, 71, 89, "Race", "White")
-dfBLS_Black = DemographicUnit(dfBLS, 92, 110, "Race", "Black")
-dfBLS_Asian = DemographicUnit(dfBLS, 113, 131, "Race", "Asian")
-dfBLS_Total = DemographicUnit(dfBLS, 8, 26, "Race", "Total")
+dfBLS_Men = DemographicUnit(dfBLS, 29, 47, "Male")
+dfBLS_Women = DemographicUnit(dfBLS, 50, 68, "Female")
+dfBLS_White = DemographicUnit(dfBLS, 71, 89, "White")
+dfBLS_Black = DemographicUnit(dfBLS, 92, 110, "Black")
+dfBLS_Asian = DemographicUnit(dfBLS, 113, 131, "Asian")
+dfBLS_Total = DemographicUnit(dfBLS, 8, 26, "Total")
 
   
 ```
-5. Create the race and gender dataframes by binding the race dataframes into one unified dataframe and the gender dataframes into another.:
+5. Create the unified dataframe by binding all the race and gender dataframes together:
 
 ```{r cr}
-dfRace <- rbind(dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
-dfGender <- rbind(dfBLS_Women, dfBLS_Men)
+
+dfAll <- rbind(dfBLS_Women, dfBLS_Men, dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
 
 ```
 
-6. Create the "Other Race" unit within the race dataframe by comparing the three race units to the total
-  a. Spread the dataframe using TidyR so each race is a column
-  b. Create a category called "Other" which is the Total minus the other categories
-  b. Eliminate the total category
-  c. Re-gather the dataframe by race
-  d. Create Final dataframes to accept more years
+6. Spread the dataframe by demographic unit and create the "Other Race" column by comparing the three race units to the total
+  a. Spread the dataframe using TidyR so each demographic unit is a column
+  b. Create a category called "Other" which is the Total minus the other ace categories
+  d. Create Final dataframe to accept more years
   
 
 ```{r Other Race}
 
-dfRace %<>% 
-  spread(Race, NumberEmployed) %<>%
+dfAll %<>% 
+  spread(demog, NumberEmployed) %<>%
   mutate_at(vars(Black, White, Asian, Total), list(as.numeric)) %<>%
-  mutate(Other = Total-(Black + White + Asian)) %<>%
-  select(-"Total") %<>%
-  gather(Black, White, Asian, Other, key="Race", value="NumberEmployed")
+  mutate(Other = Total-(Black + White + Asian))
 
-dfRaceFinal <- dfRace
-dfGenderFinal <- dfGender
-
+dfFinal <- dfAll
 ```
 
-This is the last step. We now have two clean data frames in long form. The only thing that remains is using the same steps to read in the other years and appending those dataframes to these.  We do this with a function that brings all of the steps together.  
+This is the last step. We now have a clean data frame in long form. The only thing that remains is using the same steps to read in the other years and appending those dataframes to this.  We do this with a function that brings all of the steps together.  
 
 ```{r years}
 
@@ -189,49 +184,44 @@ vColumnNames = str_replace_all(vColumnNames, " occupations", "")
 dfBLS %<>%
   rename(Industry = contains("Household"), !!vColumnNames[1] := X.1, !!vColumnNames[2] := X.2, !!vColumnNames[3] := X.3, !!vColumnNames[4] := X.4, !!vColumnNames[5] := X.5, !!vColumnNames[6] := X.6, !!vColumnNames[7] := X.7, !!vColumnNames[8] := X.8, !!vColumnNames[9] := X.9, !!vColumnNames[10] := X.10, !!vColumnNames[11] := X.11)
 
+dfBLS_Men = DemographicUnit(dfBLS, 29, 47, "Male")
+dfBLS_Women = DemographicUnit(dfBLS, 50, 68, "Female")
+dfBLS_White = DemographicUnit(dfBLS, 71, 89, "White")
+dfBLS_Black = DemographicUnit(dfBLS, 92, 110, "Black")
+dfBLS_Asian = DemographicUnit(dfBLS, 113, 131, "Asian")
+dfBLS_Total = DemographicUnit(dfBLS, 8, 26, "Total")
 
-dfBLS_Men = DemographicUnit(dfBLS, 29, 47, "Gender", "Male")
-dfBLS_Women = DemographicUnit(dfBLS, 50, 68, "Gender", "Female")
-dfBLS_White = DemographicUnit(dfBLS, 71, 89, "Race", "White")
-dfBLS_Black = DemographicUnit(dfBLS, 92, 110, "Race", "Black")
-dfBLS_Asian = DemographicUnit(dfBLS, 113, 131, "Race", "Asian")
-dfBLS_Total = DemographicUnit(dfBLS, 8, 26, "Race", "Total")
+dfAll <- rbind(dfBLS_Women, dfBLS_Men, dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
 
-dfRace <- rbind(dfBLS_Black, dfBLS_White, dfBLS_Asian, dfBLS_Total)
-dfGender <- rbind(dfBLS_Women, dfBLS_Men)
-
-dfRace %<>% 
-  spread(Race, NumberEmployed) %<>%
+dfAll %<>% 
+  spread(demog, NumberEmployed) %<>%
   mutate_at(vars(Black, White, Asian, Total), list(as.numeric)) %<>%
-  mutate(Other = Total-(Black + White + Asian)) %<>%
-  select(-"Total") %<>%
-  gather(Black, White, Asian, Other, key="Race", value="NumberEmployed")
+  mutate(Other = Total-(Black + White + Asian))
 
-
-  return(list(dfRace,dfGender))
+  return(dfAll)
 
 }
 
 dfs <- ReadYear("2016")
-dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
-dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+dfFinal <- rbind(dfFinal, dfs)
 
 dfs <- ReadYear("2017")
-dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
-dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+dfFinal <- rbind(dfFinal, dfs)
 
 dfs <- ReadYear("2018")
-dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
-dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+dfFinal <- rbind(dfFinal, dfs)
 
 dfs <- ReadYear("2019")
-dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
-dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+dfFinal <- rbind(dfFinal, dfs)
 
 dfs <- ReadYear("2020")
-dfRaceFinal <- rbind(dfRaceFinal, dfs[[1]])
-dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
+dfFinal <- rbind(dfFinal, dfs)
 
+dfFinal %<>%
+  select(-"RowID") %<>%
+  select("Year", "Industry", "Occupation", "Female", "Male", "Black", "White", "Asian", "Other", "Total")
+
+write.csv(dfFinal, "D:\\RStudio\\CUNY_607\\Projects\\Project 2\\Final.csv")
 ```
 
 ## Analysis
@@ -239,23 +229,6 @@ dfGenderFinal <- rbind(dfGenderFinal, dfs[[2]])
 Some analysis here ... 
 
 ```{r analysis2}
-
-dfInfoGender=dfGenderFinal %>%
-  group_by(Year, Occupation) %>%
-    summarize(n=sum(NumberEmployed), n_Female = sum(NumberEmployed[Gender=="Female"]), percentFemale = (n_Female/n)*100) %>%
-  mutate(percentFemale = ifelse(is.nan(percentFemale), 0, percentFemale))
-  
-dfInfoRace=dfRace %>%
-  filter(Industry=="Information")
-
-g <- ggplot(dfInfoGender, aes(x = reorder(Occupation, percentFemale), y = percentFemale, group=Year, fill=Year)) + 
-  geom_col(position = position_dodge(), width=.8, color = "black") + 
-  xlab("Occupation") + ylab("Percent Women Employed") +
-  ggtitle("Percentage of Women Employed, All Industries") +  
-  coord_flip() +
-  scale_fill_brewer(palette="Spectral") +
-  theme(legend.position="bottom")
-g
 
 ```
 
