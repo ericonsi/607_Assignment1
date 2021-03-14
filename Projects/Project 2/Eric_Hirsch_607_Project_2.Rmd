@@ -17,6 +17,7 @@ library(stringr)
 library(magrittr)
 library(gridExtra)
 library(readxl)
+library(kableExtra)
 ```
 
 # Project 2 
@@ -65,7 +66,8 @@ The biggest challenge with this data was data formation. It contained many piece
 The next challenge was creating a metric to join population data that fluctuated depending on the year. I found population data that was yearly from 1950-2017, by decade from 1900-1950 and every century from 1AD to 1900. Because of this I had to make my own rounding function. where depending on what year the event was it rounded so that population metrics could be added accordingly.
 
 
-### Tidying Dataset #1
+### Tidying Dataset #1: BLS Data
+
 
 1. First, the first year of data is read into a data frame: 
 
@@ -241,17 +243,328 @@ dfs <- ReadYear("2020")
 dfFinal <- rbind(dfFinal, dfs)
 
 dfFinal %<>%
-  select(-"RowID") %<>%
   select("Year", "Industry", "Occupation", "Female", "Male", "Black", "White", "Asian", "Other", "Total")
 
-write.csv(dfFinal, "D:\\RStudio\\CUNY_607\\Projects\\Project 2\\Final.csv")
+```
+Thus we go from this:
+
+```{r vv}
+head(dfBLS_raw,10) %>%
+  kbl(caption = "Raw Data - BLS") %>%
+  kable_styling(bootstrap_options = c("condensed"))
+```
+to this:
+
+```{r gfd}
+head(dfFinal) %>%
+  kbl(caption = "Final Data - BLS") %>%
+  kable_styling(bootstrap_options = c("condensed"))
 ```
 
-## Analysis
 
-Some analysis here ... 
+
+### Analysis of Dataset 1: BLS Data
+
+__Task - Name one significant shift in women's employment from traditional occupations/industries to nontraditional from 2015 to 2020.__
+
+Thiswas harder than one might think!
+
+We begin by examining the top 5 occupation/Industry combinations for women in 2015 and 2020.  We can see that the same combinations appear in each year, though the percentages and order change slightly.  These are sectors where women dominate: nannies and maids, education and health, and various office and admin support occupations.
 
 ```{r analysis2}
+dfFinal <- read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/Final.csv")
+dfFinal <- mutate_at(dfFinal, vars(Year), list(as.character))
+dfFinal <- na.omit(dfFinal)
+  
+df2015 <- dfFinal %>%
+  filter(Year=="2015" & Total>100) %>%
+  mutate(PercentWomen = Female/Total) %>%
+  select(Industry, Occupation, Total, PercentWomen) %>%
+  arrange(desc(PercentWomen))
+df2015 <- na.omit(df2015)
+
+head(df2015) %>%
+  kbl(caption = "Top Occupation/Industries - 2015") %>%
+  kable_styling(bootstrap_options = c("condensed"))
+
+df2020 <- dfFinal %>%
+  filter(Year=="2020" & Total>100) %>%
+  mutate(PercentWomen = Female/Total) %>%
+  select(Industry, Occupation, Total, PercentWomen) %>%
+  arrange(desc(PercentWomen))
+df2020 <- na.omit(df2020)
+
+head(df2020) %>%
+  kbl(caption = "Top Occupation/Industries - 2020") %>%
+  kable_styling(bootstrap_options = c("condensed"))
 
 ```
+We can do a deeper dive into occupations and industries by year to see if we can track any significant changes there.
+
+```{r 6}
+dfSummary <- dfFinal %>%
+  group_by(Occupation, Year) %>%
+  summarize(Percent = sum(Female)/sum(Total))
+
+dfSummary <- na.omit(dfSummary)
+
+ggplot(data = dfSummary, aes(x =Occupation, y=Percent, group=Year, fill=Year)) +
+  geom_col(position=position_dodge()) + ggtitle("Percent of Women Employed By Occupation") +
+  coord_flip() +
+  scale_fill_brewer(palette = "Spectral") 
+  
+  
+
+```
+
+The average percent of women employed in various occupations in the US was very stable from 2105 to 2020.  The only really noticeable shift is in transportation. In most sectors there is little change.  There are some odd outliers - e.g. a large drop in the % of women employed in farming and fishing in 2017. Given the relative stability elsewhere this is probably a shift in how occupations are labeled rather than a real change in the workforce.  
+
+Looking at industries ...
+
+```{r uy}
+dfSummary2 <- dfFinal %>%
+  group_by(Industry, Year) %>%
+  summarize(Percent = sum(Female)/sum(Total))
+
+
+dfSummary2 <- na.omit(dfSummary2)
+
+ggplot(data = dfSummary2, aes(x =Industry, y=Percent, group=Year, fill=Year)) +
+  geom_col(position=position_dodge()) + ggtitle("Percentage of Women Employed By Industry")+
+  coord_flip() +
+  scale_fill_brewer(palette = "Spectral")
+
+
+```
+
+Industries show a tiny bit more movement.  Women's % in some traditional industries like nannying and maids fell, and rose slightly in nontraditional ones like construction and mining.
+
+Do these minor industry shifts signify real change?  Let's look at the occupations women are occupying in the mining industry: 
+
+```{r mm}
+dfSummary <- dfFinal %>%
+  filter(Industry=="Mining, quarrying, and oil and gas extraction") %>%
+  group_by(Occupation, Year) %>%
+  summarize(Percent = sum(Female)/sum(Total))
+
+dfSummary <- na.omit(dfSummary)
+
+ggplot(data = dfSummary, aes(x =Occupation, y=Percent, group=Year, fill=Year)) +
+  geom_col(position=position_dodge()) + ggtitle("Percentage of Women Employed in Mining") +
+  coord_flip() +
+  scale_fill_brewer(palette = "Spectral")
+
+```
+
+Most of the increase in women's % in mining is in traditional occupations like office, admin, and non-protective services.
+
+We can also circle back to transportation, the occupation in which women have been making the most inroads.  What is happening there?
+
+```{r cv}
+
+dfSummary2 <- dfFinal %>%
+  filter(Occupation=="Transportation and material moving") %>%
+  group_by(Industry, Year) %>%
+  summarize(Percent = sum(Female)/sum(Total))
+
+
+dfSummary2 <- na.omit(dfSummary2)
+
+ggplot(data = dfSummary2, aes(x =Industry, y=Percent, group=Year, fill=Year)) +
+  geom_col(position=position_dodge()) + ggtitle("Percentage of Women in Transportation By Industry")+
+  coord_flip() +
+  scale_fill_brewer(palette = "Spectral")
+
+
+```
+
+There appears to be some real movement in women's % of participation in transportation accross many industries.  While mainly in service, education, information and retail, nonetheless women do appear to be making inroads into transportation occupations.  
+
+A google search reveals that in 2016 the DOT launched the Women and Girls Transportation Initiative to increase women' participation in transportation. The initiative appears to have been successful.
+
+While there was little shift of women's percentages in most occupations between 2015 and 2020, transportation does appear to be one area where women made headway in a number of industries.
+
+
+
+### Analysis of Dataset 2: Prison Data
+
+The prison dataset was tidied from this:
+
+```{r v886v}
+prison_admissions_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/TheUpshot/prison-admissions/master/county-prison-admissions.csv", 
+                                                  header = TRUE, stringsAsFactors = FALSE, sep = ","))
+
+
+head(prison_admissions_raw) %>%
+  kbl(caption = "Raw Data - Prisons") %>%
+  kable_styling(bootstrap_options = c("condensed"))
+```
+to this:
+
+```{r gf6987d}
+
+dfPrisons <- read.csv("https://raw.githubusercontent.com/cassandra-coste/CUNY607/main/prison_df.csv")
+
+head(dfPrisons) %>%
+  kbl(caption = "Prison and County Data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+__Task - What states account for the reduction in prison admissions from 2006 to 2014?__
+
+
+```{r c26885v}
+
+dfPrisons <- mutate_at(dfPrisons, vars(year), list(as.character))
+dfPrisons <- na.omit(dfPrisons)
+
+dfSummary2 <- dfPrisons %>%
+  group_by(year) %>%
+  summarize(Total = sum(prison_admissions))
+
+dfSummary2 <- na.omit(dfSummary2)
+
+ggplot(data = dfSummary2, aes(x =year, y=Total)) +
+  geom_col(position=position_dodge()) + ggtitle("Total Prison Admissions by Year")+
+  scale_fill_brewer(palette = "Spectral") +
+  ylab("Admissions")
+
+```
+
+We can see that overall prison admissions fell from 2006 to 2014.
+
+```{r c23v}
+
+dfSummary2 <- dfPrisons %>%
+  group_by(state, year) %>%
+  summarize(Total = sum(prison_admissions))
+
+dfSummary2 <- na.omit(dfSummary2)
+
+ggplot(data = dfSummary2, aes(x =state, y=Total, group=year, fill=year)) +
+  geom_col(position=position_dodge()) + ggtitle("Total Prison Admissions by State")+
+  scale_fill_brewer(palette = "Spectral") +
+  ylab("Admissions")
+
+```
+
+The lion's share of decreases came from California - Alabama, Florida, New York and Ohio contributed as well.  There were a few states that gained admissions as well, though the gains were rather small - Arizona, Minnesota, Kentucky, North Carolina, Oklahoma and Pennsylvania.
+
+```{r c265v}
+
+dfCounty <- dfPrisons %>%
+  filter(state=="CA") %>%
+  group_by(county, urbanicity) %>%
+  summarize(Diff = sum(prison_admissions[year=="2006"] - sum(prison_admissions[year=="2014"]))) %>%
+  filter(Diff>750)
+
+ggplot(data = dfCounty, aes(x = reorder(county, Diff),  y=Diff)) +
+  geom_col(position=position_dodge()) + ggtitle("Decrease in Prison Admissions by CA County, 2006-2014")+
+  scale_fill_brewer(palette = "Spectral") +
+  coord_flip() +
+  ylab("Decrease in Admissions") +
+    xlab("County")
+```
+
+Many counties in California contributed to the decline, mostly in Southern California which accounted for the 5 counties over 5,000.  Los Angeles, however,  dominated the losses with over 22,000.
+
+
+```{r qwerd}
+
+ggplot(data = dfCounty, aes(x = reorder(county, Diff),  y=urbanicity)) +
+  geom_col(position=position_dodge()) + ggtitle("Counties by 'Urbanicity'")+
+  scale_fill_brewer(palette = "Spectral") +
+  coord_flip() +
+  ylab("Urbanicity") +
+  xlab("County")
+
+```
+
+When we look at the "urbancity" of admission declines we see all the counties in California with declines above 750 are urban metropolitan areas.
+
+Thus we conclude that the bulk of admission declines are from California metro areas, especially in Southern California.
+
+
+
+### Analysis of Dataset 3: Epidemics
+
+The epidemic dataset was tidied from this:
+
+```{r v6v}
+dfepidemic_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/TheSaltyCrab/Data607-Project2/main/epidemic.csv", 
+                                                  header = TRUE, stringsAsFactors = FALSE, sep = ","))
+
+
+head(dfepidemic_raw) %>%
+  kbl(caption = "Raw Data - Epidemics") %>%
+  kable_styling(bootstrap_options = c("condensed"))
+```
+to this:
+
+```{r gf6d}
+
+dfepidemics <- read.csv("https://raw.githubusercontent.com/TheSaltyCrab/Data607-Project2/main/a_clean_epidemic.csv")
+
+head(dfepidemics) %>%
+  kbl(caption = "Epidemic - clean") %>%
+  kable_styling(bootstrap_options = c("condensed"))
+```
+__Task - How does the Covid epidemic compare to other epidemics through history?__
+
+
+```{r xyz}
+
+dfepidemics <- mutate_at(dfepidemics, vars(deaths_low_estimate), list(as.integer))
+
+dfE <- dfepidemics %>%
+  select(event, deaths_low_estimate) %>%
+  na.omit() %>%
+  filter(deaths_low_estimate > 200000)
+
+dfHighlight <- dfE %>%
+  filter(event=="COVID-19 pandemic")
+
+ggplot(data = dfE, aes(x = reorder(event, deaths_low_estimate),  y=deaths_low_estimate)) +
+  geom_col(position=position_dodge()) + ggtitle("Epidemics by Total Deaths")+
+  scale_fill_brewer(palette = "Spectral") +
+  coord_flip() +
+  geom_col(data=dfHighlight, aes(x=event, y=deaths_low_estimate), color="black", fill="orange") +
+  xlab("Event") +
+  ylab("Number of Deaths")
+
+```
+
+In terms of total deaths COVID 19 has been very significant (in the top ten) but is dwarfed by some tof the big ones (AIDS, the Black Death and the 1918 Spanish Flu pandemic).  
+
+The dataset does not include population estimates for many years so we will fill NA values with the value above for a proxy.  Then we can calculate % deaths per population for COVID and other events that have no global percentage calculated.
+
+```{r yph}
+
+dfE <- dfepidemics %>% fill(global_population) %>%
+   mutate(glob_percent = deaths_low_estimate/global_population*100) %>%
+  select(event, glob_percent) %>%
+    na.omit() %>%
+  filter(glob_percent>.035)
+
+dfHighlight <- dfE %>%
+  filter(event=="COVID-19 pandemic")
+
+ggplot(data = dfE, aes(x = reorder(event, glob_percent),  y=glob_percent)) +
+  geom_col(position=position_dodge()) + ggtitle("Epidemics by % of Deaths in World Pop")+
+  scale_fill_brewer(palette = "Spectral") +
+  coord_flip() +
+  geom_col(data=dfHighlight, aes(x=event, y=glob_percent), color="orange", fill="orange") +
+  xlab("Event") +
+  ylab("% of Deaths")
+
+```
+
+
+In terms of % of global population, COVID is again dwarfed by others but still makes the list at 20.
+
+## Conclusion
+
+The three data sets Cassie, Dan and I chose all had different challenges. My data set had classic issues of wideness, repeating data, etc. Cassie also had a wide data set that needed a reworking of columns and some adding of new columns. Dan had a host of standardization issues – dates, numbers, and text were all written in different formats throughout the data set. Both Cassie and Dan added data from more than one type of data set, and I combined six data sets of the same type from different years.
+
+Working in a team made it possible to learn many different techniques very quickly.  We are all much more advanced in our ability to tidy data.
 
