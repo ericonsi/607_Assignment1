@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+
+<Books>
+	<Book>
+<Title>Zen Flesh, Zen Bones</Title>
+	 <Authors auth1=Paul Reps, auth2=Nyogen Senzaki></Authors>
+	 <Contemporary>Yes</Contemporary>
+	 <Tradition>Zen</Tradition>
+	</Book>
+<Title>Awakening Compassion</Title>
+	 <Authors auth1=Pema Chodron></Authors>
+	 <Contemporary>Yes</Contemporary>
+	 <Tradition>Tibetan</Tradition>
+	</Book>
+<Title>The Way of the Bodhisattva</Title>
+	 <Authors auth1=Shantideva></Authors>
+	 <Contemporary>No</Contemporary>
+	 <Tradition>Indian</Tradition>
+	</Book>
+<Title>True Love</Title>
+	 <Authors auth1=Thich Nhat Hanh></Authors>
+	 <Contemporary>Yes</Contemporary>
+	 <Tradition>Zen</Tradition>
+	</Book>
+</Books>
