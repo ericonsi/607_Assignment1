@@ -1,0 +1,72 @@
+---
+title: 'DATA 607:  HTML, XML, JSON; Week 7'
+author: Eric Hirsch
+output:
+  html_document:
+    theme: lumen
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(rvest)
+library(jsonlite)
+library(xml2)
+library(XML)
+library(stringr)
+
+```
+## HTML, XML and JSON tables in R
+
+### The purpose of this assignment was to learn how to load html, xml and json files into r.  HTML and JSON are straightforward, XML needs tweaking if there is any nesting.
+
+#### 1. HTML - with a couple of lines we can load an html table into a dataframe:
+```{r html}
+h <- read_html("D:\\RStudio\\CUNY_607\\Assigments\\Assignment 7\\Books.html.txt") 
+dfHtml <- data.frame(html_table(h))
+knitr::kable(dfHtml)
+```
+
+#### 2. XML - the xml packages in r will, under certain circumstances, concatenate nested elements (what should be 'a, b' becomes 'ab').  I wrote code to correct this in my table - however, we would need a generalizable function if we were to read xml tables more often. 
+
+```{r xml}
+library(XML)
+
+x <- xmlParse("D:\\RStudio\\CUNY_607\\Assigments\\Assignment 7\\Books.nested.xml.txt")
+
+dfXML <- xmlToDataFrame(x)
+dfAuthors <- as.data.frame(t(xpathSApply(x,"//Authors",function(x) xmlSApply(x,xmlValue))))
+
+auth <- as.data.frame(dfAuthors$V1)
+dfXML[1,2] <- str_c(auth[1,1], ", ", auth[2,1])
+
+knitr::kable(dfXML)
+```
+
+#### 3. JSON needs a line of code to bind the elements and one to remove a rownames column, but otherwise is straightfoward
+```{r json}
+j <- fromJSON("D:\\RStudio\\CUNY_607\\Assigments\\Assignment 7\\Books.nested.json.txt")
+dfJSON <- do.call("rbind", lapply(j, data.frame, stringsAsFactors=FALSE))
+
+rownames(dfJSON) <- NULL
+
+knitr::kable(dfJSON)
+```
+#### Are the tables the same? They look the same, but the all.equal function can help us discover differences.
+
+```{r asd}
+all.equal(dfHtml, dfXML)
+all.equal(dfHtml, dfJSON)
+all.equal(dfJSON, dfXML)
+```
+
+We see a lot of differences! One is obvious - the HTML table column name is "Author" while for the others it's Authors. For the other mismatches, this is because the multiple authors in JSN are being stored as a list, not characters.
+
+## Conclusion
+
+HTML, XML, and JSON differ in the ease with which we can import them into r.  But we need to learn them all since we may not have a choice.

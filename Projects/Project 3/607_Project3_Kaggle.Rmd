@@ -1,0 +1,76 @@
+---
+title: "CUNY_Project_3"
+author: "Eric Hirsch"
+date: "3/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+#http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
+
+source("D:\\RStudio\\RPractice\\EH_Data.R")
+source("D:\\RStudio\\RPractice\\EH_Plots.R")
+
+library(readxl)
+library(dplyr )
+library(stringr)
+library(tidyverse)
+library(magrittr)
+
+#dfSynopses<-EH_RetrieveDataFrameFromExcelWorksheet("D:/Desk Drawer/Data Science/DataSets/Kaggle Datasets/synopses.xlsx", "synopses")
+dfKaggle <-read_csv("D:/RStudio/CUNY_607/Projects/Project 3/Kaggle CSVs/alldata.csv")
+dfKaggle %<>% 
+  filter(str_detect(dfKaggle$position, "Data Scientist" ))
+
+dfKaggle2 <- dfKaggle %>%
+ filter(row_number() %% 20 == 1) 
+
+a1<-as.data.frame(str_extract(dfKaggle$description, "(.............................................................................)skills"))
+
+a1 <- na.omit(a1)
+
+a1 %<>%
+  rename(Skills='str_extract(dfKaggle$description, "(.............................................................................)skills")')
+
+write_csv(a1, "D:/RStudio/CUNY_607/Projects/Project 3/Kaggle CSVs/SkillsExtract.csv")
+
+freqSkills <- EH_WordCloudIt(a1, "Skills", FALSE)
+
+write.csv(freqSkills, "D:/RStudio/CUNY_607/Projects/Project 3/Kaggle CSVs/SkillsExtract_Results.csv")
+
+a2<-as.data.frame(str_extract(dfKaggle$description, "ability to(.............................................................................)"))
+
+a2 <- na.omit(a2)
+
+a2 %<>%
+  rename(Abilities='str_extract(dfKaggle$description, "ability to(.............................................................................)")')
+
+write_csv(a2, "D:/RStudio/CUNY_607/Projects/Project 3/Kaggle CSVs/AbilitiesExtract.csv")
+
+freqAbilities <- EH_WordCloudIt(a2, "Abilities", FALSE)
+
+write.csv(freqAbilities, "D:/RStudio/CUNY_607/Projects/Project 3/Kaggle CSVs/AbilitiesExtract_Results.csv")
+
+```
+
+```{r g}
+
+freqAbilities <- EH_WordCloudIt(dfKaggle, "description", FALSE)
+```
+
+#freq <- EH_WordCloudIt(dfKaggle, ", ", FALSE)
+
+#If you want to just look at synopses with a certain word
+#dfKaggle<-filter(dfKaggle,grepl('comedy', description))
+#E H_WordCloudIt(dfKaggle, "description", FALSE)
+
+
+
+
+
+
+```
+

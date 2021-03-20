@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html>
+
+
+	<head>
+		<title> Books from the Buddhist Tradition</title>
+	</head>
+
+	<body>
+		<table>
+			<tr>
+				<th>Title</th>
+				<th>Author</th>
+				<th>Contemporary</th>
+				<th>Tradition</th>
+			</tr>
+			<tr>
+				<td>Zen Flesh, Zen Bones</td>
+				<td>Paul Reps, Nyogen Senzaki</td>
+				<td>Yes</td>
+				<td>Zen</td>
+			</tr>
+			<tr>
+				<td>Awakening Compassion</td>
+				<td>Pema Chodron</td>
+				<td>Yes</td>
+				<td>Tibetan</td>
+
+			</tr>
+			<tr>
+				<td>The Way of the Bodhisattva</td>
+				<td>Shantideva</td>
+				<td>No</td>
+				<td>Indian</td>
+			</tr>
+			<tr>
+				<td>True Love</td>
+				<td>Thich Nhat Hanh</td>
+				<td>Yes</td>
+				<td>Zen</td>
+			</tr>
+        
+        
+		</table>
+		
+
+	</body>
+	
+</html>

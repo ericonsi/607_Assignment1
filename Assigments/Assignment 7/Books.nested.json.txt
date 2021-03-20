@@ -1,0 +1,27 @@
+{"Books" :[ 
+	{"Title": "Zen Flesh, Zen Bones",
+	 "Author": {
+		"auth1": "Paul Reps",
+		"auth2": "Nyogen Senzaki"
+		},
+	 "Contemporary": "Yes",
+	 "Tradition": "Zen"
+	},
+	{"Title": "Awakening Compassion",
+	 "Author": "Pema Chodron",
+	 "Contemporary": "Yes",
+	 "Tradition": "Tibetan"
+	},
+	{"Title": "The Way of the Bodhisattva",
+	 "Author": "Shantideva",
+	 "Contemporary": "no",
+	 "Tradition": "Indian"
+	},
+
+	{"Title": "True Love",
+	 "Author": "Thich Nhat Hanh",
+	 "Contemporary": "Yes",
+	 "Tradition": "Zen"
+	}
+]
+}
