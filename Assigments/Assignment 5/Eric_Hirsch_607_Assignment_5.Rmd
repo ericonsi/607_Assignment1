@@ -2,7 +2,8 @@
 title: "Eric_Hirsch_607_Assignment_5"
 author: "Eric Hirsch"
 date: "`r Sys.Date()`"
-output: html_document
+output: 
+  tufte::tufte_html: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,6 +17,8 @@ library(tidyverse)
 library(stringr)
 library(magrittr)
 library(gridExtra)
+library(tufte)
+library(knitr)
 ```
 
 ## Using TidyR and Dyplr for Data Transformation
@@ -24,7 +27,7 @@ library(gridExtra)
 
 In this project we will transform a csv file into a usable dataframe using TidyR and Dyplr. After the transformation we will conduct some analyses.
 
-We load the data ... 
+First we load the data ... 
 
 ``` {r load data}
 dfFlights_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/Flights.csv", header = TRUE, stringsAsFactors = TRUE, sep=","))
@@ -38,7 +41,7 @@ dfFlights <- dfFlights_raw %>%
   rename(c(Airline =  "X", Status = "X.1")) %>%
   mutate_all(list(~na_if(.,"")))
 
-head(dfFlights)
+kable(head(dfFlights))
 ```
 
 
@@ -49,14 +52,14 @@ Now we use TidyR to normalize the table - this is an extremely powerful library 
 
 dfFlights %<>%
   gather("Los.Angeles", "Phoenix", "San.Diego", "San.Francisco", "Seattle", key="City", value="NumOfFlights") %<>%
-  fill(Airline)
+  fill(Airline) %<>%
 ```
 
 ... and that's all it takes!
 
 ## Analysis of Delays
 
-Now we can analyse the airlines delays.  We start with the mean delay percentage (flights delayed over total flights) for each airline.  Amwest appears to have a better track record than Alaska.
+Now we can analyse the airline's delays.  We start with the mean delay percentage (flights delayed over total flights) for each airline.  Amwest appears to have a better track record than Alaska.
 
 ```{r dfs}
 dfSummaryStats <- dfFlights %>% 
@@ -86,37 +89,31 @@ Here are the numbers showing proportion of delayed flights per airline:
 
 ```{r mean}
 
-print(dfSummaryStats2)
+kable(dfSummaryStats2)
 
 ```
 
-However, when we look at the percentage of delayed flights by city, Alaska is the clear winner, beating Amwest in every city:.
-
-
-```{r bar}
-
-g3<-ggplot(dfDelaysOnly, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
+```{r bar, fig.margin=TRUE, fig.cap="Fig. 1: A comparison by airline of the % of delays by city"}
+ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) +
   geom_col(position = position_dodge()) +
-  ggtitle("Number of Delays By Airline By City") +
-  theme(axis.text.x = element_text(angle = 90))
-
-
-g4<-ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("% of Delays By Airline By City") +
-  theme(axis.text.x = element_text(angle = 90))
-
-
-grid.arrange (g3, g4, ncol=2)
-
+  coord_flip()
 ```
+
+However, when we look at the percentage of delayed flights by city, Alaska is the clear winner, beating Amwest in every city (Fig 1.).
 
 How is this possible?
+
+
+```{marginfigure, echo=TRUE}
+
+Did you know: The paradox we are encountering in this exercise is called "Simpson's Paradox," first described in a technical paper by Edward H. Simpson in 1951.
+
+```
 
 If we look at the distribution of delay % by city, we can see that although Alaska beats Amwest when they are head to head in a city, in fact some of the % delays for Amwest are lower than some of those for Alaska. And Amwest's delay percentage is at its lowest in a city that has a highly disproportionate number of Amwest flights (Phoenix). This is going to bring the overall mean % of Amwest's delays way down:
 
 ```{r paradox}
-print(dfSummaryStats)
+kable(dfSummaryStats)
 ```
 
 
@@ -124,7 +121,7 @@ Is there anything in the data that might explain Amwest's poorer per city perfor
 
 These graphs display the percentage of delays by total flights for each airline.  The second one has two outliers removed:
 
-```{r size}
+```{r size, fig.margin=TRUE, fig.cap="Fig. 2: Percentage of delays by total flights by airline"}
 
 g4<-ggplot(dfSummaryStats, aes(x=sum_Flights, y=propOfDelay)) +
   geom_point() +
@@ -153,7 +150,7 @@ Neither of the graphs nor the regression analysis that follows suggest that % of
 
 Perhaps it's something more sinister.  Is it possible there is some kind of favoritism going on among airport staff and crew?  There is no easy way to measure that directly, but as an albeit weak proxy we observe that Phoenix appears to be some kind of hub for Amwest and Seattle a hub for Alaska:
 
-```{r traffic}
+```{r traffic, fig.margin=TRUE, fig.cap="Fig. 3: Number of flights by airline by city"}
 
 g3<-ggplot(dfFlights, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
   geom_col(position = position_dodge()) +
@@ -167,7 +164,7 @@ While Amwest has a higher percentage of delays across the board, is the gap betw
 
 This barchart shows the difference in the % delays between the two airlines, by city.  
 
-```{r diff 2}
+```{r diff 2, , fig.margin=TRUE, fig.cap="Fig. 4: Difference in % of delays by city"}
 
 g2<-ggplot(dfPercentDiff, aes(x=City, y=propDiff)) +
   geom_col(position = position_dodge()) +
@@ -182,6 +179,6 @@ Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seatt
 
 Perhaps it is the weather. Amwest does worst in the Northern cities - but at this point there is too little data to determine anything more than anecdotal.  Besides, blaming it on the weather, while we have all done it, is hardly a viable excuse.
 
-### Conclusion
+## Conclusion
 
 Amwest filed for bankruptcy in the early ninieties and eventually was swallowed up by US Air. This is a prophetic story.  Had they employed data scientists who could have shown them the above charts they might have survived to this day.
