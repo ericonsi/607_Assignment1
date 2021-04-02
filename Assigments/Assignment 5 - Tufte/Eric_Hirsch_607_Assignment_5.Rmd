@@ -19,11 +19,13 @@ library(magrittr)
 library(gridExtra)
 library(tufte)
 library(knitr)
+library(ggthemes)
+library(extrafont)
+#font_import()
+#loadfonts()
 ```
 
 ## Using TidyR and Dyplr for Data Transformation
-
-#### Introduction 
 
 In this project we will transform a csv file into a usable dataframe using TidyR and Dyplr. After the transformation we will conduct some analyses.
 
@@ -85,6 +87,26 @@ dfPercentDiff <- dfSummaryStats %>%
   summarize(propDiff=propOfDelay[Airline=="AMWEST"] - propOfDelay[Airline=="ALASKA"])
 
 ```
+
+```{r boxplot}
+
+gg2 <-ggplot(dfSummaryStats, aes(reorder(City, propOfDelay), propOfDelay)) +
+geom_boxplot() + theme(axis.text.x = element_text(angle = 90), axis.title = element_text(size=15), axis.text = element_text(size = 15), plot.title = element_text(size=18)) +
+  ggtitle("Percentage of Delayed Flights by City") +
+  ylab("Percentage of Flights Delayed") +
+  xlab("City") + 
+  coord_flip()
+gg2
+
+gg1 <- ggplot(dfSummaryStats, aes(reorder(City, propOfDelay), propOfDelay)) + theme_tufte() +
+geom_tufteboxplot(outlier.colour="transparent") + theme(axis.title=element_blank(), axis.text.x = element_text(angle = 90), axis.text = element_text(size = 20), plot.title = element_text(size=20)) +
+annotate("text", x = 0, y =30, adj=0,  family="serif", label = "") +
+  ggtitle("Percentage of Delayed Flights by City") + 
+  coord_flip()
+gg1
+
+```
+
 Here are the numbers showing proportion of delayed flights per airline:
 
 ```{r mean}
@@ -94,9 +116,10 @@ kable(dfSummaryStats2)
 ```
 
 ```{r bar, fig.margin=TRUE, fig.cap="Fig. 1: A comparison by airline of the % of delays by city"}
-ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) +
+ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) +
+  theme_tufte() +
   geom_col(position = position_dodge()) +
-  theme(axis.text.x = element_text(angle = 90), axis.text = element_text(size = 20)) +
+  theme(axis.text.x = element_text(angle = 90), axis.text = element_text(size = 20), legend.text = element_text(size=20), legend.title=element_blank()) +
   ylab("") + 
   xlab("") +
   coord_flip()
@@ -105,6 +128,18 @@ ggplot(dfSummaryStats, aes(x=City, y=propOfDelay, group=Airline, fill=Airline)) 
 However, when we look at the percentage of delayed flights by city, Alaska is the clear winner, beating Amwest in every city (Fig 1.).
 
 How is this possible?
+
+
+```{r xyz, fig.margin=TRUE, fig.cap="Fig. 1: A comparison by airline of the % of delays by city"}
+
+ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) + theme_tufte(base_size=14, ticks=F) +
+  geom_bar(position = position_dodge(), width=0.3, stat = "identity") +  theme(axis.title=element_blank()) +
+  annotate("text", x = 3.5, y = 5, adj=1,  family="Gill Sans MT",
+label = "") +
+    theme(axis.text.x = element_text(angle = 0), axis.text = element_text(size = 22, family="Gill Sans MT"), legend.text = element_text(size=20), legend.title=element_blank()) +
+  coord_flip()
+
+```
 
 
 ```{marginfigure, echo=TRUE}
@@ -167,7 +202,7 @@ While Amwest has a higher percentage of delays across the board, is the gap betw
 
 This barchart shows the difference in the % delays between the two airlines, by city.  
 
-```{r diff 2, , fig.margin=TRUE, fig.cap="Fig. 4: The difference in the percentage of delays by city"}
+```{r diff 2, fig.margin=TRUE, fig.cap="Fig. 4: The difference in the percentage of delays by city"}
 
 g2<-ggplot(dfPercentDiff, aes(x=City, y=propDiff)) +
   geom_col(position = position_dodge()) +
@@ -178,6 +213,78 @@ g2<-ggplot(dfPercentDiff, aes(x=City, y=propDiff)) +
 
 g2
 
+```
+```{r gv}
+
+dfFlightYears <- read_csv("D:\\RStudio\\CUNY_607\\Assigments\\Assignment 5 - Tufte\\FileForSlopeGraph.csv")
+dfFlightYears %<>%
+  gather("Alaska", "Amwest", "British", "Continental", "Delta", "Eastern", "Hawaiian", key="airline", value="flights")  %<>%
+  mutate(flights=as.integer(flights))
+
+
+dfFlightYears %<>%
+  mutate(yearCat = as.character(as.integer(Year/10)*10))
+
+dfFl <- dfFlightYears %>%
+  group_by(airline, yearCat) %>%
+  summarize(Flights=round(mean(flights)))
+  
+
+#library(devtools)
+#install_github("leeper/slopegraph")#install Leeper's package from Github
+library(slopegraph)
+ggslopegraph2(dataframe = dfFl,
+                times = yearCat,
+                measurement = Flights,
+                grouping = airline,
+                title = NULL,
+                caption = NULL,
+                linecolor = "gray",
+                subtitle = NULL, 
+                linethickness = .5,
+                ytextsize = 3
+                )
+
+```
+
+Note the footnote displayed to the right of me! ^[This is a footnote.]
+
+```{r ll, fig.margin=TRUE, fig.cap="Fig. 4: Numbers of flights over time"}
+
+
+library(reshape)
+library(RCurl)
+library(extrafont)
+#font_import()
+#loadfonts(device = "win")
+
+d <- dfFlightYears
+mins <- group_by(d, airline) %>% slice(which.min(flights))
+maxs <- group_by(d, airline) %>% slice(which.max(flights))
+ends <- group_by(d, airline) %>% filter(Year == max(Year))
+quarts <- d %>% group_by(airline) %>%
+  summarize(quart1 = quantile(flights, 0.25),
+            quart2 = quantile(flights, 0.75)) %>%
+  right_join(d)
+
+ggplot(d, aes(x=Year, y=flights)) + 
+  facet_grid(airline ~ ., scales = "free_y") + 
+  geom_ribbon(data = quarts, aes(ymin = quart1, max = quart2), fill = 'grey90') +
+  geom_line(size=0.7) +
+  geom_point(data = mins, col = 'green', size=5) +
+  geom_point(data = maxs, col = 'blue', size = 5) +
+  geom_text(data = mins, aes(label = flights), vjust = -1, size=6, family="Gill Sans MT", col='red') +
+  geom_text(data = maxs, aes(label = flights), vjust = 2.5, size=6, family="Gill Sans MT") +
+  geom_text(data = ends, aes(label = flights), hjust = 0, nudge_x = 1, size=6, family="Gill Sans MT", col='red') +
+  geom_text(data = ends, aes(label = airline), hjust = 0, nudge_x = 8, size=8, family="Gill Sans MT") +
+  expand_limits(x = max(d$Year) + (0.5 * (max(d$Year) - min(d$Year)))) +
+  scale_x_continuous(breaks = seq(1960, 2010, 10)) +
+  scale_y_continuous(expand = c(0.2, 0)) +
+  theme_tufte() +
+  theme(axis.title=element_blank(), axis.text.y = element_blank(), 
+        axis.ticks = element_blank(), strip.text = element_blank(), axis.text = element_text(size = 14, family="Gill Sans MT")) +
+  theme(panel.background = element_rect(fill = "transparent", colour = NA),
+        plot.background = element_rect(fill = "transparent", colour = NA))
 ```
 
 
