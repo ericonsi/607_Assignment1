@@ -1,0 +1,98 @@
+---
+title: "Eric_Hirsch_607_Assignment_9"
+author: "Eric Hirsch"
+date: "4/2/2021"
+output: html_document
+---
+
+
+```{r, warning=FALSE, message=FALSE}
+#install.packages('tidyjson')
+library(RJSONIO)
+library(rvest)
+library(rjson)
+library(xml2)
+library(XML)
+library(stringr)
+library(jsonlite)
+library(tidyverse)
+library(magrittr)
+library(tidyjson)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Working with API and JSON
+
+### In this assignment we are pulling json data from a New York Times API.  In this example, we pull bestseller list data from the Books API.  
+
+When we use the Books API, we need to use separate URLs to pull different types of books (hardcover fiction, hardcover nonfiction, etc.).  When we pull a type of book we receive a json file containing overall header information for the week for all the books on that list (like the date and the type of book), and we receive information about each book on the list, such as title, rank, and description.
+
+Below is a function which will convert the week header information and the book information into two separate dataframes.  We will call the API four times using this function, for four separate book types, and then inner join the dataframes in order to pull information from both.
+
+```{r json}
+
+
+
+ReadBooks <- function(bookType)
+{
+fileName <- str_c("https://api.nytimes.com/svc/books/v3/lists/current/", bookType, ".json?api-key=U1BE0rsN7a3179DhU43SqV4fyQ1DErzX")
+                  
+rawBooks <- jsonlite::fromJSON(fileName)
+
+lsResults <- rawBooks[['results']]
+dfBooks <- lsResults[['books']]
+
+lsResults <- lsResults[-11]
+dfWeekHeader <- as.data.frame(do.call(cbind, lsResults))
+
+#Add an ID column to both
+ID = str_c(bookType,1)
+
+dfWeekHeader %<>%
+  mutate(WeekID = ID)
+dfBooks %<>%
+  mutate(WeekID = ID)
+
+return <- list(dfWeekHeader, dfBooks)
+
+}
+
+```
+
+Now we can read the API json into week header and book dataframes. As a demonstration we will make four separate calls to the API to pull four book types into the two dataframes.  Then we inner join the dataframes on an ID we created in the function above and return information pulled form both dtaframes about the top ranked books in each category:
+
+```{r}
+
+dfList <- ReadBooks("hardcover-nonfiction")
+dfList2 <- ReadBooks("hardcover-fiction")
+
+dfWeekHeader <- rbind(as.data.frame(dfList[1]), as.data.frame(dfList2[1]))
+dfBooks <- rbind(as.data.frame(dfList[2]), as.data.frame(dfList2[2]))
+
+dfList3 <-ReadBooks("e-book-fiction")
+dfWeekHeader <- rbind(dfWeekHeader, as.data.frame(dfList3[1]))
+dfBooks <- rbind(dfBooks, as.data.frame(dfList3[2]))
+
+dfList4 <-ReadBooks("paperback-nonfiction")
+dfWeekHeader <- rbind(dfWeekHeader, as.data.frame(dfList4[1]))
+dfBooks <- rbind(dfBooks, as.data.frame(dfList4[2]))
+
+dfJoin <- dfBooks %>% 
+  inner_join(dfWeekHeader, by="WeekID") %>%
+  filter(rank==1) %>%
+  select(rank_last_week, weeks_on_list, title, author, display_name) %>%
+  mutate(display_name = as.character(display_name))
+
+knitr::kable(dfJoin)
+
+
+```
+### Conclusion
+
+R has a number of tools which allow us to read JSON from an API and convert it to a dataframe.  This example shows how we can pull multiple dataframes from an API call and recombine them using inner_join.
+
+
+
