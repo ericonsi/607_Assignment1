@@ -1,0 +1,41 @@
+---
+title: "Untitled"
+author: "Eric Hirsch"
+date: "4/2/2021"
+output: html_document
+---
+
+
+```{r, warning=FALSE, message=FALSE}
+#install.packages('tidyjson')
+library(RJSONIO)
+library(rvest)
+library(rjson)
+library(xml2)
+library(XML)
+library(stringr)
+library(jsonlite)
+library(tidyverse)
+library(magrittr)
+library(tidyjson)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r json}
+# 3. JSON needs a line of code to bind the elements and one to remove a rownames column, but otherwise is straightfoward
+  
+# extracting data from the website
+rawData <- jsonlite::fromJSON("https://api.nytimes.com/svc/books/v3/lists/current/hardcover-nonfiction.json?api-key=U1BE0rsN7a3179DhU43SqV4fyQ1DErzX")
+  
+# extract the data node
+lsResults <- rawData[['results']]
+dfBooks <- lsResults[['books']]
+
+lsResults <- lsResults[-11]
+dfheaderInfo <- as.data.frame(do.call(cbind, lsResults))
+
+```
+
