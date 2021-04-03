@@ -7,10 +7,11 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r load-packages, message=FALSE}
+#install.packages('RCurl')
 library(openintro)
 library(tinytex)
 library(tidyverse)
@@ -22,7 +23,7 @@ library(knitr)
 library(ggthemes)
 library(extrafont)
 #font_import()
-#loadfonts()
+loadfonts()
 ```
 
 ## Using TidyR and Dyplr for Data Transformation
@@ -36,6 +37,16 @@ dfFlights_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/eri
 ```
 
 ... eliminate the unnecessary rows, and change some column names:
+
+```{marginfigure, echo=TRUE}
+
+Principle 1. Separate Data from Metadata: 
+```
+
+```{marginfigure, echo=TRUE}  
+There is a table to the left. If I wanted to make comments about that table, I could do it here.  We often have data, and then information about the data. This column, a mainstay of Tufte presentation, is a place to present this metadata.
+
+```
 
 ```{r bvkf}
 dfFlights <- dfFlights_raw %>% 
@@ -62,6 +73,17 @@ dfFlights %<>%
 ## Analysis of Delays
 
 Now we can analyse the airline's delays.  We start with the mean delay percentage (flights delayed over total flights) for each airline.  Amwest appears to have a better track record than Alaska.
+
+```{marginfigure, echo=TRUE}
+
+Principle 2. Increase the Data-Ink Ratio! 
+
+```
+
+
+```{marginfigure, echo=TRUE}
+This boxplot is great for analysis ...
+```
 
 ```{r dfs}
 dfSummaryStats <- dfFlights %>% 
@@ -97,10 +119,19 @@ geom_boxplot() + theme(axis.text.x = element_text(angle = 90), axis.title = elem
   xlab("City") + 
   coord_flip()
 gg2
+```
+
+```{marginfigure, echo=TRUE}
+
+... but this is cleaner, leaner and perhaps clearer for a presentation.
+
+```
+
+```{r b2}
 
 gg1 <- ggplot(dfSummaryStats, aes(reorder(City, propOfDelay), propOfDelay)) + theme_tufte() +
-geom_tufteboxplot(outlier.colour="transparent") + theme(axis.title=element_blank(), axis.text.x = element_text(angle = 90), axis.text = element_text(size = 20), plot.title = element_text(size=20)) +
-annotate("text", x = 0, y =30, adj=0,  family="serif", label = "") +
+geom_tufteboxplot(outlier.colour="transparent") + theme(axis.title=element_blank(), axis.text.x = element_text(angle = 0), axis.text = element_text(size = 20), plot.title = element_text(size=20), axis.ticks=element_blank()) +
+annotate("text", x = 0, y =30, adj=0,  family="Gill Sans MT", label = "") +
   ggtitle("Percentage of Delayed Flights by City") + 
   coord_flip()
 gg1
@@ -114,37 +145,49 @@ Here are the numbers showing proportion of delayed flights per airline:
 kable(dfSummaryStats2)
 
 ```
+```{marginfigure, echo=TRUE}
 
-```{r bar, fig.margin=TRUE, fig.cap="Fig. 1: A comparison by airline of the % of delays by city"}
+Principle 3. Placement Matters 
+
+```
+
+```{marginfigure, echo=TRUE}
+Here we move a chart to the side column.
+```
+
+
+
+```{r bar, fig.margin=TRUE}
 ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) +
-  theme_tufte() +
   geom_col(position = position_dodge()) +
-  theme(axis.text.x = element_text(angle = 90), axis.text = element_text(size = 20), legend.text = element_text(size=20), legend.title=element_blank()) +
-  ylab("") + 
-  xlab("") +
+  theme(axis.text = element_text(size = 20), axis.title=element_text(size=20), legend.text = element_text(size=20), legend.title = element_text(size=20), plot.title = element_text(size=20)) +
+  ylab("City") + 
+  xlab("Percentage of Delays") +
+    ggtitle("Percent Delays by City and Airline") +
   coord_flip()
 ```
 
+```{marginfigure, echo=TRUE}
+
+
+```
+
+```{marginfigure, echo=TRUE}
+We can improve this chart according to Tufte by erasing what we don't need:
+```
 However, when we look at the percentage of delayed flights by city, Alaska is the clear winner, beating Amwest in every city (Fig 1.).
 
 How is this possible?
 
 
-```{r xyz, fig.margin=TRUE, fig.cap="Fig. 1: A comparison by airline of the % of delays by city"}
+```{r xyz, fig.margin=TRUE, fig.cap="Fig.1: Percent delays by city and airline"}
 
 ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) + theme_tufte(base_size=14, ticks=F) +
   geom_bar(position = position_dodge(), width=0.3, stat = "identity") +  theme(axis.title=element_blank()) +
   annotate("text", x = 3.5, y = 5, adj=1,  family="Gill Sans MT",
 label = "") +
-    theme(axis.text.x = element_text(angle = 0), axis.text = element_text(size = 22, family="Gill Sans MT"), legend.text = element_text(size=20), legend.title=element_blank()) +
+    theme(axis.text.x = element_text(angle = 0), axis.text = element_text(size = 24 , family="Gill Sans MT"), legend.text = element_text(size=20), legend.title=element_blank()) +
   coord_flip()
-
-```
-
-
-```{marginfigure, echo=TRUE}
-
-Did you know: The paradox we are encountering in this exercise is called "Simpson's Paradox," first described in a technical paper by Edward H. Simpson in 1951.
 
 ```
 
@@ -154,12 +197,115 @@ If we look at the distribution of delay % by city, we can see that although Alas
 kable(dfSummaryStats)
 ```
 
-
 Is there anything in the data that might explain Amwest's poorer per city performance relative to Alaska's (besides incompetence, priority or some other reason internal to Amwest)? There is not much data to work with, but one difference might be the level of traffic - maybe the larger (or smaller) an airline is, the higher its delay percentage is.  
 
 These graphs display the percentage of delays by total flights for each airline.  The second one has two outliers removed:
 
-```{r size, fig.margin=TRUE, fig.cap="Fig. 2: Percentage of delays by total flights by airline"}
+```{marginfigure, echo=TRUE}
+
+Principle 4. Break up the Hegemony of the Monolithic Chart
+
+```
+
+```{marginfigure, echo=TRUE}
+Here we use mini-charts in the form of sparklines to show total flights over time for a number of airlines.
+```
+```{r llg, fig.margin=TRUE}
+
+
+library(reshape)
+library(RCurl)
+library(extrafont)
+#font_import()
+#loadfonts(device = "win")
+
+
+dfFlightYears <- read_csv("D:\\RStudio\\CUNY_607\\Assigments\\Assignment 5 - Tufte\\FileForSlopeGraph.csv")
+dfFlightYears %<>%
+  gather("Alaska", "Amwest", "British", "Continental", "Delta", "Eastern", "Hawaiian", key="airline", value="flights")  %<>%
+  mutate(flights=as.integer(flights))
+
+
+dfFlightYears %<>%
+  mutate(yearCat = as.character(as.integer(Year/10)*10))
+
+dfFl <- dfFlightYears %>%
+  group_by(airline, yearCat) %>%
+  summarize(Flights=round(mean(flights)))
+
+d <- dfFlightYears
+mins <- group_by(d, airline) %>% slice(which.min(flights))
+maxs <- group_by(d, airline) %>% slice(which.max(flights))
+ends <- group_by(d, airline) %>% filter(Year == max(Year))
+quarts <- d %>% group_by(airline) %>%
+  summarize(quart1 = quantile(flights, 0.25),
+            quart2 = quantile(flights, 0.75)) %>%
+  right_join(d)
+
+ggplot(d, aes(x=Year, y=flights)) + 
+  facet_grid(airline ~ ., scales = "free_y") + 
+  geom_line(size=0.7) +
+  geom_text(data = ends, aes(label = airline), hjust = 0, nudge_x = 8, size=8, family="Gill Sans MT") +
+  expand_limits(x = max(d$Year) + (0.7 * (max(d$Year) - min(d$Year)))) +
+  scale_x_continuous(breaks = seq(1960, 2010, 10)) +
+  scale_y_continuous(expand = c(0.2, 0)) +
+  theme_tufte() +
+  theme(axis.title=element_blank(), axis.text = element_blank(), 
+        axis.ticks = element_blank(), strip.text = element_blank()) +
+  theme(panel.background = element_rect(fill = "transparent", colour = NA),
+        plot.background = element_rect(fill = "transparent", colour = NA))
+```
+
+```{marginfigure, echo=TRUE}
+In R we can put more data into a sparkline if we want to.  Here we see IQR and min/max graphed onto a sparkline:
+```
+
+```{marginfigure, echo=TRUE}
+
+
+```
+
+```{r llout, fig.margin=TRUE}
+
+
+library(reshape)
+library(RCurl)
+library(extrafont)
+#font_import()
+#loadfonts(device = "win")
+
+d <- dfFlightYears
+mins <- group_by(d, airline) %>% slice(which.min(flights))
+maxs <- group_by(d, airline) %>% slice(which.max(flights))
+ends <- group_by(d, airline) %>% filter(Year == max(Year))
+begins <- group_by(d, airline) %>% filter(Year == min(Year))
+quarts <- d %>% group_by(airline) %>%
+  summarize(quart1 = quantile(flights, 0.25),
+            quart2 = quantile(flights, 0.75)) %>%
+  right_join(d)
+
+ggplot(d, aes(x=Year, y=flights)) + 
+  facet_grid(airline ~ ., scales = "free_y") + 
+  geom_ribbon(data = quarts, aes(ymin = quart1, max = quart2), fill = 'grey90') +
+  geom_line(size=0.7) +
+  geom_point(data = mins, col = 'forestgreen', size=5) +
+  geom_point(data = maxs, col = 'blue', size = 5) +
+  geom_text(data = mins, aes(label = flights), vjust = -1, size=6, family="Gill Sans MT", col='forestgreen') +
+  geom_text(data = maxs, aes(label = flights), vjust = 2.5, size=6, family="Gill Sans MT", col="blue") +
+  #geom_text(data = ends, aes(label = flights), hjust = 0, nudge_x = 1, size=6, family="Gill Sans MT", col='red') +
+  geom_text(data = ends, aes(label = airline), hjust = 0, nudge_x = 8, size=8, family="Gill Sans MT", col='black') +
+  #geom_text(data = begins, aes(label = flights), hjust = 0, nudge_x = -1, size=6, family="Gill Sans MT", col='red') +
+  expand_limits(x = max(d$Year) + (.5 * (max(d$Year) - min(d$Year)))) +
+  scale_x_continuous(breaks = seq(1960, 2010, 10)) +
+  scale_y_continuous(expand = c(.5, 0)) +
+  theme_tufte() +
+  theme(axis.title=element_blank(), axis.text.y = element_blank(), 
+        axis.ticks = element_blank(), strip.text = element_blank(), axis.text = element_text(size = 14, family="Gill Sans MT")) +
+  theme(panel.background = element_rect(fill = "transparent", colour = NA),
+        plot.background = element_rect(fill = "transparent", colour = NA))
+```
+xxx
+```{r size}
 
 g4<-ggplot(dfSummaryStats, aes(x=sum_Flights, y=propOfDelay)) +
   geom_point() +
@@ -188,7 +334,7 @@ Neither of the graphs nor the regression analysis that follows suggest that % of
 
 Perhaps it's something more sinister.  Is it possible there is some kind of favoritism going on among airport staff and crew?  There is no easy way to measure that directly, but as an albeit weak proxy we observe that Phoenix appears to be some kind of hub for Amwest and Seattle a hub for Alaska:
 
-```{r traffic, fig.margin=TRUE, fig.cap="Fig. 3: Number of flights by airline by city"}
+```{r traffic}
 
 g3<-ggplot(dfFlights, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
   geom_col(position = position_dodge()) +
@@ -202,34 +348,11 @@ While Amwest has a higher percentage of delays across the board, is the gap betw
 
 This barchart shows the difference in the % delays between the two airlines, by city.  
 
-```{r diff 2, fig.margin=TRUE, fig.cap="Fig. 4: The difference in the percentage of delays by city"}
 
-g2<-ggplot(dfPercentDiff, aes(x=City, y=propDiff)) +
-  geom_col(position = position_dodge()) +
-  theme(axis.text.x = element_text(angle = 90), axis.text = element_text(size = 20)) +
-  ylab("") + 
-  xlab("") +
-  coord_flip()
-
-g2
-
-```
 ```{r gv}
 
-dfFlightYears <- read_csv("D:\\RStudio\\CUNY_607\\Assigments\\Assignment 5 - Tufte\\FileForSlopeGraph.csv")
-dfFlightYears %<>%
-  gather("Alaska", "Amwest", "British", "Continental", "Delta", "Eastern", "Hawaiian", key="airline", value="flights")  %<>%
-  mutate(flights=as.integer(flights))
-
-
-dfFlightYears %<>%
-  mutate(yearCat = as.character(as.integer(Year/10)*10))
-
-dfFl <- dfFlightYears %>%
-  group_by(airline, yearCat) %>%
-  summarize(Flights=round(mean(flights)))
   
-
+#install.packages('devtools')
 #library(devtools)
 #install_github("leeper/slopegraph")#install Leeper's package from Github
 library(slopegraph)
@@ -248,44 +371,6 @@ ggslopegraph2(dataframe = dfFl,
 ```
 
 Note the footnote displayed to the right of me! ^[This is a footnote.]
-
-```{r ll, fig.margin=TRUE, fig.cap="Fig. 4: Numbers of flights over time"}
-
-
-library(reshape)
-library(RCurl)
-library(extrafont)
-#font_import()
-#loadfonts(device = "win")
-
-d <- dfFlightYears
-mins <- group_by(d, airline) %>% slice(which.min(flights))
-maxs <- group_by(d, airline) %>% slice(which.max(flights))
-ends <- group_by(d, airline) %>% filter(Year == max(Year))
-quarts <- d %>% group_by(airline) %>%
-  summarize(quart1 = quantile(flights, 0.25),
-            quart2 = quantile(flights, 0.75)) %>%
-  right_join(d)
-
-ggplot(d, aes(x=Year, y=flights)) + 
-  facet_grid(airline ~ ., scales = "free_y") + 
-  geom_ribbon(data = quarts, aes(ymin = quart1, max = quart2), fill = 'grey90') +
-  geom_line(size=0.7) +
-  geom_point(data = mins, col = 'green', size=5) +
-  geom_point(data = maxs, col = 'blue', size = 5) +
-  geom_text(data = mins, aes(label = flights), vjust = -1, size=6, family="Gill Sans MT", col='red') +
-  geom_text(data = maxs, aes(label = flights), vjust = 2.5, size=6, family="Gill Sans MT") +
-  geom_text(data = ends, aes(label = flights), hjust = 0, nudge_x = 1, size=6, family="Gill Sans MT", col='red') +
-  geom_text(data = ends, aes(label = airline), hjust = 0, nudge_x = 8, size=8, family="Gill Sans MT") +
-  expand_limits(x = max(d$Year) + (0.5 * (max(d$Year) - min(d$Year)))) +
-  scale_x_continuous(breaks = seq(1960, 2010, 10)) +
-  scale_y_continuous(expand = c(0.2, 0)) +
-  theme_tufte() +
-  theme(axis.title=element_blank(), axis.text.y = element_blank(), 
-        axis.ticks = element_blank(), strip.text = element_blank(), axis.text = element_text(size = 14, family="Gill Sans MT")) +
-  theme(panel.background = element_rect(fill = "transparent", colour = NA),
-        plot.background = element_rect(fill = "transparent", colour = NA))
-```
 
 
 Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seattle.  However, the biggest difference between the two is in San Francisco where Amwest has MORE total flights than Alaska. 
