@@ -9,11 +9,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+```{r setup, include = FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
 ```
 
 # ggplot2 - Creating Elegant and Useful Graphs in R
@@ -29,19 +27,24 @@ We start by loading the tidyverse library.  If tidyverse is not installed you mu
 library(tidyverse)
 ```
 
-Next we load the data that will be used for our examples. This data is from the article, "Marriage Isn't Dead - Yet", published on fivethirtyeight.com.  The data represents the share of the population, aged 25 to 34, that has never been married, broken down by year and by other factors - we will be looking at level of education.
+Next we load the data that will be used for our examples. This data is from the article, "Marriage Isn't Dead - Yet", published on fivethirtyeight.com.  The data represents the share of the population, aged 25 to 34, that has never been married, broken down by year and by other factors - we will be looking at level of education for the years from 2000 forward:
 
 ```{r load data}
 dfMarriage <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master//marriage/both_sexes.csv", header= TRUE)
-dfMarriage_Subset <- subset(dfMarriage, select = c("year", "all_2534", "HS_2534", "SC_2534", "BAo_2534", "GD_2534"))
-dfMarriage_Subset <- rename(dfMarriage_Subset, c(all_individuals =  "all_2534", High_School_Or_Less = "HS_2534", Some_College = "SC_2534", Bachelors_NoGradDegree="BAo_2534", Graduate_Degree="GD_2534"))
+dfMarriage_Subset <- dfMarriage %>%
+  subset(select = c("year", "all_2534", "HS_2534", "SC_2534", "BAo_2534", "GD_2534")) %>%
+  rename(c(all_individuals =  "all_2534", High_School_Or_Less = "HS_2534", Some_College = "SC_2534", Bachelors_NoGradDegree="BAo_2534", Graduate_Degree="GD_2534")) %>%
+  filter(year >= 2000)
 
-head(dfMarriage_Subset)
+knitr::kable(head(dfMarriage_Subset))
 ```
 
 ## Using the `ggplot2` library
-`ggplot2` can create a vast array of graphs with many features. We will focus here on a few: creating different types of graphs, and adding simple features like titles and labels.
+`ggplot2` can create a vast array of graphs with many features. We will focus here on a few: creating different types of graphs, adding simple features like titles and labels, and creating themes.
 
+
+
+#### Simple Boxplot
 
 We begin with a boxplot of the share of never-married adults in the population with a high school education or less, for all the years in the dataset:
  
@@ -58,24 +61,28 @@ We can change or add to any of the parameters for this plot and generate a new g
  ggplot(data = dfMarriage_Subset, aes(x ="", y=High_School_Or_Less)) +
   geom_boxplot() +
    ylab("Share of adults who have never married") +
-    ggtitle("Marriage among Adults with a High School Education or Less") +
+    ggtitle("Marriage Rates for Adults with a High School Education or Less") +
    theme(text = element_text(size = 9))
 ```
 
-What about a bar chart of the share of 'never-married adults with a high school education or less' against 'year'? True to the grammar of graphics, we can use virtually the same code with just two adjustments - change the x axis to 'year' and the plot type to 'geom_col.'  The plot will retain our y axis label:
+
+#### Using Our Boxplot Specifications to Make A Bar Chart
+
+What about a bar chart of the share of 'never-married adults with a high school education or less' against 'year'? True to the grammar of graphics, we can use virtually the same code with just two adjustments - change the x axis to 'year' and the plot type to 'geom_col.'  The plot will retain our y axis label, title and other features:
 
 ```{r boxplot7}
 g1 <- ggplot(data = dfMarriage_Subset, aes(x =year, y=High_School_Or_Less)) +
   geom_col() +
    ylab("Share of adults who have never married") +
     xlab("Year") +
-    ggtitle("Marriage among Adults with a High School Education or Less") +
-   theme(text = element_text(size = 9))
+    ggtitle("Marriage Rates for Adults with a High School Education or Less") +
+   theme(text = element_text(size = 10))
 g1
 ```
 
 We can see that among adults between 24 and 34 with a high school education or less, the share of those who have never been married has increased steadily over time. 
 
+There are many other plots possible with ggplot2 - column, scatter, histogram - virtually any plot a data scientist might need.  We will not explore them here.
 
 
 ## Exploring the 'Themes' Component
@@ -86,11 +93,13 @@ We have already seen how much we can do with 'theme' in order to change font siz
 Let's use theme elements on the above graph to 
 
   - Increase the size of the title and bold it
-  - Remove the grid
-  - Add a border
+  - Remove the gray background
+  - Remove the vertical gridlines
+  - Soften the horizontal gridlines
+  - Add a colored border
   - Change and bold the color of the axis elements
   - Change the angle of the x axis elements
-  - Decrease the size and bold the axis titles
+  - Decrease the size of and bold the axis titles
   - Move the y axis title back off the axis elements
   - move the x axis title up closer to the axis elements
   - Remove the x axis ticks
@@ -100,10 +109,12 @@ Let's use theme elements on the above graph to
 g2 <- g1 +
    theme(plot.title = element_text(size = 12, face="bold"), 
          panel.background = element_rect(fill = "white"),
+         panel.grid.major.x = element_blank() ,
+         panel.grid.major.y = element_line( size=.2, color="gray" ),
          plot.background = element_rect(fill = "cornsilk3"),
          axis.text = element_text(colour = "darkslateblue", face="bold"),
          axis.text.x = element_text(angle=65),
-         axis.title = element_text(size = 9, face="bold"),
+         axis.title = element_text(size = 10, face="bold"),
          axis.title.y = element_text(vjust=3),
          axis.title.x = element_text(vjust=7),
          axis.ticks.x = element_blank())
@@ -112,6 +123,45 @@ g2
 ```
 
 Beware of chartjunk. It is always recommended to use ornament sparingly and only when it contributes to the overall communication of data.  But many of these elements can come in handy to make charts more readable and understandable.
-There is so much more we can do!  But this introduction should get you started.
+
+## Reusing your Custom Theme
+
+If we want to keep consistent with this theme, we can put it in a function and call it again within our markdown file:
+
+```{r theme function}
+
+my_theme <- function()
+{
+     theme(plot.title = element_text(size = 12, face="bold"), 
+         panel.background = element_rect(fill = "white"),
+         plot.background = element_rect(fill = "cornsilk3"),
+         panel.grid.major.x = element_blank() ,
+         panel.grid.major.y = element_line( size=.2, color="gray" ),
+         axis.text = element_text(colour = "darkslateblue", face="bold"),
+         axis.text.x = element_text(angle=65),
+         axis.title = element_text(size = 10, face="bold"),
+         axis.title.y = element_text(vjust=3),
+         axis.title.x = element_text(vjust=7),
+         axis.ticks.x = element_blank())
+}
+
+```
+Now if we look at marriage rates for individuals with a Graduate degree we can use our theme for a consistent look like this:
+
+```{r graduate degree}
+
+  ggplot(data = dfMarriage_Subset, aes(x =year, y=Graduate_Degree)) +
+  geom_col() +
+   ylab("Share of adults who have never married") +
+    xlab("Year") +
+    ggtitle("Marriage Rates for Adults with a Graduate Degree") +
+    my_theme()
+
+```
+
+
+Here we see that the pattern for adults with a graduate degree is different - marriage rates increased until 2005 and then began to decline.
+
+This ends are introduction to ggplot2 and themes. There is so much more we can do!  But this introduction should get you started.
 
  
