@@ -20,8 +20,7 @@ knitr::opts_chunk$set(
 
 `ggplot2`, a package in the core tidyverse, is a system for easily and efficiently creating graphics in R. It is based on the "Grammar of Graphics", the notion that all graphs can be built from the same components: a data set, a coordinate system, and visual marks that represent data points. You specify these details to ggplot2 and the package creates the graph.
 
-The possibilities with ggplot2 are vast.  You can learn more at https://ggplot2.tidyverse.org/.  I will describe here some of the basic core capabilities.
-
+The possibilities with ggplot2 are endless.  You can learn more at https://ggplot2.tidyverse.org/. I will describe here some of the basic core capabilities, and then do a deeper dive into themes.
 
 ## Loading the library and our sample data
 
@@ -53,48 +52,66 @@ We begin with a boxplot of the share of never-married adults in the population w
 
 Note the grammar of graphics at work - we supply a dataset (*dfMarriage_subset*), a coordinate system, or "aesthetic" (*aes(x = "", y=High_School_Or_Less))*) and a type of graph (*geom_boxplot()*) - and ggplot2 does the rest.
 
-If we change or add to any of the parameters for this plot, we get a new graph.  For example, we can improve the y axis label by specifying new text with *ylab()* and a new font size with *theme(text = element_text(size = 9))*.
+We can change or add to any of the parameters for this plot and generate a new graph.  For example, we can improve the y axis label by specifying new text with *ylab()*, add a title with *ggtitle* and a new font size with *theme(text = element_text(size = 9))*.
 
 ```{r boxplot4}
  ggplot(data = dfMarriage_Subset, aes(x ="", y=High_School_Or_Less)) +
   geom_boxplot() +
    ylab("Share of adults who have never married") +
+    ggtitle("Marriage among Adults with a High School Education or Less") +
    theme(text = element_text(size = 9))
 ```
 
-What about a scatterplot of the share of 'never-married adults with a high school education or less' against 'year'? True to the grammar of graphics, we can use the same plot with two adjustments - change the x axis to 'year' and the plot type to 'geom_point.'  The plot will retain our y axis label:
+What about a bar chart of the share of 'never-married adults with a high school education or less' against 'year'? True to the grammar of graphics, we can use virtually the same code with just two adjustments - change the x axis to 'year' and the plot type to 'geom_col.'  The plot will retain our y axis label:
 
 ```{r boxplot7}
- ggplot(data = dfMarriage_Subset, aes(x=year, y=High_School_Or_Less)) +
-  geom_point() +
+g1 <- ggplot(data = dfMarriage_Subset, aes(x =year, y=High_School_Or_Less)) +
+  geom_col() +
    ylab("Share of adults who have never married") +
+    xlab("Year") +
+    ggtitle("Marriage among Adults with a High School Education or Less") +
    theme(text = element_text(size = 9))
+g1
 ```
 
 We can see that among adults between 24 and 34 with a high school education or less, the share of those who have never been married has increased steadily over time. 
 
-We can continue to add features.  Let's smooth out the plot by adding *geom_smooth ()*.
 
-```{r smooth}
-ggplot(data = dfMarriage_Subset, aes(x = year, y=High_School_Or_Less)) +
-  geom_point() + 
-  ylab("Share of adults who have never married") +
-  theme(text = element_text(size = 9))+
-  geom_smooth ()
+
+## Exploring the 'Themes' Component
+
+We have already seen how much we can do with 'theme' in order to change font size.  But there are over 100 elements that can be controlled using 'theme' to control the look of your graph.  The best way to understand it is to see it in action.    
+
+
+Let's use theme elements on the above graph to 
+
+  - Increase the size of the title and bold it
+  - Remove the grid
+  - Add a border
+  - Change and bold the color of the axis elements
+  - Change the angle of the x axis elements
+  - Decrease the size and bold the axis titles
+  - Move the y axis title back off the axis elements
+  - move the x axis title up closer to the axis elements
+  - Remove the x axis ticks
+  
+```{r abc}
+
+g2 <- g1 +
+   theme(plot.title = element_text(size = 12, face="bold"), 
+         panel.background = element_rect(fill = "white"),
+         plot.background = element_rect(fill = "cornsilk3"),
+         axis.text = element_text(colour = "darkslateblue", face="bold"),
+         axis.text.x = element_text(angle=65),
+         axis.title = element_text(size = 9, face="bold"),
+         axis.title.y = element_text(vjust=3),
+         axis.title.x = element_text(vjust=7),
+         axis.ticks.x = element_blank())
+g2
+
 ```
 
-Now let's finish our graph by including a general title, and by setting the font size for the new title so it fits on the graph.  To do this we add *ggtitle(title)* and *theme(plot.title = element_text(size = 9))*
-
-
-```{r labels}
-ggplot(data = dfMarriage_Subset, aes(x = year, y=High_School_Or_Less)) +
-  geom_point() + 
-  ylab("Share of adults who have never married") +
-  theme(text = element_text(size = 9))+
-  geom_smooth () +
-  ggtitle("Never Married by Year (with <= HS degree)") +
-  theme(text = element_text(size = 9), plot.title = element_text(size = 9))
-```
-
+Beware of chartjunk. It is always recommended to use ornament sparingly and only when it contributes to the overall communication of data.  But many of these elements can come in handy to make charts more readable and understandable.
 There is so much more we can do!  But this introduction should get you started.
+
  
