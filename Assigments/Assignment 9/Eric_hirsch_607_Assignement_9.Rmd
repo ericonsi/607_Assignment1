@@ -24,13 +24,13 @@ library(tidyjson)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Working with API and JSON
+### Working with API and JSON
 
-### In this assignment we are pulling json data from a New York Times API.  In this example, we pull bestseller list data from the Books API.  
+#### In this assignment we will be pulling json data from a New York Times API - in particular, bestseller list data from the Books API.  
 
-When we use the Books API, we need to use separate URLs to pull different types of books (hardcover fiction, hardcover nonfiction, etc.).  When we pull a type of book we receive a json file containing overall header information for the week for all the books on that list (like the date and the type of book), and we receive information about each book on the list, such as title, rank, and description.
+In the Books API we use different URLs to pull bestseller lists for each form of book (hardcover fiction, hardcover nonfiction, etc.).  The json file we pull contains two different types of information for that form of book - 1) overall header information for the week for all the books on that list (like the date and the type of book), and 2) information about each book on the list, such as title, rank, and description.
 
-Below is a function which will convert the week header information and the book information into two separate dataframes.  We will call the API four times using this function, for four separate book types, and then inner join the dataframes in order to pull information from both.
+Below is a function which will convert the 1) week header information and the 2) book information into two separate dataframes.  We will call the API four times using this function, for four separate forms of book, and then inner join the dataframes in order to pull information from both.
 
 ```{r json}
 
@@ -90,7 +90,7 @@ knitr::kable(dfJoin)
 
 
 ```
-### Conclusion
+#### Conclusion
 
 R has a number of tools which allow us to read JSON from an API and convert it to a dataframe.  This example shows how we can pull multiple dataframes from an API call and recombine them using inner_join.
 
