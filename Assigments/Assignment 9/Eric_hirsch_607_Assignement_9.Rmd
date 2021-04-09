@@ -62,7 +62,7 @@ return <- list(dfWeekHeader, dfBooks)
 
 ```
 
-Now we can read the API json into week header and book dataframes. As a demonstration we will make four separate calls to the API to pull four book types into the two dataframes.  Then we inner join the dataframes on an ID we created in the function above and return information pulled form both dtaframes about the top ranked books in each category:
+Now we can read the API json into week header and book dataframes. As a demonstration we will make four separate calls to the API to pull four book types into the two dataframes.  Then we inner join the dataframes on an ID we created in the function above and return information pulled form both dataframes about the top ranked books in each category:
 
 ```{r}
 
