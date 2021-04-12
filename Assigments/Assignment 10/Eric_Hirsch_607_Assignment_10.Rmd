@@ -248,39 +248,20 @@ tidy_books %>%
 
 ### Sentiment Analysis On Broadway
 
-This dataset, taken from kaggle (link), has synopses and gross receipts for Broadway plays. We will use the package Sentiment Analysis, which contains 4 dictionaries: Harvard-IV, an all-purpose dictionary developed at Harvard, Henry's finance specific dictionary, the Loughran-Macdonald dictionary (another finance dictionary), and the QDAP, which analyses discourse.  Given the specific foci of the latter three databases, we expect the Harvard database to be the most useful.
+I am analyzing a dataset taken from kaggle (link) which has a table of synopses and and a table of gross receipts for Broadway plays for the past several decades. I will use the package SentimentAnalysis, which contains 4 dictionaries: Harvard-IV, an all-purpose dictionary developed at Harvard, Henry's finance specific dictionary, the Loughran-Macdonald dictionary (another finance dictionary), and the QDAP, which analyses discourse.  Given the specific foci of the latter three databases, I expect the Harvard database to be the most useful.
 
-The SentimentAnalysis package operates differently from the tidytext library - it provides summary statistics for weighted scores which help us determine whether an observation is predominantly positive or negative.
+The reason I am using the SentimentAnalysis package is that it operates differently from the tidytext library - it provides summary statistics for weighted scores using a complex algorithm which considers not only a term within a discourse but it's position.  This may help us more reliably determine whether an observation is predominantly positive or negative.
 
 ```{r load data}
 library(SentimentAnalysis)
-dfSynopses<-read.csv("D:/Desk Drawer/Data Science/DataSets/Kaggle Datasets/synopses.csv", fileEncoding="UTF-8-BOM")
-dfGrosses<-read.csv("D:/Desk Drawer/Data Science/DataSets/Kaggle Datasets/grosses.csv")
-
-
-#install.packages('SentimentAnalysis')
+dfGrosses<-read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Assigments/Assignment%2010/grosses.csv")
+dfSynopses<-read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Assigments/Assignment%2010/synopses.csv", fileEncoding = "UTF-8-BOM")
 
 ```
 
-#### Compare To other dictionaries
+#### We compare the performance of the 4 dictionaries on a simple pass through of the play synopses:
 
-The Harvard dictionary has fewer words than the nrc and bing dictionaries.  There is much more parity between positive and negative words in the Harvard dictionary.
-
-```{r}
-
-summary(DictionaryGI)
-
-get_sentiments("nrc") %>% 
-  filter(sentiment %in% c("positive", "negative")) %>% 
-  count(sentiment)
-
-get_sentiments("bing") %>% 
-  count(sentiment)
-```
-
-#### We compare performance on the 4 dictionaries:
-
-Not surprisingly, the finance dictionaries have medians of 0 - most words do not match the play synopses.  However, while the synopses are not discourse per se, the QDAP analysis and the Harvard analysis are relayively simliar.
+Not surprisingly, the finance dictionaries have medians and modes of 0 - there are few matches beteen the dictionaries and words in the play synopses.  The QDAP does better, and the QDAP analysis and the Harvard analysis are relatively similar.
 
 ```{r jhg}
 
@@ -312,6 +293,23 @@ ggplot(sentiment, aes(SentimentQDAP)) +
   geom_histogram() +
    ggtitle("QDAP") 
 ```
+
+#### We compare to the Harvard dictionary to the dictionaries we used from Tidytext.
+
+The Harvard dictionary (DictionaryGI in the r code) has fewer words than the nrc and bing dictionaries.  In addition, there is much more parity between positive and negative words in the Harvard dictionary than the others.
+
+```{r}
+
+summary(DictionaryGI)
+
+get_sentiments("nrc") %>% 
+  filter(sentiment %in% c("positive", "negative")) %>% 
+  count(sentiment)
+
+get_sentiments("bing") %>% 
+  count(sentiment)
+```
+
 ```{r seats sold}
 
 dfSynopses2 <- cbind(dfSynopses, sentiment)
@@ -358,7 +356,6 @@ ggplot(dfSeatAnalysis, aes(SentimentGI, total_revenues)) +
 
 ```
 
-```
 
 
 
