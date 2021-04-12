@@ -252,7 +252,7 @@ tidy_books %>%
 
 ### Sentiment Analysis On Broadway
 
-I am analyzing a dataset taken from kaggle (link) which has a table of synopses and and a table of gross receipts for Broadway plays for the past several decades. I will use the package SentimentAnalysis, which contains 4 dictionaries: Harvard-IV, an all-purpose dictionary developed at Harvard, Henry's finance specific dictionary, the Loughran-Macdonald dictionary (another finance dictionary), and the QDAP, which analyses discourse.  Given the specific foci of the latter three databases, I expect the Harvard database to be the most useful.
+I am analyzing a dataset from kaggle (https://www.kaggle.com/jessemostipak/broadway-weekly-grosses) which has a table of synopses and a table of gross receipts for Broadway plays for the past several decades. I will use the package SentimentAnalysis, which contains 4 dictionaries: Harvard-IV, an all-purpose dictionary developed at Harvard, Henry's finance specific dictionary, the Loughran-Macdonald dictionary (another finance dictionary), and the QDAP, which analyses discourse.  Given the specific foci of the latter three databases, I expect the Harvard database to be the most useful.
 
 The reason I am using the SentimentAnalysis package is that it operates differently from the tidytext library - it provides summary statistics for weighted scores using a complex algorithm which considers not only a term within a discourse but it's position.  This may help us more reliably determine whether an observation is predominantly positive or negative.
 
@@ -263,9 +263,8 @@ dfSynopses<-read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/A
 
 ```
 
-#### We compare the performance of the 4 dictionaries on a simple pass through of the play synopses:
+#### We compare the performance of the 4 dictionaries on a simple pass-through of the play synopses:
 
-Not surprisingly, the finance dictionaries have medians and modes of 0 - there are few matches beteen the dictionaries and words in the play synopses.  The QDAP does better, and the QDAP analysis and the Harvard analysis are relatively similar.
 
 ```{r jhg}
 
@@ -298,9 +297,11 @@ ggplot(sentiment, aes(SentimentQDAP)) +
    ggtitle("QDAP") 
 ```
 
+
+Not surprisingly, the finance dictionaries have medians and modes of 0 - there are few matches between the dictionaries and words in the play synopses.  The QDAP does better, and the QDAP analysis and the Harvard analysis are relatively similar.  They both find the plays, on average, to be mildly positive.
+
 #### We compare to the Harvard dictionary to the dictionaries we used from Tidytext.
 
-The Harvard dictionary (DictionaryGI in the r code) has fewer words than the nrc and bing dictionaries.  In addition, there is much more parity between positive and negative words in the Harvard dictionary than the others.
 
 ```{r}
 
@@ -313,6 +314,16 @@ get_sentiments("nrc") %>%
 get_sentiments("bing") %>% 
   count(sentiment)
 ```
+
+
+The Harvard dictionary (DictionaryGI in the r code) has fewer words than the nrc and bing dictionaries.  In addition, there is much more parity between positive and negative words in the Harvard dictionary than the others.
+
+
+#### Using sentiment analysis to predict show success
+
+Now that we have a simple tool for evaluating synopsis sentiment we can use it to do some analysis.  For example, is there an association between play sentiment and gross revenue or seats sold?
+
+The boxplots and scatterplots below suggest there is.
 
 ```{r seats sold}
 
@@ -330,29 +341,23 @@ dfJoin <- na.omit(dfJoin)
 dfSeatAnalysis <- dfJoin %>%
   filter(total_seats_sold<1000000) %>%
   filter(total_revenues>20000000) %>%
-  mutate(Valence = case_when(SentimentGI > 0 ~ 'positive',
-                           SentimentGI <=0 ~ '0 or negative')) 
+  mutate(Sentiment_Valence = case_when(SentimentGI > 0 ~ 'positive',
+                           SentimentGI <=0 ~ 'neutral or negative')) 
 
 ```
 
 
 ```{r scatter}
 
-ggplot(dfSeatAnalysis, aes(x =Valence, y=total_seats_sold)) +
+ggplot(dfSeatAnalysis, aes(x =Sentiment_Valence, y=total_seats_sold)) +
   geom_boxplot()
-
-m3 <- lm(total_seats_sold ~ SentimentGI, data = dfSeatAnalysis)
-summary(m3)
 
 ggplot(dfSeatAnalysis, aes(SentimentGI, total_seats_sold)) +
   geom_point() +
   stat_smooth(method = "lm", se = FALSE)
 
-ggplot(dfSeatAnalysis, aes(x =Valence, y=total_revenues)) +
+ggplot(dfSeatAnalysis, aes(x =Sentiment_Valence, y=total_revenues)) +
   geom_boxplot()
-
-m <- lm(total_revenues ~ SentimentGI, data = dfSeatAnalysis)
-summary(m)
 
 ggplot(dfSeatAnalysis, aes(SentimentGI, total_revenues)) +
   geom_point() +
@@ -360,8 +365,20 @@ ggplot(dfSeatAnalysis, aes(SentimentGI, total_revenues)) +
 
 ```
 
-<<<<<<< HEAD
-=======
+While the data remains suggestive that more positive shows do better, regression analysis fails to establish a correlation at the 95% level.
+
+```{r regressions}
+m3 <- lm(total_seats_sold ~ SentimentGI, data = dfSeatAnalysis)
+summary(m3)
+
+m <- lm(total_revenues ~ SentimentGI, data = dfSeatAnalysis)
+summary(m)
+```
+
+#### Comparing the Harvard results and the Bing results
+
+Here we analyze the synopses dataset using Bing to see if it makes the same conclusions about the plays' sentiment. 
+
 ```{r  abc}
 
 tidy_x <- dfSynopses %>%
@@ -376,7 +393,12 @@ x <- bing_word_counts2 %>%
   count(sentiment) %>%
   mutate(percentage = n / sum(n))
 x
+```
+The Bing dataset comes to the astonishing conclusion that 60% of Broadway plays are negative in sentiment!
 
+This word cloud helps us understand why:
+
+``` {r fjl}
 tidy_x %>%
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%
@@ -384,6 +406,10 @@ tidy_x %>%
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 ```
+
+A satirical farce about an eccentric millionaire who falls intensely in love with a mysterious stranger has 7 negative words and only one positive one.  Even "funny" is considered negative here.
+
+It does not help all that much to remove some of the words:
 
 ```{r gg}
 
@@ -399,12 +425,9 @@ x1 <- bing_word_counts3 %>%
 x1
 
 ```
->>>>>>> 5a60aa9172c3b7cca2edee4eb6b525ecea2b3837
 
-custom_stop_words
+#### Conclusion
 
-
-```
-
+Sentiment analysis is an interesting tool but has its limitations.  As the Bing vs Harvard analysis shows, different dictionaries and algorithms can produce different results.  As custom context specific dictionaries emerge, analysis will surely improve.
 
 
