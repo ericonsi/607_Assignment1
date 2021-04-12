@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #install.packages('tidytext')
-#install.packages('textdata')
+#install.packages('psych')
 library(tidytext)
 library(tidyverse)
 library(janeaustenr)
@@ -24,6 +24,9 @@ library(tidyr)
 library(wordcloud)
 library(reshape2)
 library(magrittr)
+library(openintro)
+library(psych)
+
 
 ```
 
@@ -40,6 +43,7 @@ get_sentiments("nrc")
 
 #### Joy Words In Emma
 ```{r load Jane Ausitn}
+a<-austen_books()
 
 tidy_books <- austen_books() %>%
   group_by(book) %>%
@@ -360,9 +364,48 @@ ggplot(dfSeatAnalysis, aes(SentimentGI, total_revenues)) +
 
 ```
 
+```{r  abc}
+
+tidy_x <- dfSynopses %>%
+  unnest_tokens(word, synopsis)
+
+bing_word_counts2 <- tidy_x %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+x <- bing_word_counts2 %>%
+  count(sentiment) %>%
+  mutate(percentage = n / sum(n))
+x
+
+tidy_x %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
 ```
 
+```{r gg}
 
+bing_word_counts3 <- tidy_x %>%
+  filter(word !="falls" & word !="fall" & word!="unexpected" & word!="mysterious" & word!="farce") %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+x1 <- bing_word_counts3 %>%
+  count(sentiment) %>%
+  mutate(percentage = n / sum(n))
+x1
+
+```
+
+custom_stop_words
+
+
+```
 
 
 
