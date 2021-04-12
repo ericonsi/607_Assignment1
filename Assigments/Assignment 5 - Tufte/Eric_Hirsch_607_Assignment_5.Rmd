@@ -21,6 +21,7 @@ library(tufte)
 library(knitr)
 library(ggthemes)
 library(extrafont)
+library(scales)
 #font_import()
 loadfonts()
 ```
@@ -79,7 +80,8 @@ This boxplot is great for analysis ...
 ```{r dfs}
 dfSummaryStats <- dfFlights %>% 
   group_by(Airline, City) %>% 
-  summarize(sum_DelayedFlights=sum(NumOfFlights[Status=="delayed"]), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
+  summarize(sum_DelayedFlights=sum(NumOfFlights[Status=="delayed"]), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100) %>%
+  mutate(PerCent = round(propOfDelay/100,2))
 
 dfSummaryStats2 <- dfFlights %>% 
   group_by(Airline) %>% 
@@ -126,6 +128,7 @@ gg1 <- ggplot(dfSummaryStats, aes(reorder(City, propOfDelay), propOfDelay)) + th
 geom_tufteboxplot(outlier.colour="transparent") + theme(axis.title=element_blank(), axis.text.x = element_text(angle = 0), axis.text = element_text(size = 20), plot.title = element_text(size=20), axis.ticks=element_blank()) +
 annotate("text", x = 0, y =30, adj=0,  family="Gill Sans MT", label = "") +
   ggtitle("Percentage of Delayed Flights by City") + 
+scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   coord_flip()
 gg1
 
@@ -138,8 +141,8 @@ __*Or consider this example:*__
 
 g4 <- ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) +
   geom_col(position = position_dodge()) +
-  ylab("City") + 
-  xlab("Percentage of Delays") +
+  ylab("Percentage of Delays") + 
+  xlab("City") +
     ggtitle("Percent Delays by City and Airline") +
   coord_flip()
 g4
@@ -154,6 +157,7 @@ ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Ai
   annotate("text", x = 3.5, y = 5, adj=1,  family="Gill Sans MT",
 label = "") +
     theme(axis.text.x = element_text(angle = 0), axis.text = element_text(size = 24 , family="Gill Sans MT"), legend.text = element_text(size=20), legend.title=element_blank()) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   coord_flip()
 
 ```
@@ -165,6 +169,7 @@ g5 <- ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, gr
 label = "") +
     theme(axis.text.x = element_text(angle = 0), plot.caption = element_text(size=24), axis.text = element_text(size = 15 , family="Gill Sans MT")) +
       ggtitle("Percent Delays by City and Airline") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   coord_flip()
 g5
 ```
