@@ -39,8 +39,6 @@ get_sentiments("nrc")
 
 ```
 
-### Original Assignment
-
 #### Joy Words In Emma
 ```{r load Jane Ausitn}
 a<-austen_books()

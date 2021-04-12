@@ -1,5 +1,5 @@
 ---
-title: "Eric_Hirsch_607_Assignment_5"
+title: "Eric_Hirsch_607_DataScienceInContext"
 author: "Eric Hirsch"
 date: "`r Sys.Date()`"
 output: 
@@ -21,29 +21,30 @@ library(tufte)
 library(knitr)
 library(ggthemes)
 library(extrafont)
+library(scales)
 #font_import()
 loadfonts()
 ```
 
-## Using TidyR and Dyplr for Data Transformation
+## 
+## <span style="color:darkorchid"><font size="6">__Principle 1: Style expresses substance__</font size></span>
 
-In this project we will transform a csv file into a usable dataframe using TidyR and Dyplr. After the transformation we will conduct some analyses.
+Elegance and style are not superfluous to or, even worse, antithetical to good data design - they are central to readability and clarity.
 
-First we load the data ... 
+Consider the elegance of this table:    
 
 ``` {r load data}
 dfFlights_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Project%202/Flights.csv", header = TRUE, stringsAsFactors = TRUE, sep=","))
 ```
 
-... eliminate the unnecessary rows, and change some column names:
-
 ```{marginfigure, echo=TRUE}
 
-Principle 1. Separate Data from Metadata: 
+<span style="color:darkorchid"><font size="6">__Principle 2. Form expresses function__ </font size></span>
+
 ```
 
 ```{marginfigure, echo=TRUE}  
-There is a table to the left. If I wanted to make comments about that table, I could do it here.  We often have data, and then information about the data. This column, a mainstay of Tufte presentation, is a place to present this metadata.
+Placement, color, width - all express meaning If it's a side comment, put it on the side.  For example, this would be a good place to make a side comment about the table to the left.
 
 ```
 
@@ -56,10 +57,6 @@ dfFlights <- dfFlights_raw %>%
 kable(head(dfFlights))
 ```
 
-
-  
-Now we use TidyR to normalize the table - this is an extremely powerful library that does a lot in a couple lines ...
-
 ```{r agfd}
 
 dfFlights %<>%
@@ -67,17 +64,13 @@ dfFlights %<>%
   fill(Airline)
 ```
 
-... and that's all it takes!
 
-## Analysis of Delays
 
-Now we can analyse the airline's delays.  We start with the mean delay percentage (flights delayed over total flights) for each airline.  Amwest appears to have a better track record than Alaska.
+<span style="color:darkorchid"><font size="6">__Principle 3. Less is more __ </font size></span>
 
-```{marginfigure, echo=TRUE}
+## Why a box?
 
-Principle 2. Increase the Data-Ink Ratio! 
-
-```
+Consider this box plot.  What dos the box actually get you?  What is the ratio of data expression to ink?
 
 
 ```{marginfigure, echo=TRUE}
@@ -87,7 +80,8 @@ This boxplot is great for analysis ...
 ```{r dfs}
 dfSummaryStats <- dfFlights %>% 
   group_by(Airline, City) %>% 
-  summarize(sum_DelayedFlights=sum(NumOfFlights[Status=="delayed"]), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100)
+  summarize(sum_DelayedFlights=sum(NumOfFlights[Status=="delayed"]), sum_Flights = sum(NumOfFlights), propOfDelay=sum(NumOfFlights[Status=="delayed"])/sum(NumOfFlights)*100) %>%
+  mutate(PerCent = round(propOfDelay/100,2))
 
 dfSummaryStats2 <- dfFlights %>% 
   group_by(Airline) %>% 
@@ -126,59 +120,36 @@ gg2
 
 ```
 
+
+
 ```{r b2}
 
 gg1 <- ggplot(dfSummaryStats, aes(reorder(City, propOfDelay), propOfDelay)) + theme_tufte() +
 geom_tufteboxplot(outlier.colour="transparent") + theme(axis.title=element_blank(), axis.text.x = element_text(angle = 0), axis.text = element_text(size = 20), plot.title = element_text(size=20), axis.ticks=element_blank()) +
 annotate("text", x = 0, y =30, adj=0,  family="Gill Sans MT", label = "") +
   ggtitle("Percentage of Delayed Flights by City") + 
+scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   coord_flip()
 gg1
 
 ```
 
-Here are the numbers showing proportion of delayed flights per airline:
 
-```{r mean}
+__*Or consider this example:*__
 
-kable(dfSummaryStats2)
+```{r size}
 
-```
-```{marginfigure, echo=TRUE}
-
-Principle 3. Placement Matters 
-
-```
-
-```{marginfigure, echo=TRUE}
-Here we move a chart to the side column.
-```
-
-
-
-```{r bar, fig.margin=TRUE}
-ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) +
+g4 <- ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) +
   geom_col(position = position_dodge()) +
-  theme(axis.text = element_text(size = 20), axis.title=element_text(size=20), legend.text = element_text(size=20), legend.title = element_text(size=20), plot.title = element_text(size=20)) +
-  ylab("City") + 
-  xlab("Percentage of Delays") +
+  ylab("Percentage of Delays") + 
+  xlab("City") +
     ggtitle("Percent Delays by City and Airline") +
   coord_flip()
+g4
 ```
+      
 
-```{marginfigure, echo=TRUE}
-
-
-```
-
-```{marginfigure, echo=TRUE}
-We can improve this chart according to Tufte by erasing what we don't need:
-```
-However, when we look at the percentage of delayed flights by city, Alaska is the clear winner, beating Amwest in every city (Fig 1.).
-
-How is this possible?
-
-
+   ... to this:
 ```{r xyz, fig.margin=TRUE, fig.cap="Fig.1: Percent delays by city and airline"}
 
 ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) + theme_tufte(base_size=14, ticks=F) +
@@ -186,29 +157,34 @@ ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Ai
   annotate("text", x = 3.5, y = 5, adj=1,  family="Gill Sans MT",
 label = "") +
     theme(axis.text.x = element_text(angle = 0), axis.text = element_text(size = 24 , family="Gill Sans MT"), legend.text = element_text(size=20), legend.title=element_blank()) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   coord_flip()
 
 ```
 
-If we look at the distribution of delay % by city, we can see that although Alaska beats Amwest when they are head to head in a city, in fact some of the % delays for Amwest are lower than some of those for Alaska. And Amwest's delay percentage is at its lowest in a city that has a highly disproportionate number of Amwest flights (Phoenix). This is going to bring the overall mean % of Amwest's delays way down:
-
-```{r paradox}
-kable(dfSummaryStats)
-```
-
-Is there anything in the data that might explain Amwest's poorer per city performance relative to Alaska's (besides incompetence, priority or some other reason internal to Amwest)? There is not much data to work with, but one difference might be the level of traffic - maybe the larger (or smaller) an airline is, the higher its delay percentage is.  
-
-These graphs display the percentage of delays by total flights for each airline.  The second one has two outliers removed:
-
-```{marginfigure, echo=TRUE}
-
-Principle 4. Break up the Hegemony of the Monolithic Chart
-
+```{r ava}
+g5 <- ggplot(dfSummaryStats, aes(x=reorder(City, propOfDelay), y=propOfDelay, group=Airline, fill=Airline)) + theme_tufte() +
+  geom_bar(position = position_dodge(), width=0.3, stat = "identity") +  theme(axis.title=element_blank()) +
+  annotate("text", x = 3.5, y = 5, adj=1,  family="Gill Sans MT",
+label = "") +
+    theme(axis.text.x = element_text(angle = 0), plot.caption = element_text(size=24), axis.text = element_text(size = 15 , family="Gill Sans MT")) +
+      ggtitle("Percent Delays by City and Airline") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  coord_flip()
+g5
 ```
 
 ```{marginfigure, echo=TRUE}
-Here we use mini-charts in the form of sparklines to show total flights over time for a number of airlines.
+
+<span style="color:darkorchid"><font size="6">__Principle 4. Graphs don't use language - they are language __ </font size></span>
+
 ```
+
+```{marginfigure, echo=TRUE}
+Consider these sparklines - they are graphical words.
+
+```
+
 ```{r llg, fig.margin=TRUE}
 
 
@@ -259,11 +235,6 @@ ggplot(d, aes(x=Year, y=flights)) +
 In R we can put more data into a sparkline if we want to.  Here we see IQR and min/max graphed onto a sparkline:
 ```
 
-```{marginfigure, echo=TRUE}
-
-
-```
-
 ```{r llout, fig.margin=TRUE}
 
 
@@ -303,54 +274,17 @@ ggplot(d, aes(x=Year, y=flights)) +
   theme(panel.background = element_rect(fill = "transparent", colour = NA),
         plot.background = element_rect(fill = "transparent", colour = NA))
 ```
-xxx
-```{r size}
 
-g4<-ggplot(dfSummaryStats, aes(x=sum_Flights, y=propOfDelay)) +
-  geom_point() +
-  ggtitle("% of Delays By Total Flights") 
+Tufte invented the sparkline - a small graph that shows the upward ad downward trajectory of some variable in a small, concise graphical statement.  For Tufte, the sparkline functions just as a word does -  small, discrete representation meant to express a single - though complex - idea. 
 
 
-dfSummaryStats_OutliersRemoved <- dfSummaryStats %>%
-  filter(sum_Flights<2000)
+<span style="color:darkorchid"><font size="6">__Principle 5. Don't live in a cage__ </font size></span>
 
-g5<-ggplot(dfSummaryStats_OutliersRemoved, aes(x=sum_Flights, y=propOfDelay)) +
-  geom_point() +
-  ggtitle("% of Delays By Total Flights _ outliers removed") 
-
-grid.arrange(g4, g5, ncol=2)
-```
-
-```{r regression}
-
-lmHeight = lm(sum_Flights~propOfDelay, data = dfSummaryStats_OutliersRemoved) #Create the linear regression
-summary(lmHeight) #Review the results
-
-
-```
-
-Neither of the graphs nor the regression analysis that follows suggest that % of delays is correlated with number of flights.  
-
-Perhaps it's something more sinister.  Is it possible there is some kind of favoritism going on among airport staff and crew?  There is no easy way to measure that directly, but as an albeit weak proxy we observe that Phoenix appears to be some kind of hub for Amwest and Seattle a hub for Alaska:
-
-```{r traffic}
-
-g3<-ggplot(dfFlights, aes(x=City, y=NumOfFlights, group=Airline, fill=Airline)) +
-  geom_col(position = position_dodge()) +
-  ggtitle("Number of Flights By Airline By City") +
-  theme(axis.text.x = element_text(angle = 90))
-g3
-```
-
-While Amwest has a higher percentage of delays across the board, is the gap between Amwest's and Alaska's delay percentages lowest in Phoenix and highest in Seattle?  This might suggest that where Amwest is most prominent they get favored treatment by the airport, and where Alaska is most prominent Amwest gets the least favored treatment.
-
-
-This barchart shows the difference in the % delays between the two airlines, by city.  
-
+In the graph below, the lines are the same as in a line graph.  But the y axis has been obliterated - instead, it is occupied by the names of airlines on either side with their traffic shown at various points. It is as if the sparkline words had been arranged in a paragraph. It is a very small change but a highly effective one:
 
 ```{r gv}
 
-  
+
 #install.packages('devtools')
 #library(devtools)
 #install_github("leeper/slopegraph")#install Leeper's package from Github
@@ -359,7 +293,7 @@ ggslopegraph2(dataframe = dfFl,
                 times = yearCat,
                 measurement = Flights,
                 grouping = airline,
-                title = NULL,
+                title = "Traffic by Airline, 1960 to 2010",
                 caption = NULL,
                 linecolor = "gray",
                 subtitle = NULL, 
@@ -368,14 +302,3 @@ ggslopegraph2(dataframe = dfFl,
                 )
 
 ```
-
-Note the footnote displayed to the right of me! ^[This is a footnote.]
-
-
-Amwest clearly does best in Phoenix relative to Alaska, and very poorly in Seattle.  However, the biggest difference between the two is in San Francisco where Amwest has MORE total flights than Alaska. 
-
-Perhaps it is the weather. Amwest does worst in the Northern cities - but at this point there is too little data to determine anything more than anecdotal.  Besides, blaming it on the weather, while we have all done it, is hardly a viable excuse.
-
-## Conclusion
-
-Amwest filed for bankruptcy in the early ninieties and eventually was swallowed up by US Air. This is a prophetic story.  Had they employed data scientists who could have shown them the above charts they might have survived to this day.
