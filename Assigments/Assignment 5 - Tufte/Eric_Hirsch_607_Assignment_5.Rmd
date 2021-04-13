@@ -278,7 +278,7 @@ ggplot(d, aes(x=Year, y=flights)) +
 Tufte invented the sparkline - a small graph that shows the upward ad downward trajectory of some variable in a small, concise graphical statement.  For Tufte, the sparkline functions just as a word does -  small, discrete representation meant to express a single - though complex - idea. 
 
 
-<span style="color:darkorchid"><font size="6">__Principle 5. Don't live in a cage__ </font size></span>
+<span style="color:darkorchid"><font size="6">__Principle 5. Get off the grid__ </font size></span>
 
 In the graph below, the lines are the same as in a line graph.  But the y axis has been obliterated - instead, it is occupied by the names of airlines on either side with their traffic shown at various points. It is as if the sparkline words had been arranged in a paragraph. It is a very small change but a highly effective one:
 
@@ -299,6 +299,21 @@ ggslopegraph2(dataframe = dfFl,
                 subtitle = NULL, 
                 linethickness = .5,
                 ytextsize = 3
-                )
+                ) 
 
 ```
+
+## <span style="color:darkorchid"><font size="6">__Packages__</font size></span>
+
+Basic style, background color, font and sidebar: __*tufte*__
+
+Boxplot: geom_boxplot() with ggplot2 __*ggthemes*__
+
+Minimal ink: theme_tufte() __*ggthemes*__
+
+Minimal Barchart __*ggplot2*__
+
+Sparklines:  __*sparkline*__
+
+Slopegraph: __*slopegraph*__
+
