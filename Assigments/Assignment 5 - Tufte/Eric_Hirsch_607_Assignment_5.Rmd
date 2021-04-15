@@ -27,7 +27,7 @@ loadfonts()
 ```
 
 ## 
-## <span style="color:darkorchid"><font size="6">__Principle 1: Style expresses substance__</font size></span>
+## <span style="color:darkorchid"><font size="6">__Principle 1: Style is substance__</font size></span>
 
 Elegance and style are not superfluous to or, even worse, antithetical to good data design - they are central to readability and clarity.
 
@@ -39,7 +39,7 @@ dfFlights_raw <- as.data.frame(read.delim("https://raw.githubusercontent.com/eri
 
 ```{marginfigure, echo=TRUE}
 
-<span style="color:darkorchid"><font size="6">__Principle 2. Form expresses function__ </font size></span>
+<span style="color:darkorchid"><font size="6">__Principle 2. Form is function__ </font size></span>
 
 ```
 
@@ -176,7 +176,7 @@ g5
 
 ```{marginfigure, echo=TRUE}
 
-<span style="color:darkorchid"><font size="6">__Principle 4. Graphs don't use language - they are language __ </font size></span>
+<span style="color:darkorchid"><font size="6">__Principle 4. Pictures are words__</font size></span>
 
 ```
 
@@ -275,14 +275,14 @@ ggplot(d, aes(x=Year, y=flights)) +
         plot.background = element_rect(fill = "transparent", colour = NA))
 ```
 
-Tufte invented the sparkline - a small graph that shows the upward ad downward trajectory of some variable in a small, concise graphical statement.  For Tufte, the sparkline functions just as a word does -  small, discrete representation meant to express a single - though complex - idea. 
+Tufte invented the sparkline - a small graph that shows the upward and downward trajectory of some variable in a small, concise graphical statement.  For Tufte, the sparkline functions just as a word does -  small, discrete representation meant to express a single - though complex - idea. 
 
 
 <span style="color:darkorchid"><font size="6">__Principle 5. Get off the grid__ </font size></span>
 
 In the graph below, the lines are the same as in a line graph.  But the y axis has been obliterated - instead, it is occupied by the names of airlines on either side with their traffic shown at various points. It is as if the sparkline words had been arranged in a paragraph. It is a very small change but a highly effective one:
 
-```{r gv}
+```{r gv, fig.fullwidth=TRUE}
 
 
 #install.packages('devtools')
