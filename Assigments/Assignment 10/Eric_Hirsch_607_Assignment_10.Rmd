@@ -12,6 +12,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Chapter Summary Example
 
+Source: Text Mining with R
+by Julia Silge, David Robinson
+Released June 2017
+Publisher: O'Reilly Media, Inc.
+
+*Note: this source citation was added on 4/16/21*
+
+
 ```{r}
 #install.packages('tidytext')
 #install.packages('psych')

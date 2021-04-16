@@ -1,0 +1,245 @@
+---
+title: "Tidyverse Recepie"
+author: "Maliat Islam"
+date: "4/8/2021"
+output: 
+  prettydoc::html_pretty:
+    theme: leonids
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Tidyverse Recepie:
+### The Tidyverses is an collection of R packages.When Tidyverse is loaded it loads ggplot2, dplyr, tidyr, readr, purrr, tibble, stringr, and forcats.
+
+### Forcats and ggplot:
+
+#### For the implementation of Tidyverse, I have selected Forcats and ggplot libraries from this package.dplyr was used as well. I have selected Disney movies gross income dataset from the 1937-2016 from Kaggle.
+
+#### The purpose this analysis is to categorized Disney movies according to their genre. Those movies gross income is also going to be analyzed.
+
+#### https://www.kaggle.com/rashikrahmanpritom/disney-movies-19372016-total-gross
+
+
+```{r d}
+library(tidyverse)
+library(forcats)
+library(kableExtra)
+disney_movies_total_gross <- read.csv("https://raw.githubusercontent.com/maliat-hossain/FileProcessing/main/disney_movies_total_gross.csv")
+head(disney_movies_total_gross)%>% kable() %>% 
+  kable_styling(bootstrap_options = "striped", font_size = 10) %>% 
+  scroll_box(height = "500px", width = "100%")
+```
+
+#### Only necessary rows and columns have been selected using Tidyverse package dplyr. For this assignment I am focusing on the Disney movies released from 1937 to 1954.
+```{r e}
+DisneyMovies<-disney_movies_total_gross %>% dplyr::select(1)
+DisneyMovies1<-DisneyMovies[1:10,]
+
+```
+#### The dataframe has been factorized for the purpose of implementing categories. The movies have been categorized as musical,adventure,comedy and drama.Forcats from tidyverse works really well to manipulate categorical variable.
+
+```{r f}
+DisneyMovies2<-factor(DisneyMovies1)
+view(DisneyMovies2)%>% kable() %>% 
+  kable_styling(bootstrap_options = "striped", font_size = 10) %>% 
+  scroll_box(height = "500px", width = "100%")
+```
+
+```{r g}
+DisneyMovies2<-fct_recode(DisneyMovies2 ,Musical="Snow White and the Seven Dwarfs" ,Adventure="Pinocchio",Musical="Fantasia",Adventure ="Song of the South",Drama="Cinderella",Adventure="20,000 Leagues Under the Sea",Drama="Lady and the Tramp",Drama="Sleeping Beauty",Comedy="101 Dalmatians",Comedy="The Absent Minded Professor")
+
+
+```
+
+
+#### Total gross income column for these movies have been added.
+```{r h}
+DisneyMovies3<-disney_movies_total_gross %>% dplyr::select(1,5)
+DisneyMovies3<-DisneyMovies3[1:10,]
+```
+#### Summary statistics for total gross revenue  from  Disney movies has been calculated.
+```{r i}
+
+summary(DisneyMovies3)
+```
+#### case_when from dplyr is used for binning the gross income for movies.A variable named comparison_movies has been created which shows if the gross income of selected movie is "Below Average", "Around Average",or "Above Average". To determine the average information from the summary statistics have been used.
+
+```{r j}
+library(dplyr)
+DisneyMovies4<-DisneyMovies3 %>%
+  mutate(
+    comparison_movies=case_when(
+      total_gross < 81219150 ~ "Below Average",
+      total_gross > 81219150  & total_gross <83810000 ~ "Around Average",
+      TRUE ~ "Above Average"
+      
+    )
+  )%>%
+  select(movie_title,total_gross,comparison_movies)
+```
+
+```{r a}
+view(DisneyMovies4)%>% kable() %>% 
+  kable_styling(bootstrap_options = "striped", font_size = 10) %>% 
+  scroll_box(height = "500px", width = "100%")
+```
+
+#### The outcome of selected movies' income has been visualized through the barplot. Each color represents different income status.
+```{r b}
+library(ggplot2)
+ggplot(data = DisneyMovies4, aes(x = movie_title, fill = comparison_movies)) +
+    geom_bar(position = "dodge")+coord_flip()
+```
+
+
+### Conclusion
+
+#### The plot shows most of the Disney movies have earned above average from the year 1937 to 1954.
+
+## But wait - there's more we can do with Forcats (Eric Hirsch revision)
+
+In addition to creating categories as shown above, the Forcats package helps us solve many other problems related to the display of categorical variables. For example:
+
+        1. How do we display a category by its frequency?
+        2. How can we reduce our categories by creating an "other" category
+        3. How can we order a category by another variable?
+
+Or for even more advanced Forcats functionality:
+
+        4. How can we make our catgeories anonymous?
+        5. How can we shuffle our categoires in random order?
+
+
+#### 1. Display a category by its count frequency - we use fct_infreq().  We will also use fct_rev() to reverse the default order of fct_infreq - which sorts columns from smallest to largest::
+
+```{r freq a}
+
+Disney5 <- disney_movies_total_gross %>%
+  filter(genre!="")
+
+g1 <- ggplot(Disney5, aes(x=fct_rev(fct_infreq(genre)))) +
+  geom_bar() +
+  coord_flip() + 
+  ggtitle("Total Counts by Genre") +
+  ylab("Counts") +
+  xlab("Genre")
+
+g1
+
+```
+
+#### 2. Create an "other" category to collect together the smaller categories.
+
+Forcats has many ways to do this, with many options for choosing which categories to collect - here we use fct_lump() which combines the categories below a specified n parameter:
+
+
+```{r freq f}
+
+Disney6 <- disney_movies_total_gross %>%
+    filter(genre!="") %>%
+  mutate(genre = fct_lump(genre, n=5)) 
+
+g1 <- ggplot(Disney6, aes(x=fct_rev(fct_infreq(genre)))) +
+  geom_bar() +
+  coord_flip() + 
+  ggtitle("Total Counts by Genre") +
+  ylab("Counts") +
+  xlab("Genre")
+
+g1
+
+```
+
+#### 3. Reorder a category based on another category - here we use ftc_reorder to reorder our genre by revenue generated:
+
+```{r freq b}
+
+Disney6 <- disney_movies_total_gross %>%
+  group_by(genre) %>%
+    filter(genre!="") %>%
+  summarize(Revenue= sum(round(total_gross/1000000)))
+
+
+ggplot(Disney6, aes(x=fct_reorder(genre, Revenue),  y=Revenue)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Total Revenue By Genre") +
+  ylab("Revenue") +
+  xlab("Genre")
+  
+```
+
+#### 4. Make a category anonymous - we use fct_anon():
+
+Imagine every movie has one chief hair stylist who gets rated 1-10 for each movie they work on. Mangement is interested in analyzing these ratings to look for trends compared to the previous year, and they plan to present the findings at a general staff meeting. However, management is interested in trends - not individual performance- and would like you to hide the individual names from the graph.
+
+First we show the graph as it would appear without anonymizing:
+
+```{r freq d}
+set.seed("12348")
+Disney7 <- disney_movies_total_gross %>%
+  mutate(hair_stylist = factor(sample(letters[1:15], 579, replace = TRUE))) %>%
+  mutate(hair_stylist_rating = sample(10, 579, rep=TRUE)) %>%
+  group_by(hair_stylist) %>%
+  summarize(AveRating=mean(hair_stylist_rating)) 
+
+g1 <- ggplot(Disney7, aes(x=fct_reorder(hair_stylist, AveRating),  y=AveRating)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Average Hairstylist Ratings") +
+  ylab("Ratings") +
+  xlab("Hair Stylists")
+
+g1
+
+
+```
+
+With fct_anon we can make categories anonymous simply and effectively:
+
+```{r c}
+
+Disney7$hair_stylist2 <- fct_anon(Disney7$hair_stylist, "hair_stylist_")
+
+g1 <- ggplot(Disney7, aes(x=fct_reorder(hair_stylist2, AveRating),  y=AveRating)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Average Hairstylist Ratings") +
+  ylab("Ratings") +
+  xlab("Hair Stylists")
+g1
+
+```
+
+
+#### 5. For our last piece of functionality we will use fct_shuffle() to randomly shuffle our category order.
+
+The Hairstylist Review committee is holding their monthly meeting where hairstylists will present their latest ideas.  You always put the presentation list in alphabetical, reverse alphabetical order or rating order - styists 'e','f' and 'g' are demanding your resignation since they never get to go first. Senior management asks you to randomize the order - you can do it easily with fct_shuffle().
+
+
+```{r freq e}
+
+Disney5 <- disney_movies_total_gross %>%
+  group_by(genre) %>%
+  mutate(Revenue= sum(total_gross)) %>%
+  filter(genre!="")
+
+ggplot(Disney7, aes(x=fct_shuffle(hair_stylist),  y=AveRating)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Presentation Order - with Hairstylists and their Ratings") +
+  ylab("Ratings") +
+  xlab("Hair Stylists")
+
+
+```
+
+Alas, "f" is still near the bottom of the list, but random is random.
+
+### Conclusion 2
+
+Factors make categories easy to use in R, and forcats makes it easy to manipulate them.
