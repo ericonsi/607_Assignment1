@@ -254,7 +254,7 @@ tidy_books %>%
 
 I am analyzing a dataset from kaggle (https://www.kaggle.com/jessemostipak/broadway-weekly-grosses) which has a table of synopses and a table of gross receipts for Broadway plays for the past several decades. I will use the package SentimentAnalysis, which contains 4 dictionaries: Harvard-IV, an all-purpose dictionary developed at Harvard, Henry's finance specific dictionary, the Loughran-Macdonald dictionary (another finance dictionary), and the QDAP, which analyses discourse.  Given the specific foci of the latter three databases, I expect the Harvard database to be the most useful.
 
-The reason I am using the SentimentAnalysis package is that it operates differently from the tidytext library - it provides summary statistics for weighted scores using a complex algorithm which considers not only a term within a discourse but it's position.  This may help us more reliably determine whether an observation is predominantly positive or negative.
+The reason I am using the SentimentAnalysis package is that it operates differently from the tidytext library - it provides summary statistics for weighted scores using a complex algorithm (utilizing LASSO regularization) which considers not only a term within a discourse but its position.  This may help us more reliably determine whether an observation is predominantly positive or negative.
 
 ```{r load data}
 library(SentimentAnalysis)
@@ -298,9 +298,9 @@ ggplot(sentiment, aes(SentimentQDAP)) +
 ```
 
 
-Not surprisingly, the finance dictionaries have medians and modes of 0 - there are few matches between the dictionaries and words in the play synopses.  The QDAP does better, and the QDAP analysis and the Harvard analysis are relatively similar.  They both find the plays, on average, to be mildly positive.
+Not surprisingly, in the finance dictionaries there are few matches between the dictionaries and words in the play synopses.  The QDAP does better, and the Harvard analysis has the most matches. The QDAP analysis and the Harvard analysis are relatively similar in their distribution.  They both find the plays, on average, to be mildly positive.
 
-#### We compare to the Harvard dictionary to the dictionaries we used from Tidytext.
+#### We compare the Harvard dictionary to the dictionaries we used from Tidytext.
 
 
 ```{r}
@@ -365,7 +365,7 @@ ggplot(dfSeatAnalysis, aes(SentimentGI, total_revenues)) +
 
 ```
 
-While the data remains suggestive that more positive shows do better, regression analysis fails to establish a correlation at the 95% level.
+While the data remains suggestive that more positive shows do better, regression analysis fails to allow us to reject the possibility that the apparent association is due to sampling error (at a 95% confidence level.)
 
 ```{r regressions}
 m3 <- lm(total_seats_sold ~ SentimentGI, data = dfSeatAnalysis)
@@ -394,7 +394,7 @@ x <- bing_word_counts2 %>%
   mutate(percentage = n / sum(n))
 x
 ```
-The Bing dataset comes to the astonishing conclusion that 60% of Broadway plays are negative in sentiment!
+The Bing dataset comes to the astonishing conclusion that 60% of Broadway plays are negative in sentiment! This is not the Broadway I know.
 
 This word cloud helps us understand why:
 
@@ -407,7 +407,7 @@ tidy_x %>%
                    max.words = 100)
 ```
 
-A satirical farce about an eccentric millionaire who falls intensely in love with a mysterious stranger has 7 negative words and only one positive one.  Even "funny" is considered negative here.
+Consider this: A satirical farce about an eccentric millionaire who falls intensely in love with a mysterious stranger has 7 negative words and only one positive one.  Even "funny" is considered negative here.
 
 It does not help all that much to remove some of the words:
 
@@ -428,6 +428,6 @@ x1
 
 #### Conclusion
 
-Sentiment analysis is an interesting tool but has its limitations.  As the Bing vs Harvard analysis shows, different dictionaries and algorithms can produce different results.  As custom context specific dictionaries emerge, analysis will surely improve.
+Sentiment analysis is an interesting tool but has its limitations.  As the Bing vs Harvard analysis shows, different dictionaries and algorithms can produce different results.  As more context-specific dictionaries emerge, analyses will surely improve.
 
 
