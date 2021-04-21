@@ -1,0 +1,66 @@
+---
+title: "Recommender systems"
+author: "Eric Hirsch"
+date: "4/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Recommender Systems - An Analysis of Goodreads.com
+
+For this assignment I signed up for Goodreads, a book recommender website (https://www.goodreads.com).  I also interviewed other users of the website to better understand the experience of seasoned users.
+
+### Scenario analysis:
+
+•	The target audience: book readers, but more specifically book readers who want to enjoy the benefits of a readership community.\
+•	Users goals: get book recommendations, make book recommendations, find new and interesting books to read and to see what friends and others are reading.\
+•	Methods for meeting goals: The website meets these goals through, among other things, an unusually hands-off recommender system described below.
+
+### The Goodreads recommender system
+
+This is what I’ve learned about the Goodreads recommender system from my experience “reverse engineering” the recommender algorithm, and from the report of others:
+
+__1.	The website recommends the books you ask it to recommend - personal ratings and genre selection are central.__
+
+The website offers personalized recommendations but is rather stingy with them until you yourself have chosen at least one genre of interest and rated 20 books. Perusing, browsing, clicking on author links - none of this affected my rather generic recommendations until I rated books. After that, I was offered mostly bestseller type books in book categories similar to mine or in the genres I chose.
+
+From that point forward, personal ratings continue to have an impact, but what appears to be even more important is one’s chosen genres. As one user explained to me, you may rate books that you haven’t read for years because you want others to know you think it’s a good book  - but it may not apply to your interests now.  Thus, genre selection is considered most relevant to book recommendations.
+
+__2.	Content Based Filtering mostly applies to intentional rather than implied behavior.__
+
+I clicked on a dozen books in Romanian or about Romania but this didn’t coerce the algorithm to offer me books in Romanian. I added an Indonesian language book to my “want to read” bookshelf but didn’t get recommendations based on that book.  As users emphasized to me, the website is, again, most sensitive to the books that one rates and to the genres one chooses. It is far less sensitive to user browsing behavior.   
+
+However, as I rate books in different genres, I do begin to see more subtle offerings, including books that overlap my genres.
+
+__3.	Collaborative Filtering applies mainly to the books marked as read by friends.__
+
+When I add friends, books they have read appear on my homepage as recommendations. Interestingly, they don’t necessarily feature the books my friends have rated most highly. Often, they are simply the books my friends have read most recently.   It appears that the intention is to not only offer books the user might like, but books that are possibly current, controversial or might generate discussion.
+
+On the other hand, there doesn’t seem to be much attempt to tailor recommendation choices to “people like me” either using collaborative or clustering techniques. When I look at a book and examine the list of books like it, I seem to get the same list as everyone else even though I may like the book for different reasons.
+
+__4.	The recommendation algorithm tends to offer generalized recommendations based on the domain knowledge and expertise of the website.__
+
+Goodreads recommends books of up-and-coming authors, popular authors, newly published works, and other types of material in this vein.  These recommendations are not personalized, but rather are based on the website’s credibility and expertise.  They will, however, be tailored to the genres that I’ve chosen.
+
+__5.	The website doesn’t appear to rely on the quality of its recommendations for success, but rather builds trusts with the user community that encourages them to offer recommendations to each other.__
+
+The people I spoke with appreciate the gentle and generic approach to recommendations that  Goodreads takes on its website. They didn’t feel intruded upon, manipulated or spied upon the way one might on other websites.  I also appreciate the way the website considers its customers to be knowledgeable, and able to communicate easily about the product.  In this way, members of the community can trust each other to make good recommendations based on shared tastes and interests. 
+
+Some online, however, complain about Goodreads lack of sophistication.
+This article suggests that the “quaintness” of the website has hurt its functionality. (https://www.newstatesman.com/science-tech/social-media/2020/08/better-goodreads-possible-bad-for-books-storygraph-amazon) 
+
+In another example on the website medium.com,
+
+“While Goodreads calls itself “the world’s largest site for readers and book recommendations,” many of the 18 or so people I spoke to for this story insisted that, in fact, Goodreads is nearly useless for finding recommendations. “For some reason, Goodreads seems to attract an audience of people with insanely bland and entry-level taste,” Martin says. He points to the site’s Best Books Ever list, which includes Harry Potter, high school curriculum novels, and copious YA. “That would be fine if it didn’t seem to poison the site’s recommendation algorithm, which in my experience is entirely useless.”
+ Angela Lashbrook.  Almost Everything about Goodreads Is Broken.  https://onezero.medium.com/almost-everything-about-goodreads-is-broken-662e424244d5, 2019.
+ 
+ 
+### Recommendations to improve the site
+
+This debate highlights very different approaches to recommender systems.  I personally find the lightweight recommender system to be refreshing and would not suggest changing it per se. But in its attempt to lay off the reader, the website doesn’t make recommendations where it might. 
+
+Imagine you’ve just heard of the poet Mary Oliver and want to try out a selection of her poems. If you search for Mary Oliver you receive an undifferentiated list of over 500 results. Many of these books are duplicates and they don’t seem to be in any particular order. In fact, the fifth book down is a British history book with the words “Bloody Mary, Oliver Cromwell” in the title. The website features recommendation lists by community members, but no link to any recommendation list is found. Instead, there is a link to Mary Oliver events, which include a random winetasting.
+
+I would like to see what books are recommended for this author, books like it, community lists that include this author, and authors similar to this author. These recommendations would not need to be personalized or tailored to my interests or my behavior, but they would still allow me to much more easily  navigate the rather complicated world of book choices. We have become so used to recommender systems that it is actually quite surprising that such functionality is missing.
