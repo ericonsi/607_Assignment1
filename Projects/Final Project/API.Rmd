@@ -1,0 +1,85 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+install.packages("janitor")
+library(tidyverse)
+library(magrittr)
+library(janitor)
+library(tidyverse)
+```
+
+
+
+```{r}
+
+## Install the required package with:
+#install.packages("RSocrata")
+
+library("RSocrata")
+
+#Community Health: Diabetes mortality rate per 100,000: 2009 - 2011
+dfMortality2011 <- read.socrata(
+  "https://health.data.ny.gov/resource/u98s-c3hg.json")
+
+#U.S. Chronic Disease Indicators: Diabetes
+dfDiabetesIndicators <- read.socrata(
+  "https://chronicdata.cdc.gov/resource/f8ti-h92k.json")
+
+#Community Health Obesity and Diabetes Related Indicators: 2008 - 2012
+dfCommunityHealthObesityAndDiabetes <- read.socrata(
+  "https://health.data.ny.gov/resource/tchg-ruva.json")
+
+#Community Health: Age-adjusted percentage of adults with physician diagnosed diabetes: 2008 - 2009
+dfAdultsDiagnosed <- read.socrata(
+  "https://health.data.ny.gov/resource/9j5w-7zpd.json")
+
+#AH Provisional Diabetes Death Counts, 2020
+dfDeath <- read.socrata(
+  "https://data.cdc.gov/resource/qdcb-uzft.json")
+
+#500 Cities: Diagnosed diabetes among adults aged >=18 years
+dfCityComparison <- read.socrata(
+  "https://chronicdata.cdc.gov/resource/cn78-b9bj.json")
+
+#Conditions contributing to deaths involving coronavirus disease 2019 (COVID-19), by age group and state, United States.
+dfDeathsForCovid <- read.socrata(
+  "https://data.cdc.gov/resource/hk9y-quqm.json")
+
+#Community Health: Diabetes Short-term Complications Hospitalization Rate per 10,000 - Aged 18+ Years by County Map: Latest Data
+dfHospitalizations <- read.socrata(
+  "https://health.data.ny.gov/resource/xuwq-ppg8.json")
+
+
+```
+
+```{r}
+
+ggplot(dfMortality2011, aes(reorder(county_name, as.numeric(percentage_rate)),  percentage_rate)) +
+  geom_col() + 
+  coord_flip()
+
+ggplot(dfHospitalizations, aes(reorder(county_name, as.numeric(percent_rate)),  as.numeric(percent_rate))) +
+  geom_col() + 
+  coord_flip()
+
+```
+
+```{r}
+dfSDOH <- read.csv("D:\\Buffer\\SDOH__En__1_0 (1).csv", encoding = "UTF-8")
+
+#dfSDOH %<>%
+#  remove_empty("cols") %>%
+#  select(!Device.ID & !CanText & !CanEmail & !EmailMirror)
+
+dfSDOH %<>%
+    mutate(across(everything(), as.character)) %<>%
+  pivot_longer(!X.U.FEFF.Department, names_to = "Field", values_to = "Value")
+
+```
+
