@@ -266,11 +266,12 @@ dfA1CAndNeeds %<>%
 
 dfA1CAndNeeds$Reading <- as.numeric(dfA1CAndNeeds$Reading)
 
-rBase <- lm( Reading ~ Need_Food + Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe,  data = dfA1CAndNeeds)
-summary(rBase)
+rBase1 <- lm( Reading ~ Need_Food + Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe,  data = dfA1CAndNeeds)
+summary(rBase1)
 
-rBase <- lm( Reading ~ Need_AffordNeeds,  data = dfA1CAndNeeds)
-summary(rBase)
+rBase2 <- lm( Reading ~ Need_AffordNeeds,  data = dfA1CAndNeeds)
+summary(rBase2)
+
 
 ```
 ```{r}
@@ -317,6 +318,17 @@ ggplot(dfFinal3, aes(Need_SafePlace)) +
 
 ```
 
+```{r}
+
+
+
+dfA1CDropAndNeeds <- sqlQuery(dbConnection, "SELECT tblA1C.DiagA1C, tblA1C.MostrecentA1C, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+FROM tblA1C INNER JOIN tblNeeds ON tblA1C.ClientID = tblNeeds.ClientID;")
+
+dfA1CDropAndNeeds %<>% 
+  mutate(A1CDrop = MostrecentA1C-DiagA1C)
+
+```
 
 
 
@@ -411,6 +423,8 @@ model
 model1 <- glm(HypertensionOrDiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
 model1
 
+model <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
+model
 
 #model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
 #model
@@ -436,7 +450,7 @@ p3 <- test %>%
   select(HypertensionOrDiabetesOrNot)
 
 Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.40, 1, 0)
+Predictions$predicted <- ifelse(Predictions$predicted >.13, 1, 0)
 Predictions$predicted=as.factor(Predictions$predicted)
 Predictions$HypertensionOrDiabetesOrNot=as.factor(Predictions$HypertensionOrDiabetesOrNot)
 
@@ -460,4 +474,125 @@ confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted)
 
 
 ```
+
+```{r}
+set.seed(1)
+
+#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
+sample <- sample(c(TRUE, FALSE), nrow(dfAllChronicAndNeeds), replace=TRUE, prob=c(0.7,0.3))
+train <- dfAllChronicAndNeeds[sample, ]
+test <- dfAllChronicAndNeeds[!sample, ]  
+
+#fit logistic regression model
+
+model <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
+model
+#model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
+#model
+#disable scientific notation for model summary
+#options(scipen=999)
+
+#view model summary
+summary(model)
+#Shows fit - ranges from 0 to almost 1
+pscl::pR2(model)["McFadden"]
+
+#Ranks importance
+caret::varImp(model)
+
+#multicolinearity (VIF)
+car::vif(model)
+
+#calculate probability of default for each individual in test dataset
+predicted <- predict(model, test, type="response")
+p2 <- as.data.frame(predicted)
+
+p3 <- test %>%
+  select(DiabetesOrNot)
+
+Predictions <- cbind(p2, p3)
+Predictions$predicted <- ifelse(Predictions$predicted >.13, 1, 0)
+Predictions$predicted=as.factor(Predictions$predicted)
+Predictions$DiabetesOrNot=as.factor(Predictions$DiabetesOrNot)
+
+psych::describe(Predictions)
+
+#find optimal cutoff probability to use to maximize accuracy
+optimal <- InformationValue::optimalCutoff(test$DiabetesOrNot, predicted)[1]
+optimal
+
+#ConfusionMatrix doesn't work
+confusionMatrix(Predictions$DiabetesOrNot, Predictions$predicted)
+
+#calculate sensitivity
+#sensi
+
+
+
+```
+
+```{r}
+set.seed(1)
+
+#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
+sample <- sample(c(TRUE, FALSE), nrow(dfA1CDropAndNeeds), replace=TRUE, prob=c(0.7,0.3))
+train <- dfA1CDropAndNeeds[sample, ]
+test <- dfA1CDropAndNeeds[!sample, ]  
+
+#fit logistic regression model
+
+model <- lm(A1CDrop~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=train)
+model
+#model <- glm(HypertensionOrA1CDrop ~ NumOfNeeds, family="binomial", data=train)
+#model
+#disable scientific notation for model summary
+#options(scipen=999)
+
+#view model summary
+summary(model)
+#Shows fit - ranges from 0 to almost 1
+pscl::pR2(model)["McFadden"]
+
+#Ranks importance
+caret::varImp(model)
+
+#multicolinearity (VIF)
+car::vif(model)
+
+#calculate probability of default for each individual in test dataset
+predicted <- predict(model, test, type="response")
+p2 <- as.data.frame(predicted)
+
+p3 <- test %>%
+  select(A1CDrop)
+
+Predictions <- cbind(p2, p3)
+Predictions$predicted <- ifelse(Predictions$predicted >.13, 1, 0)
+Predictions$predicted=as.factor(Predictions$predicted)
+Predictions$A1CDrop=as.factor(Predictions$A1CDrop)
+
+psych::describe(Predictions)
+
+#find optimal cutoff probability to use to maximize accuracy
+optimal <- InformationValue::optimalCutoff(test$A1CDrop, predicted)[1]
+optimal
+
+#ConfusionMatrix doesn't work
+confusionMatrix(Predictions$A1CDrop, Predictions$predicted)
+
+#calculate sensitivity
+#sensi
+
+
+
+```
+
+
+```{r}
+
+dfCommunityHealthObesityAndDiabetes2 <- dfCommunityHealthObesityAndDiabetes %>%
+  filter(county_name=="Richmond")
+
+```
+
 
