@@ -1,14 +1,12 @@
 ---
-title: "Poverty and Diabetes: Is There A Connection?"
-Author: "Eric Hirsch"
-output: 
-  html_document
+title: "Untitled"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r ech=FALSE, message = FALSE}
+```{r}
 #install.packages("janitor")
 library(tidyverse)
 library(magrittr)
@@ -25,29 +23,16 @@ library(xml2)
 library(XML)
 library(stringr)
 ```
-## Diabetes and Poverty: Is There a Connection?
 
-We will use data from 4 sources: 
 
-1. Health data from the New York Department of Health, accessed through APIs
-2. Zip code level data on population size and poverty, scraped from web tables
-3. CsV files from a proprietary survey of economic needs (stripped of identity markers) 
-4. Tables of client health information in a proprietary SQL Server database on Azure (stripped of identity markers and password protected through keyring)
 
-Note - Certain operations that load data and are very time consuming will be contained within functions that can be run or not by changing the value of the boolean variable "run" which appears at the top of each function.
-
-## Loading The Data
-
-### 1. New York DOH Data
-
-We begin by reading the New York DOH data from the APIs:
 ```{r}
+
+## Install the required package with:
+#install.packages("RSocrata")
+
 library("RSocrata")
 
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE 
-
-if(run) {
 #Community Health: Diabetes mortality rate per 100,000: 2009 - 2011
 dfMortality2011 <- read.socrata(
   "https://health.data.ny.gov/resource/u98s-c3hg.json")
@@ -83,34 +68,49 @@ dfHospitalizations <- read.socrata(
 #Medicaid Chronic Conditions, Inpatient Admissions and Emergency Room Visits by Zip Code: Beginning 2012
 dfMedicaidByZip <- read.socrata(
   "https://health.data.ny.gov/resource/2yck-xisk.json")
-
-}
-
 ```
 ```{r}
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE 
 
-if(run) {
+
 #Medicaid Program Enrollment by Month: Beginning 2009
 dfMedicaidEnrollment <- read.socrata(
   "https://health.data.ny.gov/resource/m4hz-kzn3.json")
-}
+```
+
+```{r}
+
+dfMedicaidByZip %<>%
+  filter(major_diagnostic_category=='Diabetes Mellitus' & county=="Richmond" & year=="2014")
+
+MedicaidTotal <- dfMedicaidEnrollment %>%
+  filter(economic_region == "New York City" & eligibility_year=="2014") %>%
+  group_by(economic_region) %>%
+  summarize(Total = sum(as.numeric(recipients)))
+
+Stats_DeathRate <-dfMortality2011 %>%
+  filter(county_name=="Richmond" | county_name=="New York State")
+
+Stats_Indicators <- dfDiabetesIndicators %>%
+  filter(yearstart=="2018" & locationabbr=="NY")
+
+
 ```
 
 
-### 2. Zip Code Level Population and Poverty Data Scraped From the WEb
+```{r}
 
-We scrape 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels
+
+dfErVisitsByZip <- dfMedicaidByZip %>%
+  group_by(zip_code) %>%
+  summarize(TotalERVisits = sum(as.numeric(er_visits)))
+dfErVisitsByZip
+
+write.csv(dfErVisitsByZip, "D:\\Buffer\\1.csv") 
+
+```
 
 ```{r html}
 library(XML)
-
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-
-if(run) {
-
 
 x="http://www.zipatlas.com/us/ny/zip-code-comparison/population-below-poverty-level.htm"
 dfPopAndPovertyLevel = as.data.frame(readHTMLTable(x, header=T,which=5,strings2factors=F))
@@ -120,36 +120,117 @@ x= str_c("http://www.zipatlas.com/us/ny/zip-code-comparison/population-below-pov
 dfx = as.data.frame(readHTMLTable(x, header=T,which=5,strings2factors=F))
 dfPopAndPovertyLevel=rbind(dfPopAndPovertyLevel, dfx)
 }
-}
 
+dfPopAndPovertyLevel %<>%
+  filter(str_length(V2)==5 & V4 == "Staten Island, New York")
+
+write.csv(dfPopAndPovertyLevel, "D:\\Buffer\\2.csv") 
+ 
 ```
 
 
-### 3. CSV file of a Survey of Client Economic Needs
-
-The clients in this file are clients from my workplace and their Client ID is the same as for those at my workplace.  The file is otherwise free of any personal identifying information.   
 
 
 ```{r}
 
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
+ReCreateFile=FALSE
+library(tidyverse)
 
-if(run) {
+if (ReCreateFile)
+{
+  
+dfSDOH_raw <- read.csv("D:\\Buffer\\SDOH__En__1_0 (2).csv", encoding = "UTF-8")
+#dfID <- read.csv("D:\\Buffer\\id.csv", encoding = "UTF-8")
+
+#dfSDOH %<>%
+#  remove_empty("cols") %>%
+  #select(!Device.ID & !CanText & !CanEmail & !EmailMirror)
+
+dfSDOH <- dfSDOH_raw %>%
+   mutate(across(everything(), as.character)) %>%
+  pivot_longer(!XUFEFFDepartment, names_to = "Field", values_to = "Value")
+
+write.csv(dfSDOH, "D:\\Buffer\\SDOH__En__1_0 (3).csv")
+}
+
+
+
+```
+
+```{r}
+
 dfSDOH_raw <- read.csv("D:\\Buffer\\SDOH__En__1_0 (3).csv", encoding = "UTF-8")
-}
+dfChronic <- read.csv("D:\\Buffer\\Chronic.csv", encoding = "UTF-8")
+dfReadings <- read.csv("D:\\Buffer\\Readings.csv", encoding = "UTF-8")
+dfNeeds <- read.csv("D:\\Buffer\\Needs.csv", encoding = "UTF-8")
+dfA1CAndDemographics <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\InitialA1CAndDemographics.csv", encoding = "UTF-8")
+
+
+dfA1CAndDemographics$Initial.A1C <- as.numeric(dfA1CAndDemographics$Initial.A1C)
+
+
+
 
 ```
 
-The survey instrument and resultant data were created and delivered by an outside agency and needs extensive reforming. The file contains 800,000 observations- the columns are "Field" and "Value".  Each record takes up 211 observations.
+```{r keyring-set-up, echo=FALSE}
+#install.packages("keyring")
+library(keyring)
+#keyring_create("EH_606_keyring")
+keyring_unlock("EH_606_keyring")
+#key_set(service = "EH_606_username", keyring = "EH_606_keyring")
+#key_set(service = "EH_606_pwd", keyring = "EH_606_keyring")
+```
 
-We begin by pivoting wider every 211 records, taking our names from "Field" and our values from "Value", and binding each to a final dataframe.
+#### The data is loaded from the database into a dataframe. The dependent variables (Drop in A1C, Percentage drop in A1C and Improved) are added to the dataframe.
+
+```{r db connect, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+
+
+# This is the connection string:
+
+strConnection <- paste0(
+  'Driver={ODBC Driver 13 for SQL Server};
+   Server=tcp:ehtmp.database.windows.net,1433;
+   Database=HC_A1C;
+   Encrypt=yes;
+   TrustServerCertificate=no;
+   Connection Timeout=30;',
+   'Uid=',keyring::key_get(service = "EH_606_username", keyring = "EH_606_keyring"),';',
+   'Pwd=', keyring::key_get(service = "EH_606_pwd", keyring = "EH_606_keyring"), ';'
+)
+
+library(RODBC)
+dbConnection <- odbcDriverConnect(strConnection)
+#keyring_lock
+
+
+# Here the data is loaded into a data frame. Several columns are added at this point that will facilitate analysis – drop in A1c, percentage drop in A1C, and a binary column which shows whether a client's A1C dropped or not.These columns are calculated from the client's A1c at diagnosis and most recent A1c.
+dfA1C <- sqlQuery(dbConnection, "SELECT * FROM tblA1C")
+dfA1C %<>%
+  mutate(A1CDropPerCent=-1*(MostrecentA1C - DiagA1C)/DiagA1C) %<>%
+  mutate(A1CDrop= -1*(MostrecentA1C - DiagA1C)) %>%
+  mutate(Improved = case_when(A1CDrop > 0 ~ 1,
+                           A1CDrop <= 0 ~ 0))  %>%
+  filter(A1CDrop<7.4)
+```
 
 ```{r}
+#dfID %<>%
+  #filter(as.numeric(ClientID)>0)
+  
+#PopulateIDTable <- (sqlSave(dbConnection, dfID, "Friends", append=TRUE))
+#DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblSDOH")
+#x<-sqlSave(dbConnection, dfSDOH_raw, "tblSDOH", append=TRUE)
 
-run=FALSE
+#dfSDOH2 <-sqlQuery(dbConnection, "select * from tblSDOH")
 
-if (run) {
+```
+```{r}
+
+x=FALSE
+
+if (x) {
 dfSDOH <- dfSDOH_raw %>%
     filter(as.numeric(Num) <=211) %>%
     pivot_wider(Org, names_from = "Field", values_from = "Value")
@@ -172,50 +253,30 @@ dfFinal <- rbind(dfFinal, dfSDOH)
 }
 ```
 
-We eliminate bad records that have no ClientID.
 
 ```{r}
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
 
-if(run) {
 dfFinal %<>%
   filter (ClientID > 0)
-}
 
 ```
-
-We select the columns which describe needs, and rename them to reflect the type of need. They are: (describe here)
+Recode columns
 
 ```{r}
 
 NeedsVector = c("Need_Food",  "Need_SafePlace",  "Need_LoseHousing",  "Need_Job",  "Need_AffordNeeds",  "Need_HighSchool",  "Need_HelpUnderstanding",  "Need_Sad",  "Need_Childcare",  "Need_Clothes",  "Need_Transport",  "Need_Safe") 
-
-
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-
-if(run) {
 
 dfFinal2 <- dfFinal %>%
   rename(Need_Food=DoYouOrYou, Need_SafePlace = DoYouHaveA, Need_LoseHousing = AreYouWorr, Need_Job = DoYouHaveA1, Need_AffordNeeds = AreYouAble, Need_HighSchool = DoYouHaveA2, Need_HelpUnderstanding=DoYouEverN, Need_Sad = SocialAreY, Need_Childcare = ChildCareD, Need_Clothes = DoYouEverH, Need_Transport = DoYouHaveA3, Need_Safe = DoYouFeelS )
 
 dfFinal3 <- dfFinal2 %>%
   select(ClientID, starts_with('Need_'))
-}
+
 
 ```
-
-Each of the 12 need columns is binary, containing either a yes or no in response to a question about a need. However, sometimes 'yes' means the client has a need ("Do you or your family ever go hungry") and sometimes 'yes' means the client does not have a need ("Do you feel safe physically and emotionally").
-
-We will recode the questions so that 1 always means 'has a need' and 0 always means 'does not have a need'.
-
 ```{r}
 
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
 
-if(run) {
 QCorrect<- function(x){
     ifelse(x=="Yes", 1,0)
 }
@@ -224,6 +285,7 @@ QReverse<- function(x){
     ifelse(x=="No", 1,0)
 }
  
+
 dfFinal4 <- dfFinal3 %>%
   select(Need_Food, Need_Sad, Need_HelpUnderstanding, Need_Childcare, Need_Clothes, Need_LoseHousing) %>%
    mutate_all(QCorrect)
@@ -238,151 +300,23 @@ dfFinal6 <- dfFinal3 %>%
 dfFinal6$ClientID <- as.numeric(as.character(dfFinal6$ClientID))
 
 dfFinal10 <- cbind(dfFinal6, dfFinal4, dfFinal5)
-}
+
 
 ```
-
-
-### 4. SQL Server Database Data
-
-The database contains 2 tables: 
-
-a. A table of 5,433 unique clients with demographic data and the client's first A1C result (A1C is a test that indicates diabetes.)
-b. A table of 39,491 observations for 8,546 unique clients with A1C, Blood Pressure and other health screen data.
-
-The data is password protected by keyring.  Here we create a connection.
-
-```{r keyring-set-up, echo=FALSE}
-#install.packages("keyring")
-library(keyring)
-#keyring_create("EH_606_keyring")
-keyring_unlock("EH_606_keyring")
-#key_set(service = "EH_606_username", keyring = "EH_606_keyring")
-#key_set(service = "EH_606_pwd", keyring = "EH_606_keyring")
-```
-
-```{r db connect, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
-# This is the connection string:
-
-strConnection <- paste0(
-  'Driver={ODBC Driver 13 for SQL Server};
-   Server=tcp:ehtmp.database.windows.net,1433;
-   Database=HC_A1C;
-   Encrypt=yes;
-   TrustServerCertificate=no;
-   Connection Timeout=30;',
-   'Uid=',keyring::key_get(service = "EH_606_username", keyring = "EH_606_keyring"),';',
-   'Pwd=', keyring::key_get(service = "EH_606_pwd", keyring = "EH_606_keyring"), ';'
-)
-
-library(RODBC)
-dbConnection <- odbcDriverConnect(strConnection)
-#keyring_lock
-```
-
-## Reading Dataframes into and Back out of Persistent Storage
-
-Many of the datasets in this project are very large and take a long time to load.  Therefore we will filter, prepare and then read the project dataframes into the SQL Server database.  Then we can use SQL to easily combine data from several tables and read the result back into a dataframe.  
-
-We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database.
-
-```{r}
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-if(run) {
-
-DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblMedicaidByZip")
-PopulateTable <- sqlSave(dbConnection, dfMedicaidByZip, "tblMedicaidByZip", append=TRUE)
-}
-
-```
-
-Next we clean and load the scraped dataset with 1711 observations by Zip on population and poverty in NY State:
 
 ```{r}
 
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-
-if(run) {library(XML)
-  
-dfPopAndPovertyLevel %<>%
-  filter(str_length(V2)==5)
-
-dfPopAndPovertyLevel %<>%
-  rename(number = V1, zip=V2, location=V3, city=V4, population=V5, percent_below_poverty=V6, rank=V7)
-
-DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblPopAndPovertyLevel")
-PopulateTable <- sqlSave(dbConnection, dfPopAndPovertyLevel, "tblPopAndPovertyLevel", append=TRUE)
-}
-
-```
-
-Next we load the Survey data into a table called tblNeeds:
-
-```{r}
-
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-
-if(run) {
-
-  
 DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblNeeds")
 PopulateTable <- sqlSave(dbConnection, dfFinal10, "tblNeeds", append=TRUE)
-}
-
-```
-
-## Create Dataframes from the SQL Server Database
-
-```{r}
-dfA1C <- sqlQuery(dbConnection, "SELECT * FROM tblA1C")
-dfA1C %<>%
-  mutate(A1CDropPerCent=-1*(MostrecentA1C - DiagA1C)/DiagA1C) %<>%
-  mutate(A1CDrop= -1*(MostrecentA1C - DiagA1C)) %>%
-  mutate(Improved = case_when(A1CDrop > 0 ~ 1,
-                           A1CDrop <= 0 ~ 0))  %>%
-  filter(A1CDrop<7.4)
-
-
-```
-
-
-```{r}
-
-dfA1CAndDemographics <- sqlQuery(dbConnection, "SELECT * FROM tblA1CAndDemographics")
-
-dfA1CAndDemographics %<>% 
-  mutate(BlackOrNot = ifelse(RaceandEthnicity=="Black/African American", 1, 0)) %<>%
-  mutate(MaleOrNot = ifelse(Gender=="Male", 1, 0)) %>%
-  mutate(A1CAboveMean = ifelse(InitialA1C > 6, 1, 0))
-
-```
-
-
-```{r}
-
-dfMedicaidByZip<- sqlQuery(dbConnection, "SELECT * FROM tblMedicaidByZip")
-
-dfMedicaidByZip_Staten <- dfMedicaidByZip %>%
-  filter(major_diagnostic_category=='Diabetes Mellitus' & county=="Richmond" & year=="2014")
-
-dfErVisitsByZip <- dfMedicaidByZip %>%
-  filter(major_diagnostic_category=='Diabetes Mellitus' & year=="2014") %>%
-  group_by(zip_code) %>%
-  summarize(TotalERVisits = sum(as.numeric(er_visits)))
-dfErVisitsByZip
-
 
 ```
 
 ```{r}
 
-dfA1cOnNeeds <- sqlQuery(dbConnection, "SELECT tblReadings.ClientID, tblReadings.Reading, AVG(tblNeeds.Need_Food) AS AVGOfNeed_Food, AVG(tblNeeds.Need_Sad) AS AVGOfNeed_Sad, AVG(tblNeeds.Need_HelpUnderstanding) AS AVGOfNeed_HelpUnderstanding, AVG(tblNeeds.Need_Childcare) AS AVGOfNeed_Childcare, AVG(tblNeeds.Need_Clothes) AS AVGOfNeed_Clothes, AVG(tblNeeds.Need_LoseHousing) AS AVGOfNeed_LoseHousing, AVG(tblNeeds.Need_SafePlace) AS AVGOfNeed_SafePlace, AVG(tblNeeds.Need_Job) AS AVGOfNeed_Job, AVG(tblNeeds.Need_AffordNeeds) AS AVGOfNeed_AffordNeeds, AVG(tblNeeds.Need_HighSchool) AS AVGOfNeed_HighSchool, AVG(tblNeeds.Need_Transport) AS AVGOfNeed_Transport, AVG(tblNeeds.Need_Safe) AS AVGOfNeed_Safe
-FROM tblReadings INNER JOIN tblNeeds ON tblReadings.ClientID = tblNeeds.ClientID
+dfA1cOnNeeds <- sqlQuery(dbConnection, "SELECT tblReadings.XUFEFFClientID, tblReadings.Reading, AVG(tblNeeds.Need_Food) AS AVGOfNeed_Food, AVG(tblNeeds.Need_Sad) AS AVGOfNeed_Sad, AVG(tblNeeds.Need_HelpUnderstanding) AS AVGOfNeed_HelpUnderstanding, AVG(tblNeeds.Need_Childcare) AS AVGOfNeed_Childcare, AVG(tblNeeds.Need_Clothes) AS AVGOfNeed_Clothes, AVG(tblNeeds.Need_LoseHousing) AS AVGOfNeed_LoseHousing, AVG(tblNeeds.Need_SafePlace) AS AVGOfNeed_SafePlace, AVG(tblNeeds.Need_Job) AS AVGOfNeed_Job, AVG(tblNeeds.Need_AffordNeeds) AS AVGOfNeed_AffordNeeds, AVG(tblNeeds.Need_HighSchool) AS AVGOfNeed_HighSchool, AVG(tblNeeds.Need_Transport) AS AVGOfNeed_Transport, AVG(tblNeeds.Need_Safe) AS AVGOfNeed_Safe
+FROM tblReadings INNER JOIN tblNeeds ON tblReadings.XUFEFFClientID = tblNeeds.ClientID
 where tblReadings.[Type]='A1C'
-GROUP BY tblReadings.ClientID, tblReadings.Reading")
+GROUP BY tblReadings.XUFEFFClientID, tblReadings.Reading")
 
 dfA1cOnNeeds %<>%
   mutate(Reading=as.numeric(Reading)) %<>%
@@ -392,19 +326,17 @@ dfA1cOnNeeds %<>%
 
 ```{r}
 
-dfA1CAndNeeds <- sqlQuery(dbConnection, "SELECT tblReadings.ClientID, tblReadings.Reading, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
-FROM tblNeeds INNER JOIN tblReadings ON tblReadings.ClientID = tblNeeds.ClientID
+dfA1CAndNeeds <- sqlQuery(dbConnection, "SELECT tblReadings.XUFEFFClientID, tblReadings.Reading, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+FROM tblNeeds INNER JOIN tblReadings ON tblReadings.XUFEFFClientID = tblNeeds.ClientID
 WHERE tblReadings.[Type]='A1C';")
 
 dfA1CAndNeeds <- as.data.frame(lapply(dfA1CAndNeeds, as.numeric))
 
 dfA1CAndNeeds %<>%
   filter(Reading>4.0) %<>%
-    group_by(ClientID) %<>%
+    group_by(XUFEFFClientID) %<>%
     summarize(across(everything(), mean, na.rm = TRUE))
 ```
-
-
 
 ```{r}
 
@@ -430,6 +362,31 @@ psych::describe(dfA1CAndNeeds)
 
 ```{r}
 
+DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblChronic")
+PopulateTable <- sqlSave(dbConnection, dfChronic, "tblChronic", append=TRUE)
+```
+
+
+```{r}
+x=FALSE
+
+if(x) {
+DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblReadings")
+PopulateTable <- sqlSave(dbConnection, dfReadings, "tblReadings", append=TRUE)
+}
+```
+
+
+```{r}
+
+
+ggplot(dfFinal3, aes(Need_SafePlace)) +
+  geom_bar()
+
+```
+
+```{r}
+
 
 
 dfA1CDropAndNeeds <- sqlQuery(dbConnection, "SELECT tblA1C.DiagA1C, tblA1C.MostrecentA1C, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
@@ -446,7 +403,7 @@ dfA1CDropAndNeeds %<>%
 ```{r}
 
 dfChronicAndNeeds <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
-FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.ClientID = tblNeeds.ClientID) ON tblReadings.ClientID = tblNeeds.ClientID
+FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.XUFEFFClientID = tblNeeds.ClientID) ON tblReadings.XUFEFFClientID = tblNeeds.ClientID
 WHERE tblReadings.Type='Blood Pressure' Or tblReadings.Type='A1C';")
 
 
@@ -528,16 +485,16 @@ test <- dfAllChronicAndNeeds[!sample, ]
 
 #fit logistic regression model
 model <- glm(HypertensionOrDiabetesOrNot ~ Need_Job + Need_AffordNeeds + Need_HighSchool, family="binomial", data=train)
-summary(model)
+model
 
 model <- glm(HypertensionOrDiabetesOrNot ~ Need_HighSchool + Need_AffordNeeds, family="binomial", data=train)
-summary(model)
+model
 
 model1 <- glm(HypertensionOrDiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-summary(model1)
+model1
 
 model <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-summary(model)
+model
 
 #model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
 #model
@@ -599,7 +556,7 @@ test <- dfAllChronicAndNeeds[!sample, ]
 #fit logistic regression model
 
 model <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-summary(model)
+model
 #model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
 #model
 #disable scientific notation for model summary
@@ -655,7 +612,7 @@ test <- dfA1CDropAndNeeds[!sample, ]
 #fit logistic regression model
 
 model <- lm(A1CDrop~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=train)
-summary(model)
+model
 #model <- glm(HypertensionOrA1CDrop ~ NumOfNeeds, family="binomial", data=train)
 #model
 #disable scientific notation for model summary
@@ -702,6 +659,13 @@ optimal
 
 ```{r}
 
+dfCommunityHealthObesityAndDiabetes2 <- dfCommunityHealthObesityAndDiabetes %>%
+  filter(county_name=="Richmond")
+
+```
+
+```{r}
+
 
 set.seed(1)
 
@@ -713,7 +677,7 @@ test <- dfAllChronicAndNeedsMinusNA[!sample, ]
 #fit logistic regression model
 
 model <- glm(HypertensionOrDiabetesOrNot~  Need_Clothes + Need_Job + Need_AffordNeeds, family = "binomial", data=train)
-summary(model)
+model
 #model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
 #model
 #disable scientific notation for model summary
@@ -757,13 +721,22 @@ caret::confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$pred
 
 ```
 
+```{r}
+
+dfA1CAndDemographics %<>% 
+  mutate(BlackOrNot = ifelse(Race.and.Ethnicity=="Black/African American", 1, 0)) %<>%
+  mutate(MaleOrNot = ifelse(Gender=="Male", 1, 0)) %>%
+  mutate(A1CAboveMean = ifelse(Initial.A1C > 6, 1, 0))
+
+```
+
 
 ```{r}
 
 
 psych::describe(dfA1CAndDemographics)
 
-rBase1 <- lm(InitialA1C ~ BlackOrNot + MaleOrNot + Age,  data = dfA1CAndDemographics)
+rBase1 <- lm(Initial.A1C ~ BlackOrNot + MaleOrNot + Age,  data = dfA1CAndDemographics)
 summary(rBase1)
 
 ```
@@ -781,6 +754,7 @@ test <- dfA1CAndDemographics[!sample, ]
 #fit logistic regression model
 
 model <- glm(A1CAboveMean ~ BlackOrNot + MaleOrNot + Age, family = "binomial", data=train)
+model
 #disable scientific notation for model summary
 options(scipen=999)
 
