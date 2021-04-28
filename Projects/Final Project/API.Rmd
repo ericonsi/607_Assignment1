@@ -101,7 +101,7 @@ dfMedicaidEnrollment <- read.socrata(
 
 ### 2. Zip Code Level Population and Poverty Data Scraped From the WEb
 
-We scrape 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels
+We scrape 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.
 
 ```{r html}
 library(XML)
@@ -122,6 +122,20 @@ dfPopAndPovertyLevel=rbind(dfPopAndPovertyLevel, dfx)
 }
 }
 
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE
+
+if(run) {
+  
+dfPopAndPovertyLevel %<>%
+  filter(str_length(V2)==5 & !is.na(V4)) %<>%
+  rename(number = V1, zip=V2, location=V3, city=V4, population=V5, percent_below_poverty=V6, rank=V7) %<>%
+  mutate(population = as.numeric(gsub(",", "", population))) %<>%
+  mutate(percent_below_poverty = as.numeric(gsub(" %", "", percent_below_poverty))) %<>%
+  mutate(rank = as.numeric(gsub("#", "", rank)))
+
+}
+
 ```
 
 
@@ -139,6 +153,11 @@ if(run) {
 dfSDOH_raw <- read.csv("D:\\Buffer\\SDOH__En__1_0 (3).csv", encoding = "UTF-8")
 }
 
+run=FALSE
+
+if(run) {
+dfBroadband_raw <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Broadband_Adoption.csv", encoding = "UTF-8")
+}
 ```
 
 The survey instrument and resultant data were created and delivered by an outside agency and needs extensive reforming. The file contains 800,000 observations- the columns are "Field" and "Value".  Each record takes up 211 observations.
@@ -280,9 +299,9 @@ dbConnection <- odbcDriverConnect(strConnection)
 #keyring_lock
 ```
 
-## Reading Dataframes into and Back out of Persistent Storage
+## Reading Dataframes into Persistent Storage
 
-Many of the datasets in this project are very large and take a long time to load.  Therefore we will filter, prepare and then read the project dataframes into the SQL Server database.  Then we can use SQL to easily combine data from several tables and read the result back into a dataframe.  
+If we read our datasets into persistent storage (the SQL Sever database), then we can use SQL to easily combine data from several tables and read the result back into a dataframe. Just as important, many of the datasets in this project are very large and take a long time to load.  Therefore we can filter and prepare them, read them into the database, and then use the database exclusively to read them back tp cut down on load time. 
 
 We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database.
 
@@ -304,14 +323,7 @@ Next we clean and load the scraped dataset with 1711 observations by Zip on popu
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
 run=FALSE
 
-if(run) {library(XML)
-  
-dfPopAndPovertyLevel %<>%
-  filter(str_length(V2)==5)
-
-dfPopAndPovertyLevel %<>%
-  rename(number = V1, zip=V2, location=V3, city=V4, population=V5, percent_below_poverty=V6, rank=V7)
-
+if(run) {
 DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblPopAndPovertyLevel")
 PopulateTable <- sqlSave(dbConnection, dfPopAndPovertyLevel, "tblPopAndPovertyLevel", append=TRUE)
 }
@@ -334,7 +346,61 @@ PopulateTable <- sqlSave(dbConnection, dfFinal10, "tblNeeds", append=TRUE)
 
 ```
 
+Finally, we add the broadband by zip dataframe
+
+```{r}
+
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE
+
+if(run) {
+
+DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblBroadBand")
+PopulateTable <- sqlSave(dbConnection, dfBroadband_raw, "tblBroadband", append=TRUE)
+}
+
+```
+
 ## Create Dataframes from the SQL Server Database
+
+We will create the following dataframes by combining table elements in the database:
+
+1. dfZipCode, a file with information on population info, medicaid Info, broadband info and client Info by zip code
+```{r}
+
+dfZipInfo_raw <- sqlQuery(dbConnection, "SELECT tblMedicaidByZip.zip_code, tblMedicaidByZip.major_diagnostic_category, tblPopAndPovertyLevel.population, tblPopAndPovertyLevel.percent_below_poverty, tblMedicaidByZip.ip_admits, tblMedicaidByZip.er_visits, tblA1CAndDemographics.ClientID, tblA1CAndDemographics.Zip, tblA1CAndDemographics.InitialA1C, tblA1CAndDemographics.Gender, tblA1CAndDemographics.RaceandEthnicity, tblA1CAndDemographics.Age, tblBroadband.NoInternetAccessPercentageOfHouseholds
+FROM (tblMedicaidByZip INNER JOIN (tblA1CAndDemographics INNER JOIN tblPopAndPovertyLevel ON tblA1CAndDemographics.Zip = tblPopAndPovertyLevel.zip) ON tblMedicaidByZip.zip_code = tblPopAndPovertyLevel.zip) INNER JOIN tblBroadband ON tblPopAndPovertyLevel.zip = tblBroadband.ZipCode;
+")
+
+dfZipInfo1 <- dfZipInfo_raw %>%
+  filter(major_diagnostic_category=="Diabetes Mellitus") %>%
+  select(zip_code, population, percent_below_poverty, ip_admits, er_visits) %>%
+  mutate(ip_admits = as.numeric(gsub(",", "", ip_admits))) %>%
+    mutate(er_visits = as.numeric(gsub(",", "", er_visits))) %>%
+  group_by(zip_code) %>%
+  summarize(pop=mean(population), pov=mean(percent_below_poverty), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population))
+
+dfZipInfo5 <- dfZipInfo_raw %>%
+  filter(major_diagnostic_category=="Diabetes Mellitus") %>%
+  select(zip_code, population, NoInternetAccessPercentageOfHouseholds, ip_admits, er_visits) %>%
+  mutate(ip_admits = as.numeric(gsub(",", "", ip_admits))) %>%
+    mutate(er_visits = as.numeric(gsub(",", "", er_visits))) %>%
+  group_by(zip_code) %>%
+  summarize(pop=mean(population), NoInternet=mean(NoInternetAccessPercentageOfHouseholds), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population))
+
+dfZipInfo3 <- dfZipInfo_raw %>%
+  filter(major_diagnostic_category=="Diabetes Mellitus") %>%
+  select(zip_code, InitialA1C, percent_below_poverty) %>%
+  na.omit() %>%
+  group_by(zip_code) %>%
+  summarize(n=n(), ave_A1C=mean(InitialA1C), pov=mean(percent_below_poverty))
+```
+```{r}
+
+dfBroadband <- sqlQuery(dbConnection, "SELECT * FROM tblBroadBand")
+
+```
+
 
 ```{r}
 dfA1C <- sqlQuery(dbConnection, "SELECT * FROM tblA1C")
@@ -404,6 +470,49 @@ dfA1CAndNeeds %<>%
     summarize(across(everything(), mean, na.rm = TRUE))
 ```
 
+
+```{r}
+
+
+
+
+dfZipInfo2 <- dfZipInfo1 %>%
+  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314)
+
+
+dfZipInfo4 <- dfZipInfo3 %>%
+  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314)
+
+dfZipInfo6 <- dfZipInfo5 %>%
+  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314)
+
+ggplot(dfZipInfo2, aes(pov, percent_ip)) +
+  geom_point()
+
+rBase1 <- lm( percent_ip ~ pov,  data = dfZipInfo2)
+summary(rBase1)
+
+
+ggplot(dfZipInfo2, aes(pov, percent_er)) +
+  geom_point()
+
+rBase1 <- lm(percent_er ~ pov,  data = dfZipInfo2)
+summary(rBase1)
+
+
+ggplot(dfZipInfo4, aes(pov, ave_A1C)) +
+  geom_point()
+
+rBase1 <- lm(ave_A1C ~ pov,  data = dfZipInfo4)
+summary(rBase1)
+
+ggplot(dfZipInfo6, aes(NoInternet, percent_er)) +
+  geom_point()
+
+rBase1 <- lm(percent_er ~ NoInternet,  data = dfZipInfo6)
+summary(rBase1)
+
+```
 
 
 ```{r}
