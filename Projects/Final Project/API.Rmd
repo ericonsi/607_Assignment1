@@ -9,7 +9,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r ech=FALSE, message = FALSE}
-#install.packages("janitor")
+library(ROSE)
 library(tidyverse)
 library(magrittr)
 library(janitor)
@@ -99,7 +99,7 @@ dfMedicaidEnrollment <- read.socrata(
 ```
 
 
-### 2. Zip Code Level Population and Poverty Data Scraped From the WEb
+### 2. Zip Code Level Population and Poverty Data Scraped From the web
 
 We scrape 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.
 
@@ -227,7 +227,7 @@ dfFinal3 <- dfFinal2 %>%
 
 Each of the 12 need columns is binary, containing either a yes or no in response to a question about a need. However, sometimes 'yes' means the client has a need ("Do you or your family ever go hungry") and sometimes 'yes' means the client does not have a need ("Do you feel safe physically and emotionally").
 
-We will recode the questions so that 1 always means 'has a need' and 0 always means 'does not have a need'.
+We will recode the questions so that 1 means 'has a need' and 0 means 'does not have a need' fro all variables.
 
 ```{r}
 
@@ -303,7 +303,7 @@ dbConnection <- odbcDriverConnect(strConnection)
 
 If we read our datasets into persistent storage (the SQL Sever database), then we can use SQL to easily combine data from several tables and read the result back into a dataframe. Just as important, many of the datasets in this project are very large and take a long time to load.  Therefore we can filter and prepare them, read them into the database, and then use the database exclusively to read them back tp cut down on load time. 
 
-We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database.
+We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database. We also load a second  NY DOH file, dfAdultsDiagnosed.
 
 ```{r}
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
@@ -312,6 +312,17 @@ if(run) {
 
 DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblMedicaidByZip")
 PopulateTable <- sqlSave(dbConnection, dfMedicaidByZip, "tblMedicaidByZip", append=TRUE)
+}
+
+```
+
+```{r}
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE
+if(run) {
+
+DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblAdultsDiagnosed")
+PopulateTable <- sqlSave(dbConnection, dfAdultsDiagnosed, "tblAdultsDiagnosed", append=TRUE)
 }
 
 ```
@@ -349,7 +360,6 @@ PopulateTable <- sqlSave(dbConnection, dfFinal10, "tblNeeds", append=TRUE)
 Finally, we add the broadband by zip dataframe
 
 ```{r}
-
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
 run=FALSE
 
@@ -361,59 +371,33 @@ PopulateTable <- sqlSave(dbConnection, dfBroadband_raw, "tblBroadband", append=T
 
 ```
 
-## Create Dataframes from the SQL Server Database
+## Create Three Dataframes from the SQL Server Database
 
-We will create the following dataframes by combining table elements in the database:
+We will create the following dataframes by combining elements from a number of different tables in the database:
 
-1. dfZipCode, a file with information on population info, medicaid Info, broadband info and client Info by zip code
+1. dfZipInfo, a dataframe with 99 observations at the zip code level with information on population level, poverty level, medicaid Info, average A1C from client data, and broadband info.
+
+2. dfAllChronicAndNeeds, a dataframe with 474 observations at the client level with information on needs from the survey, chronic diseases, demographics and initial A1C. 
+
+3. dfA1CAndDemographics, a dataframe with 5433 observations at the client level with information on demographics and initial A1C readings.
+
 ```{r}
 
 dfZipInfo_raw <- sqlQuery(dbConnection, "SELECT tblMedicaidByZip.zip_code, tblMedicaidByZip.major_diagnostic_category, tblPopAndPovertyLevel.population, tblPopAndPovertyLevel.percent_below_poverty, tblMedicaidByZip.ip_admits, tblMedicaidByZip.er_visits, tblA1CAndDemographics.ClientID, tblA1CAndDemographics.Zip, tblA1CAndDemographics.InitialA1C, tblA1CAndDemographics.Gender, tblA1CAndDemographics.RaceandEthnicity, tblA1CAndDemographics.Age, tblBroadband.NoInternetAccessPercentageOfHouseholds
 FROM (tblMedicaidByZip INNER JOIN (tblA1CAndDemographics INNER JOIN tblPopAndPovertyLevel ON tblA1CAndDemographics.Zip = tblPopAndPovertyLevel.zip) ON tblMedicaidByZip.zip_code = tblPopAndPovertyLevel.zip) INNER JOIN tblBroadband ON tblPopAndPovertyLevel.zip = tblBroadband.ZipCode;
 ")
 
-dfZipInfo1 <- dfZipInfo_raw %>%
-  filter(major_diagnostic_category=="Diabetes Mellitus") %>%
-  select(zip_code, population, percent_below_poverty, ip_admits, er_visits) %>%
-  mutate(ip_admits = as.numeric(gsub(",", "", ip_admits))) %>%
-    mutate(er_visits = as.numeric(gsub(",", "", er_visits))) %>%
-  group_by(zip_code) %>%
-  summarize(pop=mean(population), pov=mean(percent_below_poverty), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population))
 
-dfZipInfo5 <- dfZipInfo_raw %>%
+dfZipInfo10 <- dfZipInfo_raw %>%
   filter(major_diagnostic_category=="Diabetes Mellitus") %>%
-  select(zip_code, population, NoInternetAccessPercentageOfHouseholds, ip_admits, er_visits) %>%
-  mutate(ip_admits = as.numeric(gsub(",", "", ip_admits))) %>%
-    mutate(er_visits = as.numeric(gsub(",", "", er_visits))) %>%
-  group_by(zip_code) %>%
-  summarize(pop=mean(population), NoInternet=mean(NoInternetAccessPercentageOfHouseholds), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population))
-
-dfZipInfo3 <- dfZipInfo_raw %>%
-  filter(major_diagnostic_category=="Diabetes Mellitus") %>%
-  select(zip_code, InitialA1C, percent_below_poverty) %>%
   na.omit() %>%
   group_by(zip_code) %>%
-  summarize(n=n(), ave_A1C=mean(InitialA1C), pov=mean(percent_below_poverty))
+  summarize(n=n(), ave_A1C=mean(InitialA1C), pov=mean(percent_below_poverty), pop=mean(population), NoInternet=mean(NoInternetAccessPercentageOfHouseholds), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population), )
+
+
+dfZipInfo_SI <- dfZipInfo10 %>%
+  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314) 
 ```
-```{r}
-
-dfBroadband <- sqlQuery(dbConnection, "SELECT * FROM tblBroadBand")
-
-```
-
-
-```{r}
-dfA1C <- sqlQuery(dbConnection, "SELECT * FROM tblA1C")
-dfA1C %<>%
-  mutate(A1CDropPerCent=-1*(MostrecentA1C - DiagA1C)/DiagA1C) %<>%
-  mutate(A1CDrop= -1*(MostrecentA1C - DiagA1C)) %>%
-  mutate(Improved = case_when(A1CDrop > 0 ~ 1,
-                           A1CDrop <= 0 ~ 0))  %>%
-  filter(A1CDrop<7.4)
-
-
-```
-
 
 ```{r}
 
@@ -422,155 +406,18 @@ dfA1CAndDemographics <- sqlQuery(dbConnection, "SELECT * FROM tblA1CAndDemograph
 dfA1CAndDemographics %<>% 
   mutate(BlackOrNot = ifelse(RaceandEthnicity=="Black/African American", 1, 0)) %<>%
   mutate(MaleOrNot = ifelse(Gender=="Male", 1, 0)) %>%
-  mutate(A1CAboveMean = ifelse(InitialA1C > 6, 1, 0))
-
-```
-
-
-```{r}
-
-dfMedicaidByZip<- sqlQuery(dbConnection, "SELECT * FROM tblMedicaidByZip")
-
-dfMedicaidByZip_Staten <- dfMedicaidByZip %>%
-  filter(major_diagnostic_category=='Diabetes Mellitus' & county=="Richmond" & year=="2014")
-
-dfErVisitsByZip <- dfMedicaidByZip %>%
-  filter(major_diagnostic_category=='Diabetes Mellitus' & year=="2014") %>%
-  group_by(zip_code) %>%
-  summarize(TotalERVisits = sum(as.numeric(er_visits)))
-dfErVisitsByZip
-
+  mutate(A1CAboveMean = ifelse(InitialA1C > 7, 1, 0))
 
 ```
 
 ```{r}
 
-dfA1cOnNeeds <- sqlQuery(dbConnection, "SELECT tblReadings.ClientID, tblReadings.Reading, AVG(tblNeeds.Need_Food) AS AVGOfNeed_Food, AVG(tblNeeds.Need_Sad) AS AVGOfNeed_Sad, AVG(tblNeeds.Need_HelpUnderstanding) AS AVGOfNeed_HelpUnderstanding, AVG(tblNeeds.Need_Childcare) AS AVGOfNeed_Childcare, AVG(tblNeeds.Need_Clothes) AS AVGOfNeed_Clothes, AVG(tblNeeds.Need_LoseHousing) AS AVGOfNeed_LoseHousing, AVG(tblNeeds.Need_SafePlace) AS AVGOfNeed_SafePlace, AVG(tblNeeds.Need_Job) AS AVGOfNeed_Job, AVG(tblNeeds.Need_AffordNeeds) AS AVGOfNeed_AffordNeeds, AVG(tblNeeds.Need_HighSchool) AS AVGOfNeed_HighSchool, AVG(tblNeeds.Need_Transport) AS AVGOfNeed_Transport, AVG(tblNeeds.Need_Safe) AS AVGOfNeed_Safe
-FROM tblReadings INNER JOIN tblNeeds ON tblReadings.ClientID = tblNeeds.ClientID
-where tblReadings.[Type]='A1C'
-GROUP BY tblReadings.ClientID, tblReadings.Reading")
-
-dfA1cOnNeeds %<>%
-  mutate(Reading=as.numeric(Reading)) %<>%
-  filter(Reading>4.0)
-```
-
-
-```{r}
-
-dfA1CAndNeeds <- sqlQuery(dbConnection, "SELECT tblReadings.ClientID, tblReadings.Reading, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
-FROM tblNeeds INNER JOIN tblReadings ON tblReadings.ClientID = tblNeeds.ClientID
-WHERE tblReadings.[Type]='A1C';")
-
-dfA1CAndNeeds <- as.data.frame(lapply(dfA1CAndNeeds, as.numeric))
-
-dfA1CAndNeeds %<>%
-  filter(Reading>4.0) %<>%
-    group_by(ClientID) %<>%
-    summarize(across(everything(), mean, na.rm = TRUE))
-```
-
-
-```{r}
-
-
-
-
-dfZipInfo2 <- dfZipInfo1 %>%
-  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314)
-
-
-dfZipInfo4 <- dfZipInfo3 %>%
-  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314)
-
-dfZipInfo6 <- dfZipInfo5 %>%
-  filter(as.numeric(zip_code) >= 10301 & as.numeric(zip_code) <= 10314)
-
-ggplot(dfZipInfo2, aes(pov, percent_ip)) +
-  geom_point()
-
-rBase1 <- lm( percent_ip ~ pov,  data = dfZipInfo2)
-summary(rBase1)
-
-
-ggplot(dfZipInfo2, aes(pov, percent_er)) +
-  geom_point()
-
-rBase1 <- lm(percent_er ~ pov,  data = dfZipInfo2)
-summary(rBase1)
-
-
-ggplot(dfZipInfo4, aes(pov, ave_A1C)) +
-  geom_point()
-
-rBase1 <- lm(ave_A1C ~ pov,  data = dfZipInfo4)
-summary(rBase1)
-
-ggplot(dfZipInfo6, aes(NoInternet, percent_er)) +
-  geom_point()
-
-rBase1 <- lm(percent_er ~ NoInternet,  data = dfZipInfo6)
-summary(rBase1)
-
-```
-
-
-```{r}
-
-
-dfA1CAndNeeds$Reading <- as.numeric(dfA1CAndNeeds$Reading)
-
-rBase1 <- lm( Reading ~ Need_Food + Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe,  data = dfA1CAndNeeds)
-summary(rBase1)
-
-rBase2 <- lm( Reading ~ Need_AffordNeeds,  data = dfA1CAndNeeds)
-summary(rBase2)
-
-
-```
-```{r}
-
-#install.packages('psych')
-
-psych::describe(dfA1CAndNeeds)
-
-```
-
-
-```{r}
-
-
-
-dfA1CDropAndNeeds <- sqlQuery(dbConnection, "SELECT tblA1C.DiagA1C, tblA1C.MostrecentA1C, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
-FROM tblA1C INNER JOIN tblNeeds ON tblA1C.ClientID = tblNeeds.ClientID;")
-
-dfA1CDropAndNeeds %<>% 
-  mutate(A1CDrop = MostrecentA1C-DiagA1C)
-
-```
-
-
-
-
-```{r}
-
-dfChronicAndNeeds <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+dfAllChronicAndNeeds_raw <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
 FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.ClientID = tblNeeds.ClientID) ON tblReadings.ClientID = tblNeeds.ClientID
 WHERE tblReadings.Type='Blood Pressure' Or tblReadings.Type='A1C';")
 
-
-#dfChronicAndNeeds <- as.data.frame(lapply(dfChronicAndNeeds, as.numeric))
-
-dfDiabetesAndNeeds <- dfChronicAndNeeds %>%
-    group_by(ClientID) %>%
-    mutate(DiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II", 1,0)) %>%
-    summarize(sum(DiabetesOrNot), across(NeedsVector, mean, na.rm = TRUE)) %>%
-    rename(DiabetesOrNot="sum(DiabetesOrNot)") %>%
-    mutate(DiabetesOrNot = ifelse(DiabetesOrNot>0, 1, 0))
-
-    dfDiabetesAndNeeds$DiabetesOrNot[is.na(dfDiabetesAndNeeds$DiabetesOrNot)] <- 0
     
-dfAllChronicAndNeeds <- dfChronicAndNeeds %>%
+dfAllChronicAndNeeds <- dfAllChronicAndNeeds_raw %>%
     group_by(ClientID) %>%
     mutate(DiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II", 1,0)) %>%
     mutate(HypertensionOrNot = ifelse(Chronic == "Hypertension", 1,0)) %>%
@@ -583,16 +430,78 @@ dfAllChronicAndNeeds <- dfChronicAndNeeds %>%
       mutate(HypertensionOrNot = ifelse(HypertensionOrNot>0, 1, 0)) %>%
       mutate(HypertensionOrDiabetesOrNot = ifelse(HypertensionOrDiabetesOrNot>0, 1, 0)) %>%
       mutate(NumOfNeeds = Need_Sad+Need_HelpUnderstanding+Need_Childcare+Need_Clothes+ Need_LoseHousing+Need_SafePlace+ Need_Job+Need_AffordNeeds+Need_HighSchool+Need_Transport+Need_Safe)
-
-dfAllChronicAndNeedsMinusNA <- na.omit(dfAllChronicAndNeeds)
-  
-
-    dfAllChronicAndNeeds$DiabetesOrNot[is.na(dfAllChronicAndNeeds$DiabetesOrNot)] <- 0
-    dfAllChronicAndNeeds$HypertensionOrNot[is.na(dfAllChronicAndNeeds$HypertensionOrNot)] <- 0
-    dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot[is.na(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot)] <- 0
     
  psych::describe(dfAllChronicAndNeeds) 
 ```
+
+## Analysis - Poverty and Diabetes
+
+Richmond county (Staten Island) is a relatively middle class borough.  The NY DOH reports that the incidence of diabetes in Staten Island is 8.5%.  The chart below shows the incidence of diabetes in New York City. Staten Island is the second lowest.  
+
+```{r}
+
+
+dfIncidenceOfDiabetes <- sqlQuery(dbConnection, "SELECT * FROM tblAdultsDiagnosed Where region_name = 'New York City';")
+
+
+ggplot(dfIncidenceOfDiabetes, aes(percentage_rate, reorder(county_name, as.numeric(percentage_rate)))) +
+  geom_col() +
+  ggtitle("Incidence of Diabetes by New York City County")
+
+```
+
+However, when we screen clients in our programs at my workplace we find the incidence of Diabetes is a much higher 14%.  What is happening here?
+
+```{r}
+
+dfDiab <- dfAllChronicAndNeeds %>%
+      summarize(PercentDiabetes = sum(DiabetesOrNot/n()))
+dfDiab
+```
+
+
+
+```{r}
+
+
+ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
+  geom_point() +
+      stat_smooth(method = "loess", se = FALSE) +
+  ggtitle("Poverty by Percent of Medicaid Recipients Admitted to the Hospital")
+
+rBase1 <- lm( percent_ip ~ pov,  data = dfZipInfo_SI)
+summary(rBase1)
+
+
+ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
+  geom_point() +
+    stat_smooth(method = "loess", se = FALSE) +
+  ggtitle("Poverty by Percent of Medicaid Recipients Going to the ER")
+
+rBase1 <- lm(percent_er ~ pov,  data = dfZipInfo_SI)
+summary(rBase1)
+
+
+ggplot(dfZipInfo_SI, aes(pov, ave_A1C)) +
+  geom_point() +
+  stat_smooth(method = "loess", se = FALSE) +
+  ggtitle("Poverty by Average A1C")
+
+rBase1 <- lm(ave_A1C ~ pov,  data = dfZipInfo_SI)
+summary(rBase1)
+
+ggplot(dfZipInfo_SI, aes(NoInternet, percent_er)) +
+  geom_point() +
+    stat_smooth(method = "loess", se = FALSE) +
+  ggtitle("No Internet by Percent of Medicaid Recipients Going to the ER")
+
+rBase1 <- lm(percent_er ~ NoInternet,  data = dfZipInfo_SI)
+summary(rBase1)
+
+```
+
+
+
 
 ```{r}
 
@@ -635,17 +544,28 @@ sample <- sample(c(TRUE, FALSE), nrow(dfAllChronicAndNeeds), replace=TRUE, prob=
 train <- dfAllChronicAndNeeds[sample, ]
 test <- dfAllChronicAndNeeds[!sample, ]  
 
-#fit logistic regression model
-model <- glm(HypertensionOrDiabetesOrNot ~ Need_Job + Need_AffordNeeds + Need_HighSchool, family="binomial", data=train)
-summary(model)
 
-model <- glm(HypertensionOrDiabetesOrNot ~ Need_HighSchool + Need_AffordNeeds, family="binomial", data=train)
-summary(model)
+data.rose <- ROSE::ROSE(HypertensionOrDiabetesOrNot ~ Need_AffordNeeds + Need_HighSchool, data=train, seed=1)$data
+
+
+model <- glm(HypertensionOrDiabetesOrNot ~ Need_AffordNeeds + Need_HighSchool, family="binomial", data=data.rose)
+
+table(data.rose$HypertensionOrDiabetesOrNot)
+
+
+#fit logistic regression model
+model1 <- glm(HypertensionOrDiabetesOrNot ~ Need_Job + Need_AffordNeeds + Need_HighSchool, family="binomial", data=train)
+
+# generating data according to ROSE: p=0.5 as default
+
+model2 <- glm(HypertensionOrDiabetesOrNot ~ Need_HighSchool + Need_AffordNeeds, family="binomial", data=train)
+
 
 model1 <- glm(HypertensionOrDiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-summary(model1)
 
-model <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
+
+model3 <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
+
 summary(model)
 
 #model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
@@ -672,7 +592,7 @@ p3 <- test %>%
   select(HypertensionOrDiabetesOrNot)
 
 Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.13, 1, 0)
+Predictions$predicted <- ifelse(Predictions$predicted >.64, 1, 0)
 Predictions$predicted=as.factor(Predictions$predicted)
 Predictions$HypertensionOrDiabetesOrNot=as.factor(Predictions$HypertensionOrDiabetesOrNot)
 
@@ -683,7 +603,7 @@ optimal <- InformationValue::optimalCutoff(test$HypertensionOrDiabetesOrNot, pre
 optimal
 
 #ConfusionMatrix doesn't work
-confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted)
+caret::confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted)
 
 #calculate sensitivity
 #sensitivity(test$HypertensionOrDiabetesOrNot, predicted)
@@ -696,6 +616,11 @@ confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted)
 
 
 ```
+```{r}
+
+table(data.rose$HypertensionOrDiabetesOrNot)
+```
+
 
 ```{r}
 set.seed(1)
@@ -753,118 +678,6 @@ caret::confusionMatrix(Predictions$DiabetesOrNot, Predictions$predicted)
 
 ```
 
-```{r}
-set.seed(1)
-
-#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
-sample <- sample(c(TRUE, FALSE), nrow(dfA1CDropAndNeeds), replace=TRUE, prob=c(0.7,0.3))
-train <- dfA1CDropAndNeeds[sample, ]
-test <- dfA1CDropAndNeeds[!sample, ]  
-
-#fit logistic regression model
-
-model <- lm(A1CDrop~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=train)
-summary(model)
-#model <- glm(HypertensionOrA1CDrop ~ NumOfNeeds, family="binomial", data=train)
-#model
-#disable scientific notation for model summary
-#options(scipen=999)
-
-#view model summary
-summary(model)
-#Shows fit - ranges from 0 to almost 1
-pscl::pR2(model)["McFadden"]
-
-#Ranks importance
-caret::varImp(model)
-
-#multicolinearity (VIF)
-#car::vif(model)
-
-#calculate probability of default for each individual in test dataset
-predicted <- predict(model, test, type="response")
-p2 <- as.data.frame(predicted)
-
-p3 <- test %>%
-  select(A1CDrop)
-
-Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.13, 1, 0)
-Predictions$predicted=as.factor(Predictions$predicted)
-Predictions$A1CDrop=as.factor(Predictions$A1CDrop)
-
-psych::describe(Predictions)
-
-#find optimal cutoff probability to use to maximize accuracy
-optimal <- InformationValue::optimalCutoff(test$A1CDrop, predicted)[1]
-optimal
-
-#ConfusionMatrix doesn't work#confusionMatrix(Predictions$A1CDrop, Predictions$predicted)
-
-#calculate sensitivity
-#sensi
-
-
-
-```
-
-
-```{r}
-
-
-set.seed(1)
-
-#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
-sample <- sample(c(TRUE, FALSE), nrow(dfAllChronicAndNeedsMinusNA), replace=TRUE, prob=c(0.7,0.3))
-train <- dfAllChronicAndNeedsMinusNA[sample, ]
-test <- dfAllChronicAndNeedsMinusNA[!sample, ]  
-
-#fit logistic regression model
-
-model <- glm(HypertensionOrDiabetesOrNot~  Need_Clothes + Need_Job + Need_AffordNeeds, family = "binomial", data=train)
-summary(model)
-#model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
-#model
-#disable scientific notation for model summary
-#options(scipen=999)
-
-#view model summary
-summary(model)
-#Shows fit - ranges from 0 to almost 1
-pscl::pR2(model)["McFadden"]
-
-#Ranks importance
-caret::varImp(model)
-
-#multicolinearity (VIF)
-car::vif(model)
-
-#calculate probability of default for each individual in test dataset
-predicted <- predict(model, test, type="response")
-p2 <- as.data.frame(predicted)
-
-p3 <- test %>%
-  select(HypertensionOrDiabetesOrNot)
-
-Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.755, 1, 0)
-Predictions$predicted=as.factor(Predictions$predicted)
-Predictions$HypertensionOrDiabetesOrNot=as.factor(Predictions$HypertensionOrDiabetesOrNot)
-
-psych::describe(Predictions)
-
-#find optimal cutoff probability to use to maximize accuracy
-optimal <- InformationValue::optimalCutoff(test$HypertensionOrDiabetesOrNot, predicted)[1]
-optimal
-
-#ConfusionMatrix doesn't work
-caret::confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted)
-
-#calculate sensitivity
-#sensi
-
-
-```
 
 
 ```{r}
@@ -887,9 +700,13 @@ sample <- sample(c(TRUE, FALSE), nrow(dfA1CAndDemographics), replace=TRUE, prob=
 train <- dfA1CAndDemographics[sample, ]
 test <- dfA1CAndDemographics[!sample, ]  
 
+
+data.rose <- ROSE::ROSE(A1CAboveMean ~ BlackOrNot + MaleOrNot + Age, data=train, seed=1)$data
+model <- glm(A1CAboveMean ~ BlackOrNot + MaleOrNot + Age, family = "binomial", data=data.rose)
+
 #fit logistic regression model
 
-model <- glm(A1CAboveMean ~ BlackOrNot + MaleOrNot + Age, family = "binomial", data=train)
+model1 <- glm(A1CAboveMean ~ BlackOrNot + Age, family = "binomial", data=train)
 #disable scientific notation for model summary
 options(scipen=999)
 
@@ -912,7 +729,7 @@ p3 <- test %>%
   select(A1CAboveMean)
 
 Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.69, 1, 0)
+Predictions$predicted <- ifelse(Predictions$predicted >.864, 1, 0)
 Predictions$predicted=as.factor(Predictions$predicted)
 Predictions$A1CAboveMean=as.factor(Predictions$A1CAboveMean)
 
