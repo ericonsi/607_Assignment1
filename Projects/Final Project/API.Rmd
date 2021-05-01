@@ -8,7 +8,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r ech=FALSE, message = FALSE}
+```{r ech=TRUE, message = FALSE, warning=FALSE}
 library(ROSE)
 library(tidyverse)
 library(magrittr)
@@ -24,15 +24,18 @@ library(jsonlite)
 library(xml2)
 library(XML)
 library(stringr)
+library(kableExtra)
 ```
 ## Diabetes and Poverty: Is There a Connection?
 
-We will use data from 4 sources: 
+To investigate this question We will use data from 4 different sources: 
 
-1. Health data from the New York Department of Health, accessed through APIs
-2. Zip code level data on population size and poverty, scraped from web tables
-3. CsV files from a proprietary survey of economic needs (stripped of identity markers) 
-4. Tables of client health information in a proprietary SQL Server database on Azure (stripped of identity markers and password protected through keyring)
+1. Health data from the New York Department of Health (in json format accessed through APIs)
+2. Zip code level data on population size and poverty (scraped from html tables on the web)
+3. Files from a proprietary survey of economic needs, stripped of identity markers (stoed in a csv file)
+4. Tables of client health information in a proprietary SQL Server database, stripped of identity markers and password protected through keyring (SQL Server database on Azure)
+
+After collecting the data we will store it in the database so that we can easily combine the datasets in productive ways using SQL.  In particular, we will generate dataframes that contain zip code level information on poverty and public health, and client level information on economic needs and individual client health.  Then we will test for correlations and other relationships within the data.
 
 Note - Certain operations that load data and are very time consuming will be contained within functions that can be run or not by changing the value of the boolean variable "run" which appears at the top of each function.
 
@@ -40,12 +43,12 @@ Note - Certain operations that load data and are very time consuming will be con
 
 ### 1. New York DOH Data
 
-We begin by reading the New York DOH data from the APIs:
+We begin by reading the New York DOH data from the APIs.  The RSocrata library makes this easy.
 ```{r}
 library("RSocrata")
 
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE 
+run=TRUE 
 
 if(run) {
 #Community Health: Diabetes mortality rate per 100,000: 2009 - 2011
@@ -101,7 +104,7 @@ dfMedicaidEnrollment <- read.socrata(
 
 ### 2. Zip Code Level Population and Poverty Data Scraped From the web
 
-We scrape 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.
+We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.
 
 ```{r html}
 library(XML)
@@ -141,8 +144,7 @@ dfPopAndPovertyLevel %<>%
 
 ### 3. CSV file of a Survey of Client Economic Needs
 
-The clients in this file are clients from my workplace and their Client ID is the same as for those at my workplace.  The file is otherwise free of any personal identifying information.   
-
+This file is the result of a client survey taken at my workplace of over 2,000 clients.  We did not create the survey instrument - the file was provided by the organization that did.  The Ids have been mathced to those of the clients in the SQL database.  The file is otherwise free of any personal identifying information.  
 
 ```{r}
 
@@ -158,9 +160,24 @@ run=FALSE
 if(run) {
 dfBroadband_raw <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Broadband_Adoption.csv", encoding = "UTF-8")
 }
+
+dfListOfNeeds <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\ListOfNeeds.csv", encoding = "UTF-8")
+dfListOfNeeds %<>%
+  rename(Need=X.U.FEFF.Need)
+
 ```
 
-The survey instrument and resultant data were created and delivered by an outside agency and needs extensive reforming. The file contains 800,000 observations- the columns are "Field" and "Value".  Each record takes up 211 observations.
+The survey asks these questions:
+
+```{r}
+
+kableExtra::kable(dfListOfNeeds)
+
+
+```
+\
+
+Since the survey instrument and resultant data were created and delivered by an outside agency, the data needs extensive reforming. The file contains 800,000 observations with only two columns- the columns are "Field" and "Value".  Each record takes up 211 observations.
 
 We begin by pivoting wider every 211 records, taking our names from "Field" and our values from "Value", and binding each to a final dataframe.
 
@@ -204,7 +221,7 @@ dfFinal %<>%
 
 ```
 
-We select the columns which describe needs, and rename them to reflect the type of need. They are: (describe here)
+We select the columns which describe needs, and rename them to reflect the type of need.
 
 ```{r}
 
@@ -227,7 +244,7 @@ dfFinal3 <- dfFinal2 %>%
 
 Each of the 12 need columns is binary, containing either a yes or no in response to a question about a need. However, sometimes 'yes' means the client has a need ("Do you or your family ever go hungry") and sometimes 'yes' means the client does not have a need ("Do you feel safe physically and emotionally").
 
-We will recode the questions so that 1 means 'has a need' and 0 means 'does not have a need' fro all variables.
+We will recode the questions so that 1 means 'has a need' and 0 means 'does not have a need' for all variables.
 
 ```{r}
 
@@ -264,9 +281,10 @@ dfFinal10 <- cbind(dfFinal6, dfFinal4, dfFinal5)
 
 ### 4. SQL Server Database Data
 
-The database contains 2 tables: 
+I built this database for my workplace.  It contains information on client health screens for diabetes, hypertension and other chronic diseases.  The database contains 2 tables: 
 
 a. A table of 5,433 unique clients with demographic data and the client's first A1C result (A1C is a test that indicates diabetes.)
+
 b. A table of 39,491 observations for 8,546 unique clients with A1C, Blood Pressure and other health screen data.
 
 The data is password protected by keyring.  Here we create a connection.
@@ -299,11 +317,11 @@ dbConnection <- odbcDriverConnect(strConnection)
 #keyring_lock
 ```
 
-## Reading Dataframes into Persistent Storage
+## Loading all of the Datasets into the SQL Server Database
 
-If we read our datasets into persistent storage (the SQL Sever database), then we can use SQL to easily combine data from several tables and read the result back into a dataframe. Just as important, many of the datasets in this project are very large and take a long time to load.  Therefore we can filter and prepare them, read them into the database, and then use the database exclusively to read them back tp cut down on load time. 
+If we load our datasets into persistent storage (the SQL Sever database), then we can use SQL to easily combine data from several tables and read the result back into a dataframe. Just as important, many of the datasets in this project are very large and take a long time to load.  Therefore we can filter and prepare them, read them into the database, and then use the database exclusively to read them back to cut down on load time. 
 
-We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database. We also load a second  NY DOH file, dfAdultsDiagnosed.
+We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database. We also load a second  NY DOH file, dfAdultsDiagnosed which has information about Diabetes diagnoses throughout New York State.
 
 ```{r}
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
@@ -327,7 +345,7 @@ PopulateTable <- sqlSave(dbConnection, dfAdultsDiagnosed, "tblAdultsDiagnosed", 
 
 ```
 
-Next we clean and load the scraped dataset with 1711 observations by Zip on population and poverty in NY State:
+Next we clean and load the scraped dataset with 1711 zip code level observations on population and poverty in NY State:
 
 ```{r}
 
@@ -341,7 +359,7 @@ PopulateTable <- sqlSave(dbConnection, dfPopAndPovertyLevel, "tblPopAndPovertyLe
 
 ```
 
-Next we load the Survey data into a table called tblNeeds:
+Next we load the survey data into a table called tblNeeds:
 
 ```{r}
 
@@ -357,7 +375,7 @@ PopulateTable <- sqlSave(dbConnection, dfFinal10, "tblNeeds", append=TRUE)
 
 ```
 
-Finally, we add the broadband by zip dataframe
+Finally, we add the broadband_by_zip_code dataframe
 
 ```{r}
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
@@ -371,13 +389,13 @@ PopulateTable <- sqlSave(dbConnection, dfBroadband_raw, "tblBroadband", append=T
 
 ```
 
-## Create Three Dataframes from the SQL Server Database
+## Creating Dataframes for Analysis By Joining Tables in the SQL Server Database
 
 We will create the following dataframes by combining elements from a number of different tables in the database:
 
 1. dfZipInfo, a dataframe with 99 observations at the zip code level with information on population level, poverty level, medicaid Info, average A1C from client data, and broadband info.
 
-2. dfAllChronicAndNeeds, a dataframe with 474 observations at the client level with information on needs from the survey, chronic diseases, demographics and initial A1C. 
+2. dfdNeedsInfo_Diabetes and dfNeedsInfo_Hypertension, dataframe with client-level observations with information on needs from the survey, chronic diseases, demographics and initial A1C. The diabetes database contains 348 observations and only includes only those clients who took the survey and have been screened for diabetes.The hypertension database contains 463 observations and only includes only those clients who took the survey and have been screened for hypertension.  
 
 3. dfA1CAndDemographics, a dataframe with 5433 observations at the client level with information on demographics and initial A1C readings.
 
@@ -412,27 +430,96 @@ dfA1CAndDemographics %<>%
 
 ```{r}
 
-dfAllChronicAndNeeds_raw <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+dfNeedsInfo_raw <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
 FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.ClientID = tblNeeds.ClientID) ON tblReadings.ClientID = tblNeeds.ClientID
-WHERE tblReadings.Type='Blood Pressure' Or tblReadings.Type='A1C';")
+WHERE tblReadings.Type='A1C';")
 
     
-dfAllChronicAndNeeds <- dfAllChronicAndNeeds_raw %>%
+dfNeedsInfo <- dfNeedsInfo_raw %>%
     group_by(ClientID) %>%
-    mutate(DiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II", 1,0)) %>%
+  
+    mutate(DiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II"|Chronic == "Diabetes (doctor denied)"|Chronic == "Diabetes type I", 1, 0)) %>%
     mutate(HypertensionOrNot = ifelse(Chronic == "Hypertension", 1,0)) %>%
     mutate(HypertensionOrDiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II"|Chronic == "Hypertension", 1,0)) %>%
+  
     summarize(sum(DiabetesOrNot), sum(HypertensionOrNot), sum(HypertensionOrDiabetesOrNot), across(NeedsVector, mean, na.rm = TRUE)) %>%
+  
     rename(DiabetesOrNot="sum(DiabetesOrNot)") %>%
       rename(HypertensionOrNot="sum(HypertensionOrNot)") %>%
       rename(HypertensionOrDiabetesOrNot="sum(HypertensionOrDiabetesOrNot)") %>%
+  
       mutate(DiabetesOrNot = ifelse(DiabetesOrNot>0, 1, 0)) %>%
       mutate(HypertensionOrNot = ifelse(HypertensionOrNot>0, 1, 0)) %>%
       mutate(HypertensionOrDiabetesOrNot = ifelse(HypertensionOrDiabetesOrNot>0, 1, 0)) %>%
-      mutate(NumOfNeeds = Need_Sad+Need_HelpUnderstanding+Need_Childcare+Need_Clothes+ Need_LoseHousing+Need_SafePlace+ Need_Job+Need_AffordNeeds+Need_HighSchool+Need_Transport+Need_Safe)
-    
- psych::describe(dfAllChronicAndNeeds) 
+      mutate(NumOfNeeds = Need_Sad+Need_HelpUnderstanding+Need_Childcare+Need_Clothes+ Need_LoseHousing+Need_SafePlace+ Need_Job+Need_AffordNeeds+Need_HighSchool+Need_Transport+Need_Safe) 
+
+dfNeedsInfo$DiabetesOrNot <- replace(dfNeedsInfo$DiabetesOrNot, is.na(dfNeedsInfo$DiabetesOrNot), 0)
+
+
 ```
+
+```{r}
+
+dfNeedsInfo2_raw <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.ClientID = tblNeeds.ClientID) ON tblReadings.ClientID = tblNeeds.ClientID
+WHERE tblReadings.Type='Blood Pressure';")
+
+    
+dfNeedsInfo2 <- dfNeedsInfo2_raw %>%
+    group_by(ClientID) %>%
+  
+    mutate(DiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II"|Chronic == "Diabetes (doctor denied)"|Chronic == "Diabetes type I", 1, 0)) %>%
+    mutate(HypertensionOrNot = ifelse(Chronic == "Hypertension", 1,0)) %>%
+    mutate(HypertensionOrDiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II"|Chronic == "Hypertension", 1,0)) %>%
+  
+    summarize(sum(DiabetesOrNot), sum(HypertensionOrNot), sum(HypertensionOrDiabetesOrNot), across(NeedsVector, mean, na.rm = TRUE)) %>%
+  
+    rename(DiabetesOrNot="sum(DiabetesOrNot)") %>%
+      rename(HypertensionOrNot="sum(HypertensionOrNot)") %>%
+      rename(HypertensionOrDiabetesOrNot="sum(HypertensionOrDiabetesOrNot)") %>%
+  
+      mutate(DiabetesOrNot = ifelse(DiabetesOrNot>0, 1, 0)) %>%
+      mutate(HypertensionOrNot = ifelse(HypertensionOrNot>0, 1, 0)) %>%
+      mutate(HypertensionOrDiabetesOrNot = ifelse(HypertensionOrDiabetesOrNot>0, 1, 0)) %>%
+      mutate(NumOfNeeds = Need_Sad+Need_HelpUnderstanding+Need_Childcare+Need_Clothes+ Need_LoseHousing+Need_SafePlace+ Need_Job+Need_AffordNeeds+Need_HighSchool+Need_Transport+Need_Safe) 
+
+dfNeedsInfo2$HypertensionOrNot <- replace(dfNeedsInfo2$HypertensionOrNot, is.na(dfNeedsInfo2$HypertensionOrNot), 0)
+
+
+```
+
+These are the final dataframes which will be used for analysis:
+
+1. dfZipIno
+
+```{r}
+
+kable(head(dfZipInfo10), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+```
+
+2. dfNeedsInfo_Diabetes
+
+```{r}
+
+kable(head(dfNeedsInfo), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+```
+
+3. dfNeedsInfo_Hypertension
+
+```{r}
+kableExtra::kable(head(dfNeedsInfo2), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+```
+
+4. dfA1CAndDemographics
+
+```{r}
+
+kableExtra::kable(head(dfA1CAndDemographics), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+```
+
 
 ## Analysis - Poverty and Diabetes
 
@@ -450,13 +537,60 @@ ggplot(dfIncidenceOfDiabetes, aes(percentage_rate, reorder(county_name, as.numer
 
 ```
 
-However, when we screen clients in our programs at my workplace we find the incidence of Diabetes is a much higher 14%.  What is happening here?
+However, among the 292 clients from our survey who were also screened for diabetes, the incidence is much higher at 19%.  What is happening here?
 
 ```{r}
 
-dfDiab <- dfAllChronicAndNeeds %>%
+  diab_percent <- dfNeedsInfo %>%
       summarize(PercentDiabetes = sum(DiabetesOrNot/n()))
-dfDiab
+  diab_percent
+```
+
+While Richmond county is middle class, the clients in our survey are economically disadvantaged - all are from poorer zipcodes seeking assistance from a community health organization.
+
+The link between diabetes and poverty can be difficult to get at directly, as many poorer people who have diabetes are not aware of it, and diabetes incidence is often not available in such a way it can be correlated poverty.  However, if we examine Diabetes ER and hospital admissions against poverty the correlation is unmistakable - however, there are many confounding variables here, including the fact that poor communites tend to use the hospital for primary care to a far greater degree than more affluent communities:
+
+  
+```{r abc}
+
+my_theme <- function()
+{
+     theme(plot.title = element_text(size = 8, face="bold"), 
+         panel.background = element_rect(fill = "white"),
+         plot.background = element_rect(fill = "cornsilk3"),
+         panel.grid.major.x = element_blank() ,
+         panel.grid.major.y = element_line( size=.2, color="gray" ),
+         axis.text = element_text(face="bold"),
+         axis.text.x = element_text(angle=65),
+         axis.title = element_text(size = 10, face="bold"),
+         axis.title.y = element_text(vjust=3),
+         axis.title.x = element_text(vjust=7),
+         axis.ticks.x = element_blank())
+}
+
+
+```
+
+```{r}
+
+
+a <- ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
+  geom_point() +
+      stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Poverty by % Admitted to the Hospital With Diabetes") +
+  my_theme()
+
+
+
+
+b <- ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
+  geom_point() +
+    stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Poverty by % Going to the ER With Diabetes") +
+  my_theme()
+
+gridExtra::grid.arrange(a,b,ncol=2)
+
 ```
 
 
@@ -464,74 +598,88 @@ dfDiab
 ```{r}
 
 
-ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
+a <- ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
   geom_point() +
-      stat_smooth(method = "loess", se = FALSE) +
-  ggtitle("Poverty by Percent of Medicaid Recipients Admitted to the Hospital")
+      stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Poverty by % Admitted to the Hospital With Diabetes") +
+  my_theme() +
+  geom_hline(yintercept=21.5, size=2, color='red', linetype='dotted')
 
-rBase1 <- lm( percent_ip ~ pov,  data = dfZipInfo_SI)
-summary(rBase1)
 
-
-ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
+b <- ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
   geom_point() +
-    stat_smooth(method = "loess", se = FALSE) +
-  ggtitle("Poverty by Percent of Medicaid Recipients Going to the ER")
+    stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Poverty by % Going to the ER With Diabetes") +
+  my_theme() +
+  geom_hline(yintercept=21.5, size=2, color='red', linetype='dotted')
 
-rBase1 <- lm(percent_er ~ pov,  data = dfZipInfo_SI)
-summary(rBase1)
+gridExtra::grid.arrange(a,b,ncol=2)
+
+```
+Looking at indicators of poverty such as lack of internet shows the same pattern.
+
+```{r}
 
 
-ggplot(dfZipInfo_SI, aes(pov, ave_A1C)) +
-  geom_point() +
-  stat_smooth(method = "loess", se = FALSE) +
-  ggtitle("Poverty by Average A1C")
-
-rBase1 <- lm(ave_A1C ~ pov,  data = dfZipInfo_SI)
-summary(rBase1)
 
 ggplot(dfZipInfo_SI, aes(NoInternet, percent_er)) +
   geom_point() +
-    stat_smooth(method = "loess", se = FALSE) +
-  ggtitle("No Internet by Percent of Medicaid Recipients Going to the ER")
+    stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("No Internet by Percent of Medicaid Recipients Going to the ER") +
+  my_theme()
 
-rBase1 <- lm(percent_er ~ NoInternet,  data = dfZipInfo_SI)
-summary(rBase1)
+
 
 ```
 
+The previous graph suggests that poverty affects individual in a direct way - lack of internet may lead to lack of knowlege and poor health choices.
 
+Our next step is to test this hypothesis with our survey data. We will look to see if incidence of diabetes and particular economic and social needs are correlated.
 
+We examine the correlation between the incidence of diabetes and social needs through chi squares and a multiple regression:
+
+```{r, warning=FALSE}
+
+m10 <- glm(DiabetesOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo)
+summary(m10)
+
+dfNeedsChi <- dfNeedsInfo %>%
+  select(DiabetesOrNot, NeedsVector) %>%
+  summarise_all(funs(chisq.test(.,dfNeedsInfo$DiabetesOrNot)$p.value))
+kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+```
+
+Those clients who cannot afford basic needs have a higher incidence of Diabetes in both the CHi2 and regression analysis.  However, we cannot reject the null hypothesis for other needs.
+
+We can also see if we find the same pattern for hypertension clients.
 
 ```{r}
 
-m10 <- glm(DiabetesOrNot ~ Need_Food + Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfAllChronicAndNeeds)
+dfNeedsInfo_Any <- na.omit(dfNeedsInfo)
+
+m10 <- glm(HypertensionOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo2)
 summary(m10)
 
-m10 <- glm(HypertensionOrNot ~ Need_Food + Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfAllChronicAndNeeds)
-summary(m10)
+dfNeedsChi <- dfNeedsInfo2 %>%
+  select(HypertensionOrNot, NeedsVector) %>%
+  summarise_all(funs(chisq.test(.,dfNeedsInfo2$HypertensionOrNot)$p.value))
+kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
-m10 <- glm(HypertensionOrDiabetesOrNot ~ Need_Food + Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfAllChronicAndNeeds)
-summary(m10)
-
-m10 <- glm(DiabetesOrNot ~ Need_AffordNeeds, family = "binomial", data=dfAllChronicAndNeeds)
-summary(m10)
-
-x2 <- chisq.test(dfAllChronicAndNeeds$DiabetesOrNot, dfAllChronicAndNeeds$Need_AffordNeeds)
-x2
-
-x2 <- chisq.test(dfAllChronicAndNeeds$Need_HighSchool, dfAllChronicAndNeeds$Need_Job)
-x2
-
-table(dfAllChronicAndNeeds$DiabetesOrNot, dfAllChronicAndNeeds$Need_AffordNeeds)
-
-table(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot, dfAllChronicAndNeeds$Need_Clothes)
-table(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot, dfAllChronicAndNeeds$Need_LoseHousing)
-table(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot, dfAllChronicAndNeeds$Need_AffordNeeds)
-table(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot, dfAllChronicAndNeeds$Need_Job)
-table(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot, dfAllChronicAndNeeds$Need_HighSchool)
 
 ```
+3. predictive model
+
+No help
+
+data.rose <- ROSE::ROSE(DiabetesOrNot ~ Need_AffordNeeds, data=train, seed=1)$data
+
+
+model <- glm(DiabetesOrNot ~ Need_AffordNeeds, family="binomial", data=data.rose)
+
+table(data.rose$DiabetesOrNot)
+
+table(data.rose$HypertensionOrDiabetesOrNot)
 
 ```{r}
 
@@ -539,71 +687,51 @@ table(dfAllChronicAndNeeds$HypertensionOrDiabetesOrNot, dfAllChronicAndNeeds$Nee
 #make this example reproducible
 set.seed(1)
 
-#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
-sample <- sample(c(TRUE, FALSE), nrow(dfAllChronicAndNeeds), replace=TRUE, prob=c(0.7,0.3))
-train <- dfAllChronicAndNeeds[sample, ]
-test <- dfAllChronicAndNeeds[!sample, ]  
-
-
-data.rose <- ROSE::ROSE(HypertensionOrDiabetesOrNot ~ Need_AffordNeeds + Need_HighSchool, data=train, seed=1)$data
-
-
-model <- glm(HypertensionOrDiabetesOrNot ~ Need_AffordNeeds + Need_HighSchool, family="binomial", data=data.rose)
-
-table(data.rose$HypertensionOrDiabetesOrNot)
-
+#Use 70% of dfNeedsInfoset as training set and remaining 30% as testing set
+sample <- sample(c(TRUE, FALSE), nrow(dfNeedsInfo2), replace=TRUE, prob=c(0.7,0.3))
+train <- dfNeedsInfo2[sample, ]
+test <- dfNeedsInfo2[!sample, ]  
 
 #fit logistic regression model
-model1 <- glm(HypertensionOrDiabetesOrNot ~ Need_Job + Need_AffordNeeds + Need_HighSchool, family="binomial", data=train)
+model1 <- glm(HypertensionOrNot ~ Need_HighSchool + Need_Clothes + Need_Sad, family="binomial", data=train)
 
-# generating data according to ROSE: p=0.5 as default
-
-model2 <- glm(HypertensionOrDiabetesOrNot ~ Need_HighSchool + Need_AffordNeeds, family="binomial", data=train)
-
-
-model1 <- glm(HypertensionOrDiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-
-
-model3 <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-
-summary(model)
+summary(model1)
 
 #model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
 #model
 #disable scientific notation for model summary
 #options(scipen=999)
 
-#view model summary
-summary(model)
+
 #Shows fit - ranges from 0 to almost 1
-pscl::pR2(model)["McFadden"]
+pscl::pR2(model1)["McFadden"]
 
 #Ranks importance
-caret::varImp(model)
+caret::varImp(model1)
 
 #multicolinearity (VIF)
-car::vif(model)
+car::vif(model1)
 
 #calculate probability of default for each individual in test dataset
-predicted <- predict(model, test, type="response")
+predicted <- predict(model1, test, type="response")
 p2 <- as.data.frame(predicted)
 
 p3 <- test %>%
-  select(HypertensionOrDiabetesOrNot)
+  select(HypertensionOrNot)
 
 Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.64, 1, 0)
+Predictions$predicted <- ifelse(Predictions$predicted >.405, 1, 0)
 Predictions$predicted=as.factor(Predictions$predicted)
-Predictions$HypertensionOrDiabetesOrNot=as.factor(Predictions$HypertensionOrDiabetesOrNot)
+Predictions$HypertensionOrNot=as.factor(Predictions$HypertensionOrNot)
 
 psych::describe(Predictions)
 
 #find optimal cutoff probability to use to maximize accuracy
-optimal <- InformationValue::optimalCutoff(test$HypertensionOrDiabetesOrNot, predicted)[1]
+optimal <- InformationValue::optimalCutoff(test$HypertensionOrNot, predicted)[1]
 optimal
 
 #ConfusionMatrix doesn't work
-caret::confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted)
+caret::confusionMatrix(Predictions$HypertensionOrNot, Predictions$predicted)
 
 #calculate sensitivity
 #sensitivity(test$HypertensionOrDiabetesOrNot, predicted)
@@ -616,69 +744,8 @@ caret::confusionMatrix(Predictions$HypertensionOrDiabetesOrNot, Predictions$pred
 
 
 ```
-```{r}
 
-table(data.rose$HypertensionOrDiabetesOrNot)
-```
-
-
-```{r}
-set.seed(1)
-
-#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
-sample <- sample(c(TRUE, FALSE), nrow(dfAllChronicAndNeeds), replace=TRUE, prob=c(0.7,0.3))
-train <- dfAllChronicAndNeeds[sample, ]
-test <- dfAllChronicAndNeeds[!sample, ]  
-
-#fit logistic regression model
-
-model <- glm(DiabetesOrNot~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=train)
-summary(model)
-#model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
-#model
-#disable scientific notation for model summary
-#options(scipen=999)
-
-#view model summary
-summary(model)
-#Shows fit - ranges from 0 to almost 1
-pscl::pR2(model)["McFadden"]
-
-#Ranks importance
-caret::varImp(model)
-
-#multicolinearity (VIF)
-car::vif(model)
-
-#calculate probability of default for each individual in test dataset
-predicted <- predict(model, test, type="response")
-p2 <- as.data.frame(predicted)
-
-p3 <- test %>%
-  select(DiabetesOrNot)
-
-Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.13, 1, 0)
-Predictions$predicted=as.factor(Predictions$predicted)
-Predictions$DiabetesOrNot=as.factor(Predictions$DiabetesOrNot)
-
-psych::describe(Predictions)
-
-#find optimal cutoff probability to use to maximize accuracy
-optimal <- InformationValue::optimalCutoff(test$DiabetesOrNot, predicted)[1]
-optimal
-
-#ConfusionMatrix doesn't work
-caret::confusionMatrix(Predictions$DiabetesOrNot, Predictions$predicted)
-
-#calculate sensitivity
-#sensi
-
-
-
-```
-
-
+Lastly we look at race and other demographics.
 
 ```{r}
 
@@ -690,12 +757,14 @@ summary(rBase1)
 
 ```
 
+Prediciton for A1C and demographics
+
 ```{r}
 
 
 set.seed(1)
 
-#Use 70% of dfAllChronicAndNeedsset as training set and remaining 30% as testing set
+#Use 70% of dfNeedsInfoset as training set and remaining 30% as testing set
 sample <- sample(c(TRUE, FALSE), nrow(dfA1CAndDemographics), replace=TRUE, prob=c(0.7,0.3))
 train <- dfA1CAndDemographics[sample, ]
 test <- dfA1CAndDemographics[!sample, ]  
