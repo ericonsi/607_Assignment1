@@ -1,5 +1,10 @@
+---
+title: "Spam Filter"
+author: "Eric Hirsch"
+date: "4/20/2021"
+output: html_document
+---
 
-CUNY MSDS DATA 607 - Project 4 - Text Mining/Classification
 ```{r}
 
 library(tm)
@@ -7,230 +12,115 @@ library(RTextTools)
 library(knitr)
 library(tidyverse)
 library(kableExtra)
+#library(quanteda)
 ```
 
-First we start off with reading in data from the local PC into R. We define two variables, easy_ham and easy_spam. A Corpus is a collection of text documents. A VCorpus is a “Volatile” corpus, which means the corpus is stored in memory. DirSource allows us to pull the entire directory into R.
+## Spam Filter
+
+### In this project I build a simple spam filter.  The dataset, downloaded from kaggle, contains 5572 texts, including 747 spam texts. We will be using the RTextTools package.
+
+(https://www.kaggle.com/uciml/sms-spam-collection-dataset/home?select=spam.csv)
+
+We begin by reading the csv into a dataframe. RTextTools does not randomly select the train and test datasets (you need to specify the rows for each) - therefore we split the dataframes up into spam and ham and then rejoin them to ensure enough spam and ham in each group.
+
+The final result is a corpus.
 
 ```{r}
 
-easy_ham <- VCorpus(DirSource("easy_ham"))
-easy_spam <- VCorpus(DirSource("easy_spam"))
-```
+dfTexts <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Project 4\\spam.csv", row.name=NULL)
 
-We then add meta information to our sets of data: spam, and ham.
+dfSpam1 <- dfTexts %>%
+  filter(v1 == "spam") %>%
+  slice_head(n = 523)
 
-```{r}
-
-
-meta(easy_spam, tag = "type") <- "spam"
-meta(easy_ham, tag = "type") <- "ham"
-
-easy_combined <- c(easy_spam, easy_ham)
-
-```
-
-Data Cleaning & Tidying:
-The data is filled with inconsistencies - we try to make it easier for the program to understand. We first have to convert all of the characters to a standard format. There were many special characters that were giving issues when trying to convert tolower. We removed numbers, stopwords, punctuation, and white space. All of these aren’t necessary to perform the analysis.
-
-```{r}
-
-easy_combined <- tm_map(easy_combined, content_transformer(function(x) iconv(x, "UTF-8", sub="byte")))
-easy_combined <- tm_map(easy_combined, content_transformer(tolower))
-easy_combined <- tm_map(easy_combined, removeNumbers)
-easy_combined <- tm_map(easy_combined, removeWords, stopwords("english"))
-easy_combined <- tm_map(easy_combined, removePunctuation)
-easy_combined <- tm_map(easy_combined, stripWhitespace)
-
-```
-
-The data is then arranged into a matrix. According to the text, “Simply put, a term-document matrix is a way to arrange text in matrix form where the rows represent individual terms and columns contain the texts. The cells are filled with counts of how often a particular term appears in a given text.” [1][1]
-
-```{r}
+dfSpam2 <- dfTexts %>%
+  filter(v1 == "spam") %>%
+  slice_head(n = 224)
 
 
-dtm <- DocumentTermMatrix(easy_combined)
-dtm
-## <<DocumentTermMatrix (documents: 3897, terms: 94341)>>
-## Non-/sparse entries: 640733/367006144
-## Sparsity           : 100%
-## Maximal term length: 868
-## Weighting          : term frequency (tf)
-```
+dfHam1 <- dfTexts %>%
+  filter(v1 == "ham") %>%
+  slice_head(n = 3378)
 
-The data is then cleaned further by removing sparse words - words that appear infrequently in the dataset (in this case, less than 10 times.).
-The primary reason for this operation is computational feasibility. Apart from that, the operation can also be viewed as a safeguard against formatting errors in the data. If a term appears extremely infrequently, it is possible that it contains an error.[1][1]
+dfHam2 <- dfTexts %>%
+  filter(v1 == "ham") %>%
+  slice_head(n = 1447)
 
-```{r}
+Corpus_s1 <- VCorpus(VectorSource(dfSpam1$v2))
+Corpus_h1 <- VCorpus(VectorSource(dfHam1$v2))
+Corpus_s2 <- VCorpus(VectorSource(dfSpam2$v2))
+Corpus_h2 <- VCorpus(VectorSource(dfHam2$v2))
 
+meta(Corpus_s1, tag = "type") <- "spam"
+meta(Corpus_h1, tag = "type") <- "ham"
+meta(Corpus_s2, tag = "type") <- "spam"
+meta(Corpus_h2, tag = "type") <- "ham"
 
-
-dtm <- removeSparseTerms(dtm, 1-(10/length(easy_combined)))
-dtm
-## <<DocumentTermMatrix (documents: 3897, terms: 6317)>>
-## Non-/sparse entries: 484363/24132986
-## Sparsity           : 98%
-## Maximal term length: 73
-## Weighting          : term frequency (tf)
-```
-
-The data was then analyzed out of courisity, to see what the most frequent terms were. The following kable outputs the results:
-
-```{r}
-
-
-
-dtm2 <- as.matrix(dtm)
-frequency <- colSums(dtm2)
-frequency <- sort(frequency, decreasing=T)
-table_freq <- head(frequency, 15)
-kable(table_freq, "html", escape = F) %>%
-  kable_styling("striped", full_width = T) %>%
-  column_spec(1, bold = T)
-```
-
-	x
-received	20338
-esmtp	11544
-sep	9793
-localhost	9246
-mon	6008
-aug	5764
-postfix	5627
-oct	5256
-jmlocalhost	5227
-thu	5194
-wed	5178
-date	4845
-ist	4840
-subject	4696
-tue	4536
-```{r}
-
-wf <- data.frame(word=names(frequency), frequency=frequency)
-
-p <- ggplot(subset(wf, frequency>2000), aes(x = reorder(word, -frequency), y = frequency)) +
-  geom_bar(stat = "identity", fill='#35a2c4') +
-  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-  theme(panel.background = element_rect(fill = '#adc8d1'))
-p
+Corpus_All <- c(Corpus_s1, Corpus_h1, Corpus_s2, Corpus_h2)
 
 ```
 
-
-Analysis: Models and predictions
-The metadata was then analyzed - we have 2500 emails classified as HAM, and 1397 emails classified as spam.
-
+From here we create a document term matirx, removing sparse terms to speed up our process.
 ```{r}
 
-meta_type <- as.vector(unlist(meta(easy_combined)))
-meta_data <- data.frame(type = unlist(meta_type))
+dtm <- DocumentTermMatrix(Corpus_All, control = list(stopwords=F))
 
-table(meta_data)
+dtm <- removeSparseTerms(dtm, 1-(10/length(Corpus_All)))
+
 ```
-## meta_data
-##  ham spam 
-## 2500 1397
 
-We then created a container using the create_container() function from RTextTools. In this, we specify which data is going to be part of our train set, and which part is part of the testing set. According to google, a good percentage is 70% train, 30% testing. The virgin attribute = F means that we have labels for all of our documents.
+We create a container from the dtm.  The labels must be recoded as numeric or RTextTools throws an error.
 
 ```{r}
 
-N <- length(meta_type)
+Corpus_labels <- as.vector(unlist(meta(Corpus_All)))
+
 container <- create_container(dtm,
-                              labels = meta_type,
-                              trainSize = 1:2727,
-                              testSize = 2728:N,
+                              labels = as.numeric(factor(Corpus_labels)),
+                              trainSize = 1:3901,
+                              testSize = 3902:5572,
                               virgin = F)
 
 ```
-The container itself: matrix_container. It contains a set of objects that are used for the estimation procedures of the supervised learning methods [1][1]:
-slotNames(container)
-## [1] "training_matrix"       "classification_matrix" "training_codes"       
-## [4] "testing_codes"         "column_names"          "virgin"
-We then use the information stored in the container, by using the train_model() function on the train data:
 
-```{r}
-svm_model <- train_model(container, "SVM")
-tree_model <- train_model(container, "TREE")
-maxent_model <- train_model(container, "MAXENT")
-```
-
-We then use our model to estimate if an email in our test dataset is spam or ham.
-```{r}
-svm_out <- classify_model(container, svm_model)
-tree_out <- classify_model(container, tree_model)
-maxent_out <- classify_model(container, maxent_model)
-```
-
-Looking at the outcome: all three models were combined into one dataframe where the labels and estimat eof the probability of classification are shown.
+We run two models (support vector machine and a generalized linear model). 
 
 ```{r}
 
-test_out <- data.frame(head(svm_out), head(tree_out), head(maxent_out) )
-kable(test_out, "html", escape = F) %>%
-  kable_styling("striped", full_width = F) %>%
-  column_spec(1, bold = T)
-```
+models <- train_models(container, algorithms=c("GLMNET", "SVM"))
+results <- classify_models(container, models)
 
-SVM_LABEL	SVM_PROB	TREE_LABEL	TREE_PROB	MAXENTROPY_LABEL	MAXENTROPY_PROB
-ham	0.9893930	ham	0.998295	ham	0.9999784
-ham	0.9962258	ham	0.998295	ham	0.9999772
-ham	0.8823817	spam	0.996136	spam	0.6678205
-ham	0.8183342	spam	0.996136	ham	0.5153088
-spam	0.5064285	spam	0.996136	ham	0.9602845
-ham	0.6308979	spam	0.996136	ham	0.9539801
-Since we’re using supervised learning, our models know the correct labels. We can use this to see exactly how correct the algorithm was in correctly classifying the documents.
+analytics <- create_analytics(container, results)
+analytics@algorithm_summary
+```
+1 is spam and 2 is ham.  Both models do an excellent job overall except that a moderate amount of ham is being classified as spam.  SVM is slightly better accross the board for all metrics.
+
+We see if we can improve the model by removing stopwords:
 
 ```{r}
+dtm <- DocumentTermMatrix(Corpus_All, control = list(stopwords=T))
 
-labels_out <- data.frame(
-  correct_label = meta_type[2728:N],
-  svm = as.character(svm_out[,1]),
-  tree = as.character(tree_out[,1]),
-  maxent = as.character(maxent_out[,1]),
-  stringsAsFactors = F)
-#SVM performance
-table(labels_out[,1] == labels_out[,2])
-## 
-## FALSE  TRUE 
-##   203   967
-prop.table(table(labels_out[,1] == labels_out[,2]))
-## 
-##     FALSE      TRUE 
-## 0.1735043 0.8264957
-#Random forest performance
-table(labels_out[,1] == labels_out[,3])
-## 
-## FALSE  TRUE 
-##   897   273
-prop.table(table(labels_out[,1] == labels_out[,3]))
-## 
-##     FALSE      TRUE 
-## 0.7666667 0.2333333
-#Maximum entropy performance
-table(labels_out[,1] == labels_out[,4])
-## 
-## FALSE  TRUE 
-##    93  1077
-prop.table(table(labels_out[,1] == labels_out[,4]))
-## 
-##      FALSE       TRUE 
-## 0.07948718 0.92051282
-dfdata <- data.frame(table(labels_out[,1] == labels_out[,2]),
-                     table(labels_out[,1] == labels_out[,3]),
-                     table(labels_out[,1] == labels_out[,4])
-                     )
+dtm <- removeSparseTerms(dtm, 1-(10/length(Corpus_All)))
 
-colnames(dfdata) <- c("SVM","Freq", "Random Forest", "Freq", "Max Entropy", "Freq")
-kable(dfdata, "html", escape = F) %>%
-  kable_styling("striped", full_width = F) %>%
-  column_spec(1, bold = T)
+Corpus_labels <- as.vector(unlist(meta(Corpus_All)))
+
+container <- create_container(dtm,
+                              labels = as.numeric(factor(Corpus_labels)),
+                              trainSize = 1:3901,
+                              testSize = 3902:5572,
+                              virgin = F)
+
+models <- train_models(container, algorithms=c("GLMNET", "SVM"))
+results <- classify_models(container, models)
+
+analytics <- create_analytics(container, results)
+analytics@algorithm_summary
+
 ```
-SVM	Freq	Random Forest	Freq	Max Entropy	Freq
-FALSE	203	FALSE	897	FALSE	93
-TRUE	967	TRUE	273	TRUE	1077
-Conclusions:
-Looking at the results, we can see that the Maximum Entropy was the best classifier, followed by the SVM. The worst classifier was the Random Forest.
-References:
-[1][1]Automated Data Collection with R: A Practical Guide to Web Scraping and Text Mining
+In fact, both models do a worse job identifying ham as spam - the recall score tells us that without certain stopwords, we are more likely to misidentify ham as spam.  
+
+### Conclusion
+
+RTextTools provides a very simple and effective way to work with labeled data.  Once we created a proper container, from running the models to getting analytics took only three lines.
+
 
