@@ -144,7 +144,7 @@ dfPopAndPovertyLevel %<>%
 
 ### 3. CSV file of a Survey of Client Economic Needs
 
-This file is the result of a client survey taken at my workplace of over 2,000 clients.  We did not create the survey instrument - the file was provided by the organization that did.  The Ids have been mathced to those of the clients in the SQL database.  The file is otherwise free of any personal identifying information.  
+This file is the result of a client survey taken at my workplace of over 3,000 clients.  We did not create the survey instrument - the file was provided by the organization that did.  The Ids have been mathced to those of the clients in the SQL database.  The file is otherwise free of any personal identifying information.  
 
 ```{r}
 
@@ -501,7 +501,7 @@ dfNeedsInfo2$HypertensionOrNot <- replace(dfNeedsInfo2$HypertensionOrNot, is.na(
 
 These are the final dataframes which will be used for analysis:
 
-1. dfZipIno
+
 
 ```{r}
 
@@ -547,7 +547,9 @@ dfIncidenceOfDiabetes <- sqlQuery(dbConnection, "SELECT * FROM tblAdultsDiagnose
 
 ggplot(dfIncidenceOfDiabetes, aes(percentage_rate, reorder(county_name, as.numeric(percentage_rate)))) +
   geom_col() +
-  ggtitle("Incidence of Diabetes by New York City County")
+  ggtitle("Incidence of Diabetes by New York City County") + 
+  ylab("") +
+  xlab("Per Cent of Population with Diabetes")
 
 ```
 
@@ -654,93 +656,13 @@ dfJoin
 
 What stands out most is that the other clients mostly don't have diabetes diagnoses.  Since most clients are screened for both, this would appear to be a non-random cohort who were approached or surveyed differently.  More investigation is needed.
 
-3. predictive model
-
-No help
-
-data.rose <- ROSE::ROSE(DiabetesOrNot ~ Need_AffordNeeds, data=train, seed=1)$data
-
-
-model <- glm(DiabetesOrNot ~ Need_AffordNeeds, family="binomial", data=data.rose)
-
-table(data.rose$DiabetesOrNot)
-
-table(data.rose$HypertensionOrDiabetesOrNot)
+3. Lastly we look at race and other demographics.
 
 ```{r}
-
-#https://www.statology.org/logistic-regression-in-r/
-#make this example reproducible
-set.seed(1)
-
-#Use 70% of dfNeedsInfoset as training set and remaining 30% as testing set
-sample <- sample(c(TRUE, FALSE), nrow(dfNeedsInfo2), replace=TRUE, prob=c(0.7,0.3))
-train <- dfNeedsInfo2[sample, ]
-test <- dfNeedsInfo2[!sample, ]  
-
-#fit logistic regression model
-model1 <- glm(HypertensionOrNot ~ Need_HighSchool + Need_Clothes + Need_Sad, family="binomial", data=train)
-
-summary(model1)
-
-#model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
-#model
-#disable scientific notation for model summary
-#options(scipen=999)
-
-
-#Shows fit - ranges from 0 to almost 1
-pscl::pR2(model1)["McFadden"]
-
-#Ranks importance
-caret::varImp(model1)
-
-#multicolinearity (VIF)
-car::vif(model1)
-
-#calculate probability of default for each individual in test dataset
-predicted <- predict(model1, test, type="response")
-p2 <- as.data.frame(predicted)
-
-p3 <- test %>%
-  select(HypertensionOrNot)
-
-Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.405, 1, 0)
-Predictions$predicted=as.factor(Predictions$predicted)
-Predictions$HypertensionOrNot=as.factor(Predictions$HypertensionOrNot)
-
-psych::describe(Predictions)
-
-#find optimal cutoff probability to use to maximize accuracy
-optimal <- InformationValue::optimalCutoff(test$HypertensionOrNot, predicted)[1]
-optimal
-
-#ConfusionMatrix doesn't work
-caret::confusionMatrix(Predictions$HypertensionOrNot, Predictions$predicted)
-
-#calculate sensitivity
-#sensitivity(test$HypertensionOrDiabetesOrNot, predicted)
-
-#calculate specificity
-#specificity(test$HypertensionOrDiabetesOrNot, predicted)
-
-#calculate total misclassification error rate
-#misClassError(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted, threshold=optimal)
-
-
-```
-
-Lastly we look at race and other demographics.
-
-```{r}
-
-
 psych::describe(dfA1CAndDemographics)
 
 rBase1 <- lm(InitialA1C ~ BlackOrNot + MaleOrNot + Age,  data = dfA1CAndDemographics)
 summary(rBase1)
-
 ```
 
 Here we can see that race, gender and age all affect the initial A1C at a client's first screening.
