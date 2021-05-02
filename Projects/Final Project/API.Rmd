@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning=FALSE)
 ```
 ```{r ech=TRUE, message = FALSE, warning=FALSE}
 library(ROSE)
@@ -421,7 +421,7 @@ dfZipInfo10 <- dfZipInfo_raw %>%
   filter(major_diagnostic_category=="Diabetes Mellitus") %>%
   na.omit() %>%
   group_by(zip_code) %>%
-  summarize(n=n(), ave_A1C=mean(InitialA1C), pov=mean(percent_below_poverty), pop=mean(population), NoInternet=mean(NoInternetAccessPercentageOfHouseholds), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population), )
+  summarize(n=n(), ave_A1C=mean(InitialA1C), pov=mean(percent_below_poverty), pop=mean(population), NoInternet=mean(NoInternetAccessPercentageOfHouseholds*100), percent_ip = sum(ip_admits/population), percent_er=sum(er_visits/population))
 
 
 dfZipInfo_SI <- dfZipInfo10 %>%
@@ -505,21 +505,20 @@ These are the final dataframes which will be used for analysis:
 
 ```{r}
 
-kable(head(dfZipInfo10), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+kable(psych::describe(dfZipInfo10), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
 2. dfNeedsInfo_Diabetes
 
 ```{r}
-
-kable(head(dfNeedsInfo), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+kable(psych::describe(dfNeedsInfo), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
 ```
 
 3. dfNeedsInfo_Hypertension
 
 ```{r}
-kableExtra::kable(head(dfNeedsInfo2), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+kableExtra::kable(psych::describe(dfNeedsInfo2), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
 ```
 
@@ -527,12 +526,16 @@ kableExtra::kable(head(dfNeedsInfo2), "html") %>% kable_styling("striped") %>% s
 
 ```{r}
 
-kableExtra::kable(head(dfA1CAndDemographics), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+kableExtra::kable(psych::describe(dfA1CAndDemographics), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
 ```
 
+## Analysis - Exploring the Connection Between Poverty and Diabetes
 
-## Analysis - Poverty and Diabetes
+
+The link between diabetes and poverty can be difficult to get at directly, as many poorer people who have diabetes are not aware of it, and diabetes incidence is often not available in such a way it can be correlated poverty (for example, it may only be available at the county level.)  The purpose of this analysis is to get at the correlation through other means: hospitalization rates, looking at a cohort of clients who have all been tested for diabetes, and A1C levels.
+
+### Poverty and diabetes at the county and zip code level
 
 Richmond county (Staten Island) is a relatively middle class borough.  The NY DOH reports that the incidence of diabetes in Staten Island is 8.5%.  The chart below shows the incidence of diabetes in New York City. Staten Island is the second lowest.  
 
@@ -559,50 +562,8 @@ However, among the 292 clients from our survey who were also screened for diabet
 
 While Richmond county is middle class, the clients in our survey are economically disadvantaged - all are from poorer zipcodes seeking assistance from a community health organization.
 
-The link between diabetes and poverty can be difficult to get at directly, as many poorer people who have diabetes are not aware of it, and diabetes incidence is often not available in such a way it can be correlated poverty.  However, if we examine Diabetes ER and hospital admissions against poverty the correlation is unmistakable - however, there are many confounding variables here, including the fact that poor communites tend to use the hospital for primary care to a far greater degree than more affluent communities:
+However, consider the hospitalization rate per 100,000 for all individuals with diabetes in Staten Island:
 
-  
-```{r abc}
-
-my_theme <- function()
-{
-     theme(plot.title = element_text(size = 8, face="bold"), 
-         panel.background = element_rect(fill = "white"),
-         plot.background = element_rect(fill = "cornsilk3"),
-         panel.grid.major.x = element_blank() ,
-         panel.grid.major.y = element_line( size=.2, color="gray" ),
-         axis.text = element_text(face="bold"),
-         axis.text.x = element_text(angle=65),
-         axis.title = element_text(size = 10, face="bold"),
-         axis.title.y = element_text(vjust=3),
-         axis.title.x = element_text(vjust=7),
-         axis.ticks.x = element_blank())
-}
-
-
-```
-
-```{r}
-
-
-a <- ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
-  geom_point() +
-      stat_smooth(method = "lm", se = FALSE) +
-  ggtitle("Poverty by % Admitted to the Hospital With Diabetes") +
-  my_theme()
-
-
-
-
-b <- ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
-  geom_point() +
-    stat_smooth(method = "lm", se = FALSE) +
-  ggtitle("Poverty by % Going to the ER With Diabetes") +
-  my_theme()
-
-gridExtra::grid.arrange(a,b,ncol=2)
-
-```
 
 ```{r}
 dfCommunityHealth <- sqlQuery(dbConnection, "SELECT * from tblCommunityHealth;")
@@ -613,47 +574,40 @@ HospRate <- dfCommunityHealth %>%
   select(percentage_rate)
 HospRate
 
-
-
 ```
 
+Now consider these scatterplots of hospital admissions for diabetes patients with Medicaid, against indicators of poverty per zip code.  
 
 ```{r}
 
-
 a <- ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
   geom_point() +
-      stat_smooth(method = "lm", se = FALSE) +
-  ggtitle("Poverty by % Admitted to the Hospital With Diabetes") +
-  my_theme() +
+  ggtitle("Poverty And Medicaid Hospitalizations") +
+   theme(plot.title = element_text(size = 10, face="bold")) +
+      xlab("Percent below the poverty line") +
+  ylab("Hospitalizations per 100,000") +
   geom_hline(yintercept=26.4, size=2, color='red', linetype='dotted')
 
-
-b <- ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
+b <- ggplot(dfZipInfo_SI, aes(NoInternet, percent_ip)) +
   geom_point() +
-    stat_smooth(method = "lm", se = FALSE) +
-  ggtitle("Poverty by % Going to the ER With Diabetes") +
-  my_theme() +
+  ggtitle("Poverty And Medicaid Hospitalizations") +
+   theme(plot.title = element_text(size = 10, face="bold")) +
+      xlab("Percent without internet") +
+  ylab("Hospitalizations per 100,000") +
   geom_hline(yintercept=26.4, size=2, color='red', linetype='dotted')
+
 
 gridExtra::grid.arrange(a,b,ncol=2)
 
 ```
-Looking at indicators of poverty such as lack of internet shows the same pattern.
 
-```{r}
+While the strong relationship between poverty level and hospitalization rate for medicaid recipients is likely due in part to the fact that there are more medicaid recipients in poorer zip codes, nonetheless we can see from these graphs that the 5 poorest zip codes have higher rates of hospitalization for medicaid resipients alone than the average hospitalization rate for all recipients.
 
-ggplot(dfZipInfo_SI, aes(NoInternet, percent_er)) +
-  geom_point() +
-    stat_smooth(method = "lm", se = FALSE) +
-  ggtitle("No Internet by Percent of Medicaid Recipients Going to the ER") +
-  my_theme()
+### Poverty and diabetes at the individual level
 
-```
+The second graph suggests that poverty affects individuals in a direct way - lack of internet may lead to lack of knowledge and poor health choices.
 
-The previous graph suggests that poverty affects individual in a direct way - lack of internet may lead to lack of knowlege and poor health choices.
-
-Our next step is to test this hypothesis with our survey data. We will look to see if incidence of diabetes and particular economic and social needs are correlated.
+Our survey data allow us to examine diabetes and poverty at the individual level. We will look first to see if incidence of diabetes and particular economic and social needs are correlated.
 
 We examine the correlation between the incidence of diabetes and social needs through chi squares and a multiple regression:
 
@@ -669,13 +623,11 @@ kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scr
 
 ```
 
-Those clients who cannot afford basic needs have a higher incidence of Diabetes in both the CHi2 and regression analysis.  However, we cannot reject the null hypothesis for other needs.
+Those clients who cannot afford basic needs have a higher incidence of diabetes in both the chi squares and regression analysis.  However, we cannot reject the null hypothesis for other needs.
 
-We can also see if we find the same pattern for hypertension clients.
+We can also investigate whether we find the same pattern for hypertension clients.
 
 ```{r}
-
-dfNeedsInfo_Any <- na.omit(dfNeedsInfo)
 
 m10 <- glm(HypertensionOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo2)
 summary(m10)
@@ -686,7 +638,22 @@ dfNeedsChi <- dfNeedsInfo2 %>%
 kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
 
+
 ```
+
+In this case the consistent factor is whether a client does not have clothing for their family (this factor appears as significant in both the chi square and the regression).  However, the finding is surprising as the coeficient is negative, in other words, clothing need is negatively correlated with high blood pressure.  
+
+we investigate these clients further to see if any confounding variable is obvious:
+
+```{r}
+dfJoin <- dfNeedsInfo2 %>% 
+  inner_join(dfA1CAndDemographics, by="ClientID") %>%
+    filter(Need_Clothes==1)
+dfJoin
+```
+
+What stands out most is that the other clients mostly don't have diabetes diagnoses.  Since most clients are screened for both, this would appear to be a non-random cohort who were approached or surveyed differently.  More investigation is needed.
+
 3. predictive model
 
 No help
@@ -776,63 +743,8 @@ summary(rBase1)
 
 ```
 
-Prediciton for A1C and demographics
+Here we can see that race, gender and age all affect the initial A1C at a client's first screening.
 
-```{r}
+### Conclusion
 
-
-set.seed(1)
-
-#Use 70% of dfNeedsInfoset as training set and remaining 30% as testing set
-sample <- sample(c(TRUE, FALSE), nrow(dfA1CAndDemographics), replace=TRUE, prob=c(0.7,0.3))
-train <- dfA1CAndDemographics[sample, ]
-test <- dfA1CAndDemographics[!sample, ]  
-
-
-data.rose <- ROSE::ROSE(A1CAboveMean ~ BlackOrNot + MaleOrNot + Age, data=train, seed=1)$data
-model <- glm(A1CAboveMean ~ BlackOrNot + MaleOrNot + Age, family = "binomial", data=data.rose)
-
-#fit logistic regression model
-
-model1 <- glm(A1CAboveMean ~ BlackOrNot + Age, family = "binomial", data=train)
-#disable scientific notation for model summary
-options(scipen=999)
-
-#view model summary
-summary(model)
-#Shows fit - ranges from 0 to almost 1
-pscl::pR2(model)["McFadden"]
-
-#Ranks importance
-caret::varImp(model)
-
-#multicolinearity (VIF)
-car::vif(model)
-
-#calculate probability of default for each individual in test dataset
-predicted <- predict(model, test, type="response")
-p2 <- as.data.frame(predicted)
-
-p3 <- test %>%
-  select(A1CAboveMean)
-
-Predictions <- cbind(p2, p3)
-Predictions$predicted <- ifelse(Predictions$predicted >.864, 1, 0)
-Predictions$predicted=as.factor(Predictions$predicted)
-Predictions$A1CAboveMean=as.factor(Predictions$A1CAboveMean)
-
-psych::describe(Predictions)
-
-#find optimal cutoff probability to use to maximize accuracy
-optimal <- InformationValue::optimalCutoff(test$A1CAboveMean, predicted)[1]
-optimal
-
-#ConfusionMatrix doesn't work
-caret::confusionMatrix(Predictions$A1CAboveMean, Predictions$predicted)
-
-#calculate sensitivity
-#sensi
-
-
-```
-
+This study touched the surface of the question, "how are poverty and diabetes connected?'  We found statistical associations between poverty and diabetes hospitalization rates, between being unable to afford basic needs and diabetes incidence rates, and a connection between high A1C (indicative of diabetes) and race, age and gender.  We also found evidnece to suggest our study has nonradom elements.  Clearly there is more to explore here.
