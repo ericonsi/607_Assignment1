@@ -48,7 +48,7 @@ We begin by reading the New York DOH data from the APIs.  The RSocrata library m
 library("RSocrata")
 
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=TRUE 
+run=FALSE 
 
 if(run) {
 #Community Health: Diabetes mortality rate per 100,000: 2009 - 2011
@@ -321,7 +321,7 @@ dbConnection <- odbcDriverConnect(strConnection)
 
 If we load our datasets into persistent storage (the SQL Sever database), then we can use SQL to easily combine data from several tables and read the result back into a dataframe. Just as important, many of the datasets in this project are very large and take a long time to load.  Therefore we can filter and prepare them, read them into the database, and then use the database exclusively to read them back to cut down on load time. 
 
-We begin with the MedicaidByZip file, a NYDOH file with over a million records.  We filter it down to the records we want (the most recent diabetes records from Staten Island) and load it into the database. We also load a second  NY DOH file, dfAdultsDiagnosed which has information about Diabetes diagnoses throughout New York State.
+We begin with 3 NYDOH files: MedicaidByZip, a NYDOH file with over a million records on medicaid information; dfAdultsDiagnosed which has 63 records about Diabetes diagnoses throughout New York State; and dfCommunityHealthObesityAndDiabtes, a dataset with 2733 records with detailed county-level information about diabetes.
 
 ```{r}
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
@@ -341,6 +341,17 @@ if(run) {
 
 DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblAdultsDiagnosed")
 PopulateTable <- sqlSave(dbConnection, dfAdultsDiagnosed, "tblAdultsDiagnosed", append=TRUE)
+}
+
+```
+
+```{r}
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE
+if(run) {
+
+DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblCommunityHealth")
+PopulateTable <- sqlSave(dbConnection, dfCommunityHealthObesityAndDiabetes, "tblCommunityHealth", append=TRUE)
 }
 
 ```
@@ -593,6 +604,18 @@ gridExtra::grid.arrange(a,b,ncol=2)
 
 ```
 
+```{r}
+dfCommunityHealth <- sqlQuery(dbConnection, "SELECT * from tblCommunityHealth;")
+
+HospRate <- dfCommunityHealth %>%
+  filter(indicator=="Diabetes hospitalization rate per 10,000 (any diagnosis)" & county_name=="Richmond") %>%
+  mutate(percentage_rate = percentage_rate/10) %>%
+  select(percentage_rate)
+HospRate
+
+
+
+```
 
 
 ```{r}
@@ -603,7 +626,7 @@ a <- ggplot(dfZipInfo_SI, aes(pov, percent_ip)) +
       stat_smooth(method = "lm", se = FALSE) +
   ggtitle("Poverty by % Admitted to the Hospital With Diabetes") +
   my_theme() +
-  geom_hline(yintercept=21.5, size=2, color='red', linetype='dotted')
+  geom_hline(yintercept=26.4, size=2, color='red', linetype='dotted')
 
 
 b <- ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
@@ -611,7 +634,7 @@ b <- ggplot(dfZipInfo_SI, aes(pov, percent_er)) +
     stat_smooth(method = "lm", se = FALSE) +
   ggtitle("Poverty by % Going to the ER With Diabetes") +
   my_theme() +
-  geom_hline(yintercept=21.5, size=2, color='red', linetype='dotted')
+  geom_hline(yintercept=26.4, size=2, color='red', linetype='dotted')
 
 gridExtra::grid.arrange(a,b,ncol=2)
 
@@ -620,15 +643,11 @@ Looking at indicators of poverty such as lack of internet shows the same pattern
 
 ```{r}
 
-
-
 ggplot(dfZipInfo_SI, aes(NoInternet, percent_er)) +
   geom_point() +
     stat_smooth(method = "lm", se = FALSE) +
   ggtitle("No Internet by Percent of Medicaid Recipients Going to the ER") +
   my_theme()
-
-
 
 ```
 
