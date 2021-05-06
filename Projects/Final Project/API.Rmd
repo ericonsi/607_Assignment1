@@ -471,6 +471,19 @@ dfNeedsInfo$DiabetesOrNot <- replace(dfNeedsInfo$DiabetesOrNot, is.na(dfNeedsInf
 
 ```{r}
 
+
+dfA1CProjectAndNeeds_raw <- sqlQuery(dbConnection, "SELECT tblA1C.DiagA1C, tblA1C.MostrecentA1C, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+FROM tblA1C INNER JOIN tblNeeds ON tblA1C.ClientID = tblNeeds.ClientID;")
+
+dfA1CProjectAndNeeds <- dfA1CProjectAndNeeds_raw %>%
+  mutate(A1CDrop=DiagA1C-MostrecentA1C)
+
+
+```
+
+
+```{r}
+
 dfNeedsInfo2_raw <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
 FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.ClientID = tblNeeds.ClientID) ON tblReadings.ClientID = tblNeeds.ClientID
 WHERE tblReadings.Type='Blood Pressure';")
@@ -629,6 +642,51 @@ Those clients who cannot afford basic needs have a higher incidence of diabetes 
 
 We can also investigate whether we find the same pattern for hypertension clients.
 
+
+```{r, warning=FALSE}
+
+m10 <- glm(HypertensionOrDiabetesOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo)
+summary(m10)
+
+
+#m10 <- lm(A1CDrop ~ NumOfNeeds, data=dfA1CProjectAndNeeds)
+#summary(m10)
+
+m10 <- lm(A1CDrop ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=dfA1CProjectAndNeeds)
+summary(m10)
+
+m10 <- lm(DiagA1C ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=dfA1CProjectAndNeeds)
+summary(m10)
+
+m10 <- lm(DiagA1C ~ Need_Job + Need_HighSchool, data=dfA1CProjectAndNeeds)
+summary(m10)
+
+m10 <- lm(A1CDrop ~ Need_Job, data=dfA1CProjectAndNeeds)
+summary(m10)
+
+m10 <- glm(HypertensionOrDiabetesOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo)
+summary(m10)
+
+
+m10 <- glm(DiabetesOrNot ~ NumOfNeeds, family = "binomial", data=dfNeedsInfo)
+summary(m10)
+
+m10 <- glm(HypertensionOrNot ~ NumOfNeeds, family = "binomial", data=dfNeedsInfo2)
+summary(m10)
+
+
+
+m10 <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family = "binomial", data=dfNeedsInfo)
+summary(m10)
+
+
+dfNeedsChi <- dfNeedsInfo %>%
+  select(HypertensionOrDiabetesOrNot, NeedsVector) %>%
+  summarise_all(funs(chisq.test(.,dfNeedsInfo$HypertensionOrDiabetesOrNot)$p.value))
+kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+```
+
 ```{r}
 
 m10 <- glm(HypertensionOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo2)
@@ -642,6 +700,15 @@ kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scr
 
 
 ```
+
+```{r}
+#
+#m10 <- glm(HypertensionOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Clothes + Need_LoseHousing + #Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo2)
+
+m10 <- lm(DiagA1C ~ Need_Safe, data=dfA1CProjectAndNeeds)
+summary(m10)
+```
+
 
 In this case the consistent factor is whether a client does not have clothing for their family (this factor appears as significant in both the chi square and the regression).  However, the finding is surprising as the coeficient is negative, in other words, clothing need is negatively correlated with high blood pressure.  
 
