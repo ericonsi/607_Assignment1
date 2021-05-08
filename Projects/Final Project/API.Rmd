@@ -472,7 +472,7 @@ dfNeedsInfo$DiabetesOrNot <- replace(dfNeedsInfo$DiabetesOrNot, is.na(dfNeedsInf
 ```{r}
 
 
-dfA1CProjectAndNeeds_raw <- sqlQuery(dbConnection, "SELECT tblA1C.DiagA1C, tblA1C.MostrecentA1C, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+dfA1CProjectAndNeeds_raw <- sqlQuery(dbConnection, "SELECT tblA1C.*, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
 FROM tblA1C INNER JOIN tblNeeds ON tblA1C.ClientID = tblNeeds.ClientID;")
 
 dfA1CProjectAndNeeds <- dfA1CProjectAndNeeds_raw %>%
@@ -509,6 +509,12 @@ dfNeedsInfo2 <- dfNeedsInfo2_raw %>%
 
 dfNeedsInfo2$HypertensionOrNot <- replace(dfNeedsInfo2$HypertensionOrNot, is.na(dfNeedsInfo2$HypertensionOrNot), 0)
 
+
+```
+
+```{r}
+
+dfNeedsInfo3_raw <- sqlQuery(dbConnection, "SELECT * from tblNeeds")
 
 ```
 
@@ -664,6 +670,9 @@ summary(m10)
 m10 <- lm(A1CDrop ~ Need_Job, data=dfA1CProjectAndNeeds)
 summary(m10)
 
+m10 <- lm(A1CDrop ~ Need_Job, data=dfA1CProjectAndNeeds)
+summary(m10)
+
 m10 <- glm(HypertensionOrDiabetesOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo)
 summary(m10)
 
@@ -685,7 +694,68 @@ dfNeedsChi <- dfNeedsInfo %>%
   summarise_all(funs(chisq.test(.,dfNeedsInfo$HypertensionOrDiabetesOrNot)$p.value))
 kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
+
 ```
+
+Immigrant is asscoiated with basic needs. (and then it wasn't) Needs high school is a1c screens but wrong direction. Not vaccinated = no job and need safe. Referral and wants and unsure = nothing.
+
+```{r}
+
+
+m10 <- lm(NumA1CScreens ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=dfA1CProjectAndNeeds)
+summary(m10)
+
+m10 <- lm(NumA1CScreens ~ Need_HighSchool, data=dfA1CProjectAndNeeds)
+summary(m10)
+
+q <- ggplot(dfA1CProjectAndNeeds, aes(NumA1CScreens, Need_HighSchool))+
+  geom_boxplot()
+q
+
+dfVaccine <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Vaccine.csv", encoding = "UTF-8") %>%
+    rename(ClientID=X.U.FEFF.ClientID)
+
+dfJoin7 <- dfNeedsInfo3_raw %>% 
+  inner_join(dfVaccine, by="ClientID") 
+
+dfNoVaccine <- dfJoin7 %>%
+  filter(SumOfNot.Vaccinated==1) %>%
+  mutate(Refused=ifelse(SumOfWants.Vaccine==1,0,1))
+
+NeedsVector1 <- NeedsVector[! NeedsVector %in% c("Need_SafePlace", "Need_HelpUnderstanding", "Need_Childcare", "Need_Transport")] 
+
+NeedsVector2 <- NeedsVector[! NeedsVector %in% c("Need_SafePlace", "Need_HelpUnderstanding", "Need_Childcare", "Need_Transport", "Need_HighSchool")] 
+
+NeedsVector3 <- NeedsVector[! NeedsVector %in% c("Need_Clothes", "Need_SafePlace", "Need_Transport")] 
+
+dfNeedsChi1 <- dfJoin7 %>%
+  select(SumOfNot.Vaccinated, NeedsVector1) %>%
+  summarise_all(funs(chisq.test(.,dfJoin7$SumOfNot.Vaccinated)$p.value))
+kableExtra::kable(head(dfNeedsChi1), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+dfNeedsChi1 <- dfJoin7 %>%
+  select(SumOfUnsure., NeedsVector1) %>%
+  summarise_all(funs(chisq.test(.,dfJoin7$SumOfUnsure.)$p.value))
+kableExtra::kable(head(dfNeedsChi1), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+dfNeedsChi1 <- dfA1CProjectAndNeeds%>%
+  select(Immigrant, NeedsVector3) %>%
+  summarise_all(funs(chisq.test(.,dfA1CProjectAndNeeds$Immigrant)$p.value))
+kableExtra::kable(head(dfNeedsChi1), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+chisq.test(dfA1CProjectAndNeeds$Immigrant, dfA1CProjectAndNeeds$Need_AffordNeeds)
+
+```
+
+```{r}
+
+q <- ggplot(dfA1CProjectAndNeeds, aes(NumA1CScreens, Need_HighSchool))+
+  geom_col()
+q
+
+
+```
+
 
 ```{r}
 

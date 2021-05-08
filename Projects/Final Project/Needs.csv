@@ -1,0 +1,13 @@
+﻿ID,sType,Need,WhatMatters,Question,Referral
+111,Food,Yes,FOOD TODAY,Do you or your family ever feel hungry?,"Community Health Action of Staten Island: Pantry, SNAP Benefits"
+112,Housing,Yes,,Do you have a safe place to live right now?,
+113,Housing,No,,Are you worried about losing your housing?,
+114,Income,No,HRA CASH ASSISTANCE,Do you have a job?,
+115,Income,Yes,,Are you able to afford basic needs?,
+116,Literacy,No,I AM ON WELLNESS EXEMPTION AT THE TIME FOR MEDICAL EXCUSE SO NOT INTERESTED AT THIS TIME,Do you have a high school diploma or a GED?,
+117,Literacy,No,,Do you ever need help understanding what your doctor tells you?,
+118,Social and Child Care,No,,Are you sad or lonely?,
+119,Social and Child Care,No,,Do problems with childcare make it hard for you?,
+120,"Clothing, Safety and Transportation",No,,Do you ever have a problem getting the right type of clothes for each season?,
+121,"Clothing, Safety and Transportation",Yes,,Do you have access to transportation to get where you need to go?,
+122,"Clothing, Safety and Transportation",Yes,,"Do you feel safe: emotionally, physically?",
