@@ -26,14 +26,16 @@ library(XML)
 library(stringr)
 library(kableExtra)
 ```
-## Diabetes and Poverty: Is There a Connection?
+## Diabetes and Poverty: How does poverty affect health outcomes?
 
-To investigate this question We will use data from 4 different sources: 
+We know that poverty affects health outcomes.  We also know that obesity, poor diet choices, and poor lifestyle choices often result from poverty and inadequate access to resources. However, what are the actual poverty markers that lead to these outcomes - is it lack of transportation options?  Housing insecurity? Lack of High School defree? In this study we will take a deeper look. To answer these questions we will examine data from a client survey on economic needs from my workplace.  We will supplement the survey info with other client health-related databases from my workplace, as well as data from outside sources such as the NY Department of Health.
 
-1. Health data from the New York Department of Health (in json format accessed through APIs)
-2. Zip code level data on population size and poverty (scraped from html tables on the web)
-3. Files from a proprietary survey of economic needs, stripped of identity markers (stoed in a csv file)
-4. Tables of client health information in a proprietary SQL Server database, stripped of identity markers and password protected through keyring (SQL Server database on Azure)
+Altogether we will use data from 4 different sources: 
+
+1. Files from a proprietary survey of economic needs, stripped of identity markers (stored in a local csv file)
+2. Tables of client health information in a proprietary SQL Server database, stripped of identity markers and password protected through keyring (SQL Server database on Azure)
+3. Health data from the New York Department of Health (in json format accessed through APIs)
+4. Zip code level data on population size and poverty (scraped from html tables on the web)
 
 After collecting the data we will store it in the database so that we can easily combine the datasets in productive ways using SQL.  In particular, we will generate dataframes that contain zip code level information on poverty and public health, and client level information on economic needs and individual client health.  Then we will test for correlations and other relationships within the data.
 
@@ -41,110 +43,14 @@ Note - Certain operations that load data and are very time consuming will be con
 
 ## Loading The Data
 
-### 1. New York DOH Data
 
-We begin by reading the New York DOH data from the APIs.  The RSocrata library makes this easy.
-```{r}
-library("RSocrata")
-
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE 
-
-if(run) {
-#Community Health: Diabetes mortality rate per 100,000: 2009 - 2011
-dfMortality2011 <- read.socrata(
-  "https://health.data.ny.gov/resource/u98s-c3hg.json")
-
-#U.S. Chronic Disease Indicators: Diabetes
-dfDiabetesIndicators <- read.socrata(
-  "https://chronicdata.cdc.gov/resource/f8ti-h92k.json")
-
-#Community Health Obesity and Diabetes Related Indicators: 2008 - 2012
-dfCommunityHealthObesityAndDiabetes <- read.socrata(
-  "https://health.data.ny.gov/resource/tchg-ruva.json")
-
-#Community Health: Age-adjusted percentage of adults with physician diagnosed diabetes: 2008 - 2009
-dfAdultsDiagnosed <- read.socrata(
-  "https://health.data.ny.gov/resource/9j5w-7zpd.json")
-
-#AH Provisional Diabetes Death Counts, 2020
-dfDeath <- read.socrata(
-  "https://data.cdc.gov/resource/qdcb-uzft.json")
-
-#500 Cities: Diagnosed diabetes among adults aged >=18 years
-dfCityComparison <- read.socrata(
-  "https://chronicdata.cdc.gov/resource/cn78-b9bj.json")
-
-#Conditions contributing to deaths involving coronavirus disease 2019 (COVID-19), by age group and state, United States.
-dfDeathsForCovid <- read.socrata(
-  "https://data.cdc.gov/resource/hk9y-quqm.json")
-
-#Community Health: Diabetes Short-term Complications Hospitalization Rate per 10,000 - Aged 18+ Years by County Map: Latest Data
-dfHospitalizations <- read.socrata(
-  "https://health.data.ny.gov/resource/xuwq-ppg8.json")
-
-#Medicaid Chronic Conditions, Inpatient Admissions and Emergency Room Visits by Zip Code: Beginning 2012
-dfMedicaidByZip <- read.socrata(
-  "https://health.data.ny.gov/resource/2yck-xisk.json")
-
-}
-
-```
-```{r}
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE 
-
-if(run) {
-#Medicaid Program Enrollment by Month: Beginning 2009
-dfMedicaidEnrollment <- read.socrata(
-  "https://health.data.ny.gov/resource/m4hz-kzn3.json")
-}
-```
-
-
-### 2. Zip Code Level Population and Poverty Data Scraped From the web
-
-We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.
-
-```{r html}
-library(XML)
-
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-
-if(run) {
-
-
-x="http://www.zipatlas.com/us/ny/zip-code-comparison/population-below-poverty-level.htm"
-dfPopAndPovertyLevel = as.data.frame(readHTMLTable(x, header=T,which=5,strings2factors=F))
-
-for (i in 1:16) {
-x= str_c("http://www.zipatlas.com/us/ny/zip-code-comparison/population-below-poverty-level.", i, ".htm")
-dfx = as.data.frame(readHTMLTable(x, header=T,which=5,strings2factors=F))
-dfPopAndPovertyLevel=rbind(dfPopAndPovertyLevel, dfx)
-}
-}
-
-#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
-run=FALSE
-
-if(run) {
-  
-dfPopAndPovertyLevel %<>%
-  filter(str_length(V2)==5 & !is.na(V4)) %<>%
-  rename(number = V1, zip=V2, location=V3, city=V4, population=V5, percent_below_poverty=V6, rank=V7) %<>%
-  mutate(population = as.numeric(gsub(",", "", population))) %<>%
-  mutate(percent_below_poverty = as.numeric(gsub(" %", "", percent_below_poverty))) %<>%
-  mutate(rank = as.numeric(gsub("#", "", rank)))
-
-}
-
-```
-
-
-### 3. CSV file of a Survey of Client Economic Needs
+### 1. CSV file of a Survey of Client Economic Needs
 
 This file is the result of a client survey taken at my workplace of over 3,000 clients.  We did not create the survey instrument - the file was provided by the organization that did.  The Ids have been mathced to those of the clients in the SQL database.  The file is otherwise free of any personal identifying information.  
+
+__*For security purposes these files are stored locally.  However, they have already been read into the sql server database and can be accessed from there through keyring. Leave "run = false" in the following code, and in the code in which the file is read into the database, to use this rmd successfully with the survey.*__
+
+We also input a file that simply contains the list of survey needs.
 
 ```{r}
 
@@ -153,12 +59,6 @@ run=FALSE
 
 if(run) {
 dfSDOH_raw <- read.csv("D:\\Buffer\\SDOH__En__1_0 (3).csv", encoding = "UTF-8")
-}
-
-run=FALSE
-
-if(run) {
-dfBroadband_raw <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Broadband_Adoption.csv", encoding = "UTF-8")
 }
 
 dfListOfNeeds <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\ListOfNeeds.csv", encoding = "UTF-8")
@@ -279,13 +179,15 @@ dfFinal10 <- cbind(dfFinal6, dfFinal4, dfFinal5)
 ```
 
 
-### 4. SQL Server Database Data
+### 2. SQL Server Database Data
 
-I built this database for my workplace.  It contains information on client health screens for diabetes, hypertension and other chronic diseases.  The database contains 2 tables: 
+I built this database for my workplace.  It contains information on client health screens for diabetes, hypertension and other chronic diseases.  We will use three tables: 
 
-a. A table of 5,433 unique clients with demographic data and the client's first A1C result (A1C is a test that indicates diabetes.)
+a. Demographic data: A table of 5,433 unique clients with demographic data and the client's first A1C result (A1C is a test that indicates diabetes.)
 
-b. A table of 39,491 observations for 8,546 unique clients with A1C, Blood Pressure and other health screen data.
+b. Health data: A table of 39,491 observations for 8,546 unique clients with A1C, Blood Pressure and other health screen data.
+
+c. Vaccine data: A table of 2122 unique clients with info on vaccine status.
 
 The data is password protected by keyring.  Here we create a connection.
 
@@ -315,6 +217,104 @@ strConnection <- paste0(
 library(RODBC)
 dbConnection <- odbcDriverConnect(strConnection)
 #keyring_lock
+```
+
+### 3. New York DOH Data
+
+We read the New York DOH data from the APIs.  The RSocrata library makes this easy.
+
+```{r}
+library("RSocrata")
+
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE 
+
+if(run) {
+
+
+#Community Health Obesity and Diabetes Related Indicators: 2008 - 2012
+dfCommunityHealthObesityAndDiabetes <- read.socrata(
+  "https://health.data.ny.gov/resource/tchg-ruva.json")
+
+#Community Health: Age-adjusted percentage of adults with physician diagnosed diabetes: 2008 - 2009
+dfAdultsDiagnosed <- read.socrata(
+  "https://health.data.ny.gov/resource/9j5w-7zpd.json")
+
+#AH Provisional Diabetes Death Counts, 2020
+dfDeath <- read.socrata(
+  "https://data.cdc.gov/resource/qdcb-uzft.json")
+
+#500 Cities: Diagnosed diabetes among adults aged >=18 years
+dfCityComparison <- read.socrata(
+  "https://chronicdata.cdc.gov/resource/cn78-b9bj.json")
+
+#Conditions contributing to deaths involving coronavirus disease 2019 (COVID-19), by age group and state, United States.
+dfDeathsForCovid <- read.socrata(
+  "https://data.cdc.gov/resource/hk9y-quqm.json")
+
+#Community Health: Diabetes Short-term Complications Hospitalization Rate per 10,000 - Aged 18+ Years by County Map: Latest Data
+dfHospitalizations <- read.socrata(
+  "https://health.data.ny.gov/resource/xuwq-ppg8.json")
+
+#Medicaid Chronic Conditions, Inpatient Admissions and Emergency Room Visits by Zip Code: Beginning 2012
+dfMedicaidByZip <- read.socrata(
+  "https://health.data.ny.gov/resource/2yck-xisk.json")
+
+}
+
+```
+```{r}
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE 
+
+if(run) {
+#Medicaid Program Enrollment by Month: Beginning 2009
+dfMedicaidEnrollment <- read.socrata(
+  "https://health.data.ny.gov/resource/m4hz-kzn3.json")
+}
+```
+
+
+### 4. Zip Code Level Population and Poverty Data Scraped From the web
+
+We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.  We also read a csv file, taken from the web, which contains information on zip code and broadband access.
+
+```{r html}
+library(XML)
+
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE
+
+if(run) {
+
+
+x="http://www.zipatlas.com/us/ny/zip-code-comparison/population-below-poverty-level.htm"
+dfPopAndPovertyLevel = as.data.frame(readHTMLTable(x, header=T,which=5,strings2factors=F))
+
+for (i in 1:16) {
+x= str_c("http://www.zipatlas.com/us/ny/zip-code-comparison/population-below-poverty-level.", i, ".htm")
+dfx = as.data.frame(readHTMLTable(x, header=T,which=5,strings2factors=F))
+dfPopAndPovertyLevel=rbind(dfPopAndPovertyLevel, dfx)
+}
+}
+
+#This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
+run=FALSE
+
+if(run) {
+  
+dfPopAndPovertyLevel %<>%
+  filter(str_length(V2)==5 & !is.na(V4)) %<>%
+  rename(number = V1, zip=V2, location=V3, city=V4, population=V5, percent_below_poverty=V6, rank=V7) %<>%
+  mutate(population = as.numeric(gsub(",", "", population))) %<>%
+  mutate(percent_below_poverty = as.numeric(gsub(" %", "", percent_below_poverty))) %<>%
+  mutate(rank = as.numeric(gsub("#", "", rank)))
+
+}
+
+
+dfBroadband_raw <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Broadband_Adoption.csv", encoding = "UTF-8")
+
 ```
 
 ## Loading all of the Datasets into the SQL Server Database
@@ -398,6 +398,8 @@ DropTable <- sqlQuery(dbConnection, "DROP TABLE IF EXISTS tblBroadBand")
 PopulateTable <- sqlSave(dbConnection, dfBroadband_raw, "tblBroadband", append=TRUE)
 }
 
+
+
 ```
 
 ## Creating Dataframes for Analysis By Joining Tables in the SQL Server Database
@@ -406,9 +408,11 @@ We will create the following dataframes by combining elements from a number of d
 
 1. dfZipInfo, a dataframe with 99 observations at the zip code level with information on population level, poverty level, medicaid Info, average A1C from client data, and broadband info.
 
-2. dfdNeedsInfo_Diabetes and dfNeedsInfo_Hypertension, dataframe with client-level observations with information on needs from the survey, chronic diseases, demographics and initial A1C. The diabetes database contains 348 observations and only includes only those clients who took the survey and have been screened for diabetes.The hypertension database contains 463 observations and only includes only those clients who took the survey and have been screened for hypertension.  
+2. dfdNeedsInfo, a dataframe with client-level observations with information on needs from the survey, chronic diseases, demographics and initial A1C. The dataframe only includes only those clients who took the survey AND have been screened for diabetes.
 
-3. dfA1CAndDemographics, a dataframe with 5433 observations at the client level with information on demographics and initial A1C readings.
+3. dfNeedsInfo_Vaccine, a dataframe with 304 client-level observations with information on needs from the survey and vaccine information. The dataframe only includes only those clients who took the survey AND have been screened for diabetes.
+
+4. dfA1CAndDemographics, a dataframe with 5433 observations at the client level with information on demographics and initial A1C readings.
 
 ```{r}
 
@@ -471,44 +475,8 @@ dfNeedsInfo$DiabetesOrNot <- replace(dfNeedsInfo$DiabetesOrNot, is.na(dfNeedsInf
 
 ```{r}
 
-
-dfA1CProjectAndNeeds_raw <- sqlQuery(dbConnection, "SELECT tblA1C.*, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
-FROM tblA1C INNER JOIN tblNeeds ON tblA1C.ClientID = tblNeeds.ClientID;")
-
-dfA1CProjectAndNeeds <- dfA1CProjectAndNeeds_raw %>%
-  mutate(A1CDrop=DiagA1C-MostrecentA1C)
-
-
-```
-
-
-```{r}
-
-dfNeedsInfo2_raw <- sqlQuery(dbConnection, "SELECT tblNeeds.ClientID, tblChronic.Chronic, tblReadings.Type,  tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
-FROM tblReadings INNER JOIN (tblChronic RIGHT JOIN tblNeeds ON tblChronic.ClientID = tblNeeds.ClientID) ON tblReadings.ClientID = tblNeeds.ClientID
-WHERE tblReadings.Type='Blood Pressure';")
-
-    
-dfNeedsInfo2 <- dfNeedsInfo2_raw %>%
-    group_by(ClientID) %>%
-  
-    mutate(DiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II"|Chronic == "Diabetes (doctor denied)"|Chronic == "Diabetes type I", 1, 0)) %>%
-    mutate(HypertensionOrNot = ifelse(Chronic == "Hypertension", 1,0)) %>%
-    mutate(HypertensionOrDiabetesOrNot = ifelse(Chronic == "Diabetes Type I"|Chronic=="Diabetes Type II"|Chronic == "Hypertension", 1,0)) %>%
-  
-    summarize(sum(DiabetesOrNot), sum(HypertensionOrNot), sum(HypertensionOrDiabetesOrNot), across(NeedsVector, mean, na.rm = TRUE)) %>%
-  
-    rename(DiabetesOrNot="sum(DiabetesOrNot)") %>%
-      rename(HypertensionOrNot="sum(HypertensionOrNot)") %>%
-      rename(HypertensionOrDiabetesOrNot="sum(HypertensionOrDiabetesOrNot)") %>%
-  
-      mutate(DiabetesOrNot = ifelse(DiabetesOrNot>0, 1, 0)) %>%
-      mutate(HypertensionOrNot = ifelse(HypertensionOrNot>0, 1, 0)) %>%
-      mutate(HypertensionOrDiabetesOrNot = ifelse(HypertensionOrDiabetesOrNot>0, 1, 0)) %>%
-      mutate(NumOfNeeds = Need_Sad+Need_HelpUnderstanding+Need_Childcare+Need_Clothes+ Need_LoseHousing+Need_SafePlace+ Need_Job+Need_AffordNeeds+Need_HighSchool+Need_Transport+Need_Safe) 
-
-dfNeedsInfo2$HypertensionOrNot <- replace(dfNeedsInfo2$HypertensionOrNot, is.na(dfNeedsInfo2$HypertensionOrNot), 0)
-
+dfNeedsInfo_Vaccine <- sqlQuery(dbConnection, "SELECT tblVaccine.*, tblNeeds.Need_Food, tblNeeds.Need_Sad, tblNeeds.Need_HelpUnderstanding, tblNeeds.Need_Childcare, tblNeeds.Need_Clothes, tblNeeds.Need_LoseHousing, tblNeeds.Need_SafePlace, tblNeeds.Need_Job, tblNeeds.Need_AffordNeeds, tblNeeds.Need_HighSchool, tblNeeds.Need_Transport, tblNeeds.Need_Safe
+FROM tblNeeds INNER JOIN tblVaccine ON tblVaccine.ClientID = tblNeeds.ClientID;")
 
 ```
 
@@ -521,23 +489,22 @@ dfNeedsInfo3_raw <- sqlQuery(dbConnection, "SELECT * from tblNeeds")
 These are the final dataframes which will be used for analysis:
 
 
-
 ```{r}
 
 kable(psych::describe(dfZipInfo10), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
-2. dfNeedsInfo_Diabetes
+2. dfNeedsInfo
 
 ```{r}
 kable(psych::describe(dfNeedsInfo), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
 ```
 
-3. dfNeedsInfo_Hypertension
+3. dfNeedsInfo_Vaccine
 
 ```{r}
-kableExtra::kable(psych::describe(dfNeedsInfo2), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+kableExtra::kable(psych::describe(dfNeedsInfo_Vaccine), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
 ```
 
@@ -551,10 +518,7 @@ kableExtra::kable(psych::describe(dfA1CAndDemographics), "html") %>% kable_styli
 
 ## Analysis - Exploring the Connection Between Poverty and Diabetes
 
-
-The link between diabetes and poverty can be difficult to get at directly, as many poorer people who have diabetes are not aware of it, and diabetes incidence is often not available in such a way it can be correlated poverty (for example, it may only be available at the county level.)  The purpose of this analysis is to get at the correlation through other means: hospitalization rates, looking at a cohort of clients who have all been tested for diabetes, and A1C levels.
-
-### Poverty and diabetes at the county and zip code level
+### Poverty and diabetes in Staten Island
 
 Richmond county (Staten Island) is a relatively middle class borough.  The NY DOH reports that the incidence of diabetes in Staten Island is 8.5%.  The chart below shows the incidence of diabetes in New York City. Staten Island is the second lowest.  
 
@@ -581,9 +545,10 @@ However, among the 292 clients from our survey who were also screened for diabet
   diab_percent
 ```
 
-While Richmond county is middle class, the clients in our survey are economically disadvantaged - all are from poorer zipcodes seeking assistance from a community health organization.
+While Richmond county is middle class, the clients in our survey are economically disadvantaged - all are from poorer zip codes seeking assistance from a community health organization.
 
-However, consider the hospitalization rate per 100,000 for all individuals with diabetes in Staten Island:
+
+Public health information helps us get at the relationship between poverty and diabetes health outcomes in the aggregate.  For example, consider the hospitalization rate per 100,000 for all individuals with diabetes in Staten Island:
 
 
 ```{r}
@@ -622,9 +587,9 @@ gridExtra::grid.arrange(a,b,ncol=2)
 
 ```
 
-While the strong relationship between poverty level and hospitalization rate for medicaid recipients is likely due in part to the fact that there are more medicaid recipients in poorer zip codes, nonetheless we can see from these graphs that the 5 poorest zip codes have higher rates of hospitalization for medicaid resipients alone than the average hospitalization rate for all recipients.
+While the strong relationship between poverty level and hospitalization rate for medicaid recipients is likely due in part to the fact that there are more medicaid recipients in poorer zip codes, nonetheless we can see from these graphs that the 5 poorest zip codes have higher rates of hospitalization for medicaid recipients alone than the average hospitalization rate for all recipients.
 
-### Poverty and diabetes at the individual level
+### Poverty and diabetes at the individual level - looking at the mechanisms of poverty
 
 The second graph suggests that poverty affects individuals in a direct way - lack of internet may lead to lack of knowledge and poor health choices.
 
@@ -642,168 +607,129 @@ dfNeedsChi <- dfNeedsInfo %>%
   summarise_all(funs(chisq.test(.,dfNeedsInfo$DiabetesOrNot)$p.value))
 kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
+tbl <- dfNeedsInfo %>%
+  select(DiabetesOrNot, Need_AffordNeeds) %>%
+  mutate(Need_AffordNeeds = ifelse(Need_AffordNeeds==0,0,1))
+
+tbl2 <- table(tbl)
+tbl2
+
+psych::phi(tbl2)
 ```
 
-Those clients who cannot afford basic needs have a higher incidence of diabetes in both the chi squares and regression analysis.  However, we cannot reject the null hypothesis for other needs.
+Those clients who cannot afford basic needs have a higher incidence of diabetes in both the chi squares and regression analysis (p=.02).  However, we cannot reject the null hypothesis for other needs.
 
-We can also investigate whether we find the same pattern for hypertension clients.
-
-
-```{r, warning=FALSE}
-
-m10 <- glm(HypertensionOrDiabetesOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo)
-summary(m10)
-
-
-#m10 <- lm(A1CDrop ~ NumOfNeeds, data=dfA1CProjectAndNeeds)
-#summary(m10)
-
-m10 <- lm(A1CDrop ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=dfA1CProjectAndNeeds)
-summary(m10)
-
-m10 <- lm(DiagA1C ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=dfA1CProjectAndNeeds)
-summary(m10)
-
-m10 <- lm(DiagA1C ~ Need_Job + Need_HighSchool, data=dfA1CProjectAndNeeds)
-summary(m10)
-
-m10 <- lm(A1CDrop ~ Need_Job, data=dfA1CProjectAndNeeds)
-summary(m10)
-
-m10 <- lm(A1CDrop ~ Need_Job, data=dfA1CProjectAndNeeds)
-summary(m10)
-
-m10 <- glm(HypertensionOrDiabetesOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo)
-summary(m10)
-
-
-m10 <- glm(DiabetesOrNot ~ NumOfNeeds, family = "binomial", data=dfNeedsInfo)
-summary(m10)
-
-m10 <- glm(HypertensionOrNot ~ NumOfNeeds, family = "binomial", data=dfNeedsInfo2)
-summary(m10)
-
-
-
-m10 <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family = "binomial", data=dfNeedsInfo)
-summary(m10)
-
-
-dfNeedsChi <- dfNeedsInfo %>%
-  select(HypertensionOrDiabetesOrNot, NeedsVector) %>%
-  summarise_all(funs(chisq.test(.,dfNeedsInfo$HypertensionOrDiabetesOrNot)$p.value))
-kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
-
-
-```
-
-Immigrant is asscoiated with basic needs. (and then it wasn't) Needs high school is a1c screens but wrong direction. Not vaccinated = no job and need safe. Referral and wants and unsure = nothing.
+Diabetes is particularly dangerous for clients with Covid.  We therefore look at the relationship between poverty and whether a client is vaccinated.  Some of the needs are all zeros so we remove them.
 
 ```{r}
 
-
-m10 <- lm(NumA1CScreens ~ Need_Sad + Need_HelpUnderstanding + Need_Childcare + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, data=dfA1CProjectAndNeeds)
+m10 <- glm(SumOfNotVaccinated ~ Need_Sad + Need_Clothes + Need_LoseHousing + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Safe, family = "binomial", data=dfNeedsInfo_Vaccine)
 summary(m10)
-
-m10 <- lm(NumA1CScreens ~ Need_HighSchool, data=dfA1CProjectAndNeeds)
-summary(m10)
-
-q <- ggplot(dfA1CProjectAndNeeds, aes(NumA1CScreens, Need_HighSchool))+
-  geom_boxplot()
-q
-
-dfVaccine <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Vaccine.csv", encoding = "UTF-8") %>%
-    rename(ClientID=X.U.FEFF.ClientID)
-
-dfJoin7 <- dfNeedsInfo3_raw %>% 
-  inner_join(dfVaccine, by="ClientID") 
-
-dfNoVaccine <- dfJoin7 %>%
-  filter(SumOfNot.Vaccinated==1) %>%
-  mutate(Refused=ifelse(SumOfWants.Vaccine==1,0,1))
 
 NeedsVector1 <- NeedsVector[! NeedsVector %in% c("Need_SafePlace", "Need_HelpUnderstanding", "Need_Childcare", "Need_Transport")] 
 
-NeedsVector2 <- NeedsVector[! NeedsVector %in% c("Need_SafePlace", "Need_HelpUnderstanding", "Need_Childcare", "Need_Transport", "Need_HighSchool")] 
 
-NeedsVector3 <- NeedsVector[! NeedsVector %in% c("Need_Clothes", "Need_SafePlace", "Need_Transport")] 
-
-dfNeedsChi1 <- dfJoin7 %>%
-  select(SumOfNot.Vaccinated, NeedsVector1) %>%
-  summarise_all(funs(chisq.test(.,dfJoin7$SumOfNot.Vaccinated)$p.value))
+dfNeedsChi1 <- dfNeedsInfo_Vaccine %>%
+  select(SumOfNotVaccinated, NeedsVector1) %>%
+  summarise_all(funs(chisq.test(.,dfNeedsInfo_Vaccine$SumOfNotVaccinated)$p.value))
 kableExtra::kable(head(dfNeedsChi1), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 
-dfNeedsChi1 <- dfJoin7 %>%
-  select(SumOfUnsure., NeedsVector1) %>%
-  summarise_all(funs(chisq.test(.,dfJoin7$SumOfUnsure.)$p.value))
-kableExtra::kable(head(dfNeedsChi1), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+tbl <- dfNeedsInfo_Vaccine %>%
+  select(SumOfNotVaccinated, Need_Job) %>%
+  mutate(Need_Job = ifelse(Need_Job==0,0,1))
 
-dfNeedsChi1 <- dfA1CProjectAndNeeds%>%
-  select(Immigrant, NeedsVector3) %>%
-  summarise_all(funs(chisq.test(.,dfA1CProjectAndNeeds$Immigrant)$p.value))
-kableExtra::kable(head(dfNeedsChi1), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+tbl1 <- table(tbl)
+tbl1
 
-chisq.test(dfA1CProjectAndNeeds$Immigrant, dfA1CProjectAndNeeds$Need_AffordNeeds)
+psych::phi(tbl1)
+
+tbl2 <- dfNeedsInfo_Vaccine %>%
+  select(SumOfNotVaccinated, Need_Safe) %>%
+  mutate(Need_Safe = ifelse(Need_Safe==0,0,1))
+
+tbl3 <- table(tbl2)
+tbl3
+
+psych::phi(tbl3)
 
 ```
+
+Unemployed clients and those that do not feel safe are correlated with no vaccine (p=.028 and p=.02 respectively).
+
+The effect is not strong enough to run a successful prediction model. The model does no better than guessing. This is perhaps because the data is very unbalanced:
 
 ```{r}
 
-q <- ggplot(dfA1CProjectAndNeeds, aes(NumA1CScreens, Need_HighSchool))+
-  geom_col()
-q
+#https://www.statology.org/logistic-regression-in-r/
+#make this example reproducible
+set.seed(1)
 
+#Use 70% of dfNeedsInfoset as training set and remaining 30% as testing set
+sample <- sample(c(TRUE, FALSE), nrow(dfNeedsInfo_Vaccine), replace=TRUE, prob=c(0.7,0.3))
+train <- dfNeedsInfo_Vaccine[sample, ]
+test <- dfNeedsInfo_Vaccine[!sample, ]  
+
+#fit logistic regression model
+model1 <- glm(SumOfNotVaccinated ~ Need_Safe + Need_Job, family="binomial", data=train)
+
+summary(model1)
+
+#model <- glm(HypertensionOrDiabetesOrNot ~ NumOfNeeds, family="binomial", data=train)
+#model
+#disable scientific notation for model summary
+#options(scipen=999)
+
+
+#Shows fit - ranges from 0 to almost 1
+pscl::pR2(model1)["McFadden"]
+
+#Ranks importance
+caret::varImp(model1)
+
+#multicolinearity (VIF)
+car::vif(model1)
+
+#calculate probability of default for each individual in test dataset
+predicted <- predict(model1, test, type="response")
+p2 <- as.data.frame(predicted)
+
+p3 <- test %>%
+  select(SumOfNotVaccinated)
+
+Predictions <- cbind(p2, p3)
+Predictions$predicted <- ifelse(Predictions$predicted >.38, 1, 0)
+Predictions$predicted=as.factor(Predictions$predicted)
+Predictions$SumOfNotVaccinated=as.factor(Predictions$SumOfNotVaccinated)
+
+psych::describe(Predictions)
+
+#find optimal cutoff probability to use to maximize accuracy
+optimal <- InformationValue::optimalCutoff(test$SumOfNotVaccinated, predicted)[1]
+optimal
+
+#ConfusionMatrix doesn't work
+caret::confusionMatrix(Predictions$SumOfNotVaccinated, Predictions$predicted)
+
+#calculate sensitivity
+#sensitivity(test$HypertensionOrDiabetesOrNot, predicted)
+
+#calculate specificity
+#specificity(test$HypertensionOrDiabetesOrNot, predicted)
+
+#calculate total misclassification error rate
+#misClassError(Predictions$HypertensionOrDiabetesOrNot, Predictions$predicted, threshold=optimal`)
 
 ```
-
-
-```{r}
-
-m10 <- glm(HypertensionOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Clothes + Need_LoseHousing + Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo2)
-summary(m10)
-
-dfNeedsChi <- dfNeedsInfo2 %>%
-  select(HypertensionOrNot, NeedsVector) %>%
-  summarise_all(funs(chisq.test(.,dfNeedsInfo2$HypertensionOrNot)$p.value))
-kableExtra::kable(head(dfNeedsChi), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
-
-
-
-```
-
-```{r}
-#
-#m10 <- glm(HypertensionOrNot ~ Need_Sad + Need_HelpUnderstanding + Need_Clothes + Need_LoseHousing + #Need_SafePlace + Need_Job + Need_AffordNeeds + Need_HighSchool + Need_Transport + Need_Safe, family = "binomial", data=dfNeedsInfo2)
-
-m10 <- lm(DiagA1C ~ Need_Safe, data=dfA1CProjectAndNeeds)
-summary(m10)
-```
-
-
-In this case the consistent factor is whether a client does not have clothing for their family (this factor appears as significant in both the chi square and the regression).  However, the finding is surprising as the coeficient is negative, in other words, clothing need is negatively correlated with high blood pressure.  
-
-we investigate these clients further to see if any confounding variable is obvious:
-
-```{r}
-dfJoin <- dfNeedsInfo2 %>% 
-  inner_join(dfA1CAndDemographics, by="ClientID") %>%
-    filter(Need_Clothes==1)
-dfJoin
-```
-
-What stands out most is that the other clients mostly don't have diabetes diagnoses.  Since most clients are screened for both, this would appear to be a non-random cohort who were approached or surveyed differently.  More investigation is needed.
 
 3. Lastly we look at race and other demographics.
 
 ```{r}
-psych::describe(dfA1CAndDemographics)
-
 rBase1 <- lm(InitialA1C ~ BlackOrNot + MaleOrNot + Age,  data = dfA1CAndDemographics)
 summary(rBase1)
 ```
 
-Here we can see that race, gender and age all affect the initial A1C at a client's first screening.
+Here we can see that race, gender and age all affect the initial A1C at a client's first screening.  The R2 is very low, however.
 
 ### Conclusion
 
-This study touched the surface of the question, "how are poverty and diabetes connected?'  We found statistical associations between poverty and diabetes hospitalization rates, between being unable to afford basic needs and diabetes incidence rates, and a connection between high A1C (indicative of diabetes) and race, age and gender.  We also found evidnece to suggest our study has nonradom elements.  Clearly there is more to explore here.
+This study touched the surface of the question, "how are poverty and diabetes connected?'  We found statistical associations between poverty and diabetes hospitalization rates, between being unable to afford basic needs and diabetes incidence rates, between having not been vaccinated against not having a job and feeling unsafe, and between high A1C and race, age and gender.  Clearly there is more to explore here.
