@@ -213,7 +213,7 @@ if(run) {
 dfSDOH_raw &lt;- read.csv(&quot;D:\\Buffer\\SDOH__En__1_0 (3).csv&quot;, encoding = &quot;UTF-8&quot;)
 }
 
-dfListOfNeeds &lt;- read.csv(&quot;D:\\RStudio\\CUNY_607\\Projects\\Final Project\\ListOfNeeds.csv&quot;, encoding = &quot;UTF-8&quot;)
+dfListOfNeeds &lt;- read.csv(&quot;https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Final%20Project/ListOfNeeds.csv&quot;, encoding = &quot;UTF-8&quot;)
 dfListOfNeeds %&lt;&gt;%
   rename(Need=X.U.FEFF.Need)</code></pre>
 <p>The survey asks these questions:</p>
@@ -447,7 +447,8 @@ dfMedicaidEnrollment &lt;- read.socrata(
 </div>
 <div id="zip-code-level-population-and-poverty-data-scraped-from-the-web" class="section level3">
 <h3>4. Zip Code Level Population and Poverty Data Scraped From the web</h3>
-<p>We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels. We also read a csv file, taken from the web, which contains information on zip code and broadband access.</p>
+<p>We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels. We also read a csv file, taken from the web, which contains information on zip code and broadband access. The file is compiled by the city of New York and is downloaded from here:</p>
+<p><a href="https://data.cityofnewyork.us/City-Government/Broadband-Adoption-and-Infrastructure-by-Zip-Code/qz5f-yx82" class="uri">https://data.cityofnewyork.us/City-Government/Broadband-Adoption-and-Infrastructure-by-Zip-Code/qz5f-yx82</a></p>
 <pre class="r"><code>library(XML)
 
 #This operation is time consuming.  Set run to TRUE the first time you run ii, and FALSE afterward.
@@ -481,7 +482,7 @@ dfPopAndPovertyLevel %&lt;&gt;%
 }
 
 
-dfBroadband_raw &lt;- read.csv(&quot;D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Broadband_Adoption.csv&quot;, encoding = &quot;UTF-8&quot;)</code></pre>
+dfBroadband_raw &lt;- read.csv(&quot;https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Final%20Project/Broadband_Adoption.csv&quot;, encoding = &quot;UTF-8&quot;)</code></pre>
 </div>
 </div>
 <div id="loading-all-of-the-datasets-into-the-sql-server-database" class="section level2">

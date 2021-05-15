@@ -61,7 +61,7 @@ if(run) {
 dfSDOH_raw <- read.csv("D:\\Buffer\\SDOH__En__1_0 (3).csv", encoding = "UTF-8")
 }
 
-dfListOfNeeds <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\ListOfNeeds.csv", encoding = "UTF-8")
+dfListOfNeeds <- read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Final%20Project/ListOfNeeds.csv", encoding = "UTF-8")
 dfListOfNeeds %<>%
   rename(Need=X.U.FEFF.Need)
 
@@ -277,7 +277,9 @@ dfMedicaidEnrollment <- read.socrata(
 
 ### 4. Zip Code Level Population and Poverty Data Scraped From the web
 
-We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.  We also read a csv file, taken from the web, which contains information on zip code and broadband access.
+We scrape and then clean 17 pages of zipatlas data to compile a table of zip codes, population levels and poverty levels.  We also read a csv file, taken from the web, which contains information on zip code and broadband access.  The file is compiled by the city of New York and is downloaded from here:
+
+https://data.cityofnewyork.us/City-Government/Broadband-Adoption-and-Infrastructure-by-Zip-Code/qz5f-yx82
 
 ```{r html}
 library(XML)
@@ -313,7 +315,7 @@ dfPopAndPovertyLevel %<>%
 }
 
 
-dfBroadband_raw <- read.csv("D:\\RStudio\\CUNY_607\\Projects\\Final Project\\Broadband_Adoption.csv", encoding = "UTF-8")
+dfBroadband_raw <- read.csv("https://raw.githubusercontent.com/ericonsi/CUNY_607/main/Projects/Final%20Project/Broadband_Adoption.csv", encoding = "UTF-8")
 
 ```
 
