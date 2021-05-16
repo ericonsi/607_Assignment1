@@ -735,3 +735,5 @@ Here we can see that race, gender and age all affect the initial A1C at a client
 ### Conclusion
 
 This study touched the surface of the question, "how are poverty and diabetes connected?'  We found statistical associations between poverty and diabetes hospitalization rates, between being unable to afford basic needs and diabetes incidence rates, between having not been vaccinated against not having a job and feeling unsafe, and between high A1C and race, age and gender.  Clearly there is more to explore here.
+
+This analysis only shows a small handful of the anlyses that were run on this data.  I also analyzed the relationship between poverty and chronic hypertension, A1V levels, success in A1C management, and so on.  Thistype of "fishing" increases the likelihood ofsampling errors.  A cursory analysis of survey results by program and staff suggests a lack of consistency in how the survey was applied.  In the second round of survey impkementation I plan to make sure that suveys are conducted in a consistent manager accross staff and programs to provide the possibility for a more robust analysis.
